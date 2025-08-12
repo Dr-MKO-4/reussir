@@ -1,0 +1,36 @@
+Livraison [Numéro de version]
+Auteur : [Nom de l’auteur]
+Date : [JJ/MM/AAAA]
+Type de livraison : [Totale / Corrective / Évolutive / etc.]
+Contenu de la livraison :
+[Brève description du contenu et/ou lien vers ticket/outil de suivi]
+
+Checklist
+[Liste des points vérifiés / actions réalisées]
+
+Fichiers modifiés
+[Liste des fichiers modifiés]
+
+Fichiers ajoutés
+[Liste des nouveaux fichiers ajoutés] ou « Aucun »
+
+Dossiers ajoutés
+[Liste des nouveaux dossiers ajoutés] ou « Aucun »
+
+Fonctions
+Création :
+
+[Liste des fonctions créées] ou « Aucune »
+
+Modifications :
+
+[Liste des fonctions modifiées] ou « Aucune »
+
+Tables modifiées
+[Liste des tables modifiées] ou « Aucune »
+
+APIs modifiées
+[Liste des APIs modifiées] ou « Aucune »
+
+Actions manuelles
+[Description des actions manuelles à effectuer] ou « Aucune »
