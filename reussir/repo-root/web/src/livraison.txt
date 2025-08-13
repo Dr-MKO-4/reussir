@@ -1,0 +1,35 @@
+Livraison 0.000.001
+Auteur : mko
+Date : 13/08/2025
+Type de livraison : partielle
+Contenu de la livraison :
+style vhatbot
+
+Checklist
+[Liste des points vérifiés / actions réalisées]
+
+Fichiers modifiés
+    Livraison.txt
+
+Fichiers ajoutés
+    - reussir\repo-root\web\src\utils\root
+
+Dossiers ajoutés
+Aucun
+
+Fonctions
+Création :
+
+ « Aucune »
+
+Modifications :
+ « Aucune »
+
+Tables modifiées
+« Aucune »
+
+APIs modifiées
+ « Aucune »
+
+Actions manuelles
+ « Aucune »
