@@ -1,0 +1,50 @@
+Livraison 1.0.0
+Auteur : Dr-MKO
+Date : 15/08/2025
+Type de livraison : Évolutive
+
+Contenu de la livraison :
+- Mise en place du backend Express/TypeScript pour la gestion des messages
+- Ajout du serveur principal et des utilitaires
+- Ajout des tests unitaires backend (Jest)
+- Ajout du service de calcul mathématique
+- Ajout du support des uploads
+
+Checklist
+- Démarrage serveur vérifié
+- API de chat fonctionnelle
+- Tests unitaires backend
+- Uploads testés
+
+Fichiers modifiés
+- package.json
+- tsconfig.json
+
+Fichiers ajoutés
+- jest.config.js
+- package-lock.json
+- src/__tests__/chat.test.ts
+- src/server.ts
+- src/utils/math.ts
+- uploads/fd4e05ac6769d29403fa3ffc830abc7a
+
+Dossiers ajoutés
+- uploads
+
+Fonctions
+Création :
+- API Express de chat
+- Fonction de calcul mathématique
+- Fonction d’upload
+
+Modifications :
+Aucune
+
+Tables modifiées
+Aucune
+
+APIs modifiées
+- API de chat créée
+
+Actions manuelles
+Aucune
