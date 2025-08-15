@@ -1,0 +1,87 @@
+Livraison 1.0.0
+Auteur : Dr-MKO
+Date : 15/08/2025
+Type de livraison : Évolutive
+
+Contenu de la livraison :
+- Création complète du frontend du chat web (React/TypeScript)
+- Ajout et stylisation de tous les composants principaux (ChatHeader, ChatView, ChatWindow, Composer, ContextPanel, ConversationPanel, ImageUploader, MathEditor, MessageBubble, TypingIndicator)
+- Mise en place du service d’API et du service de gestion de chat
+- Ajout du menu flottant pour les actions (image, mode math)
+- Responsive, accessibilité, cohérence visuelle
+- Configuration Jest, tests unitaires
+
+Checklist
+- Responsive mobile/desktop vérifié
+- Accessibilité (aria-label, title) ajoutée
+- Tests unitaires et visuels
+- Suppression des styles inline
+- Cohérence des couleurs et variables CSS
+- Mapping CSS modules pour TypeScript
+
+Fichiers modifiés
+- package.json
+- tsconfig.json
+- src/App.tsx
+
+Fichiers ajoutés
+- jest.config.cjs
+- package-lock.json
+- src/__tests__/ChatWindow.test.tsx
+- src/components/ChatHeader.module.css
+- src/components/ChatHeader.module.css.d.ts
+- src/components/ChatHeader.tsx
+- src/components/ChatView.module.css
+- src/components/ChatView.module.css.d.ts
+- src/components/ChatView.tsx
+- src/components/ChatWindow.module.css
+- src/components/ChatWindow.tsx
+- src/components/Composer.module.css
+- src/components/Composer.module.css.d.ts
+- src/components/Composer.tsx
+- src/components/ContextPanel.module.css
+- src/components/ContextPanel.module.css.d.ts
+- src/components/ContextPanel.tsx
+- src/components/ConversationPanel.module.css
+- src/components/ConversationPanel.module.css.d.ts
+- src/components/ConversationPanel.tsx
+- src/components/ImageUploader.module.css
+- src/components/ImageUploader.module.css.d.ts
+- src/components/ImageUploader.tsx
+- src/components/MathEditor.module.css
+- src/components/MathEditor.module.css.d.ts
+- src/components/MathEditor.tsx
+- src/components/MessageBubble.module.css
+- src/components/MessageBubble.module.css.d.ts
+- src/components/MessageBubble.tsx
+- src/components/TypingIndicator.module.css
+- src/components/TypingIndicator.module.css.d.ts
+- src/components/TypingIndicator.tsx
+- src/context/ChatContext.tsx
+- src/hooks/useChat.ts
+- src/pages/ChatPage.module.css
+- src/pages/ChatPage.tsx
+- src/services/chatApi.ts
+- src/services/chatService.ts
+- src/styles/tokens.module.css
+
+Dossiers ajoutés
+Aucun
+
+Fonctions
+Création :
+- Tous les composants React du chat
+- Service d’API et gestion de chat
+- Menu flottant d’actions dans Composer
+
+Modifications :
+- Responsive, accessibilité, mapping CSS modules
+
+Tables modifiées
+Aucune
+
+APIs modifiées
+Aucune
+
+Actions manuelles
+Aucune
