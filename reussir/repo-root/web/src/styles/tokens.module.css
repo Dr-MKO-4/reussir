@@ -1,0 +1,27 @@
+:root {
+  --color-primary: #0057B7;
+  --color-surface: #FFFFFF;
+  --color-bg: #F6F7FB;
+  --color-text-main: #111827;
+  --color-text-muted: #6B7280;
+  --color-border: #E6E9EF;
+  --color-error: #E11D48;
+  --color-success: #16A34A;
+
+  --font-h1-size: 28px;
+  --font-h1-weight: 600;
+  --font-h2-size: 20px;
+  --font-h2-weight: 600;
+  --font-body-size: 16px;
+  --font-body-weight: 400;
+  --font-caption-size: 12px;
+  --font-caption-weight: 400;
+
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+}

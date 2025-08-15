@@ -1,0 +1,45 @@
+@import "../styles/tokens.module.css";
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 2px 8px rgba(127,90,240,0.08);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.botName {
+  font-size: var(--font-h1-size);
+  font-weight: var(--font-h1-weight);
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+}
+
+.status {
+  font-size: var(--font-caption-size);
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.infoBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 20px;
+  font-size: var(--font-body-size);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(127,90,240,0.12);
+  transition: background 0.2s;
+}
+.infoBtn:hover {
+  background: var(--color-success);
+}

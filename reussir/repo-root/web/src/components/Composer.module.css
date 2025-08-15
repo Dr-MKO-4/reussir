@@ -1,0 +1,148 @@
+.composer {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--color-border);
+  position: relative;
+}
+
+/* Ligne contenant la saisie et les boutons */
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.textarea {
+  resize: vertical;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-primary);
+  margin-bottom: 0.7rem;
+  min-height: 60px;
+  max-height: 180px;
+  width: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 2px 8px rgba(127, 90, 240, 0.08);
+  transition: border 0.2s;
+  line-height: 1.5;
+}
+
+/* Bouton menu (+) */
+.plusBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(127, 90, 240, 0.15);
+  transition: background 0.25s ease;
+}
+
+.plusBtn:hover {
+  background: var(--color-success);
+}
+
+/* Menu déroulant */
+.dropdownMenu {
+  position: absolute;
+  bottom: 110%;
+  right: 0;
+  min-width: 210px;
+  background: var(--color-surface);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  transform: translateY(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 20;
+}
+
+.dropdownMenu.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: var(--color-bg);
+  transform: translateX(3px);
+}
+
+/* Bouton envoyer */
+.sendBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(127, 90, 240, 0.15);
+  transition: background 0.25s ease;
+}
+
+.sendBtn:hover {
+  background: var(--color-success);
+}
+
+.sendBtn:disabled {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: not-allowed;
+}
+
+/* Zone math */
+.mathEditor {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-top: 0.5rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(127, 90, 240, 0.08);
+  border: 1px dashed var(--color-primary);
+}
+
+@media (max-width: 700px) {
+  .composer {
+    padding: 0.5rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .dropdownMenu {
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    min-width: unset;
+    width: 90vw;
+  }
+}
