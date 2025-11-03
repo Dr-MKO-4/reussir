@@ -1,0 +1,88 @@
+.pageTransition {
+  width: 100%;
+  height: 100%;
+}
+
+.fadeIn {
+  animation: fadeIn var(--duration-slow) var(--easing-ease-out) forwards;
+}
+
+.fadeOut {
+  animation: fadeOut var(--duration-normal) var(--easing-ease-out) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(1.02);
+    filter: blur(3px);
+  }
+}
+
+/* Animations alternatives pour différents effets */
+.slideLeft {
+  animation: slideLeft var(--duration-slow) var(--easing-ease-out) forwards;
+}
+
+.slideRight {
+  animation: slideRight var(--duration-slow) var(--easing-ease-out) forwards;
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Transition plus douce pour les utilisateurs sensibles au mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn,
+  .fadeOut,
+  .slideLeft,
+  .slideRight {
+    animation: simpleFade var(--duration-fast) ease forwards;
+  }
+}
+
+@keyframes simpleFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

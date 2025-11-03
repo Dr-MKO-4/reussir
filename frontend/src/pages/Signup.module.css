@@ -1,0 +1,206 @@
+:root {
+  /* Variables héritées du système global */
+  --color-primary: #0057B7;
+  --color-secondary: #FF8C00;
+  --color-accent: #00A676;
+  --color-neutral-light: #F8FAFC;
+  --color-white: #FFFFFF;
+  --radius-lg: 8px;
+  --shadow-medium: 0 10px 15px rgba(0, 87, 183, 0.1);
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --duration-slower: 0.5s;
+  --duration-slow: 0.3s;
+  --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  
+  /* Variables spécifiques pour le background */
+  --color-background-gradient-start: var(--color-neutral-light);
+  --color-background-gradient-end: #E8F2FF;
+  --color-container-bg: var(--color-white);
+  --container-shadow: var(--shadow-medium);
+  --container-hover-shadow: 0 15px 35px rgba(0, 87, 183, 0.15);
+}
+
+/* Mode sombre */
+.dark,
+:root.dark {
+  --color-white: #0F172A;
+  --color-neutral-light: #1E293B;
+  --color-background-gradient-start: #0F172A;
+  --color-background-gradient-end: #1E293B;
+  --color-container-bg: #1E293B;
+  --shadow-medium: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --container-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 50px rgba(30, 111, 204, 0.1);
+  --container-hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 60px rgba(30, 111, 204, 0.15);
+}
+
+.signupPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-background-gradient-start) 0%, var(--color-background-gradient-end) 100%);
+  position: relative;
+  overflow-x: hidden;
+  transition: background 0.3s ease;
+}
+
+.signupContainer {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1200px;
+  width: 100%;
+  background: var(--color-container-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--container-shadow);
+  overflow: hidden;
+  animation: containerSlideIn var(--duration-slower) var(--easing-ease-out);
+  transition: all var(--duration-slow) ease;
+}
+
+@keyframes containerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Animation d'entrée avec effet de profondeur */
+.signupContainer::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-accent), var(--color-primary));
+  background-size: 400% 400%;
+  border-radius: var(--radius-lg);
+  z-index: -1;
+  animation: gradientBorder 6s ease infinite;
+  opacity: 0.8;
+}
+
+@keyframes gradientBorder {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Dark mode specific styles for container */
+.dark .signupContainer::before {
+  opacity: 0.6;
+}
+
+/* Effet de parallaxe au survol */
+.signupContainer:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--container-hover-shadow);
+  transition: all var(--duration-slow) var(--easing-ease-out);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .signupContainer {
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .signupPage {
+    padding: var(--spacing-md);
+    align-items: flex-start;
+    padding-top: var(--spacing-xl);
+  }
+
+  .signupContainer {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
+    animation: containerSlideInMobile var(--duration-slower) var(--easing-ease-out);
+  }
+
+  .signupContainer::before {
+    display: none;
+  }
+
+  .signupContainer:hover {
+    transform: none;
+  }
+}
+
+@keyframes containerSlideInMobile {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .signupPage {
+    padding: var(--spacing-sm);
+    padding-top: var(--spacing-lg);
+  }
+
+  .signupContainer {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .signupContainer,
+  .signupContainer::before {
+    animation: none;
+  }
+
+  .signupContainer:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Support du mode sombre préféré du système */
+@media (prefers-color-scheme: dark) {
+  :root:not(.dark) {
+    --color-background-gradient-start: #0F172A;
+    --color-background-gradient-end: #1E293B;
+    --color-container-bg: #1E293B;
+  }
+}
+
+/* Animation spéciale pour les utilisateurs qui préfèrent les animations */
+@media (prefers-reduced-motion: no-preference) {
+  .signupContainer {
+    animation: containerSlideIn var(--duration-slower) var(--easing-ease-out),
+               containerFloat 8s ease-in-out infinite 2s;
+  }
+}
+
+@keyframes containerFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
