@@ -1,0 +1,155 @@
+:root {
+  /* Variables héritées du système global */
+  --color-primary: #0057B7;
+  --color-secondary: #FF8C00;
+  --color-accent: #00A676;
+  --color-neutral-light: #F8FAFC;
+  --color-white: #FFFFFF;
+  --radius-lg: 8px;
+  --shadow-medium: 0 10px 15px rgba(0, 87, 183, 0.1);
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --duration-slower: 0.5s;
+  --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  
+  /* Variables spécifiques pour le background */
+  --color-background-gradient-start: var(--color-neutral-light);
+  --color-background-gradient-end: #E8F2FF;
+  --color-container-bg: var(--color-white);
+}
+
+/* Mode sombre */
+.dark,
+:root.dark {
+  --color-white: #0F172A;
+  --color-neutral-light: #1E293B;
+  --color-background-gradient-start: #0F172A;
+  --color-background-gradient-end: #1E293B;
+  --color-container-bg: #1E293B;
+  --shadow-medium: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-background-gradient-start) 0%, var(--color-background-gradient-end) 100%);
+  position: relative;
+  overflow-x: hidden;
+  transition: background 0.3s ease;
+}
+
+.loginContainer {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1200px;
+  width: 100%;
+  background: var(--color-container-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  animation: containerAppear var(--duration-slower) var(--easing-ease-out);
+  transition: all 0.3s ease;
+}
+
+@keyframes containerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur();
+  }
+}
+
+.loginContainer::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-accent), var(--color-primary));
+  background-size: 400% 400%;
+  border-radius: var(--radius-lg);
+  z-index: -1;
+  animation: gradientBorder 6s ease infinite;
+  opacity: 0.8;
+}
+
+@keyframes gradientBorder {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Dark mode specific styles for container */
+.dark .loginContainer {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 50px rgba(30, 111, 204, 0.1);
+}
+
+.dark .loginContainer::before {
+  opacity: 0.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginPage {
+    padding: var(--spacing-md);
+    align-items: flex-start;
+    padding-top: var(--spacing-xl);
+  }
+
+  .loginContainer {
+    grid-template-columns: 1fr;
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .loginContainer::before {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .loginPage {
+    padding: var(--spacing-sm);
+    padding-top: var(--spacing-lg);
+  }
+
+  .loginContainer {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .loginContainer {
+    animation: none;
+  }
+  
+  .loginContainer::before {
+    animation: none;
+  }
+}
+
+/* Support du mode sombre préféré du système */
+@media (prefers-color-scheme: dark) {
+  :root:not(.dark) {
+    --color-background-gradient-start: #0F172A;
+    --color-background-gradient-end: #1E293B;
+    --color-container-bg: #1E293B;
+  }
+}
