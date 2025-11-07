@@ -1,0 +1,123 @@
+📊 Statut de Génération - Projet Catalogue des Épreuves
+✅ Scripts Générés (Complétés)
+Phase 1 : Configuration & Infrastructure de Base
+
+✅ Configuration Vite + TypeScript - Configuré
+✅ Structure des dossiers - Organisée
+✅ System Design (variables.css) - Complet
+✅ Styles globaux (globals.css) - Complet
+✅ Thème sombre (dark-mode.css) - Complet
+✅ Router principal - Configuré
+
+Phase 2 : Composants de Base (Design System)
+
+✅ Boutons (Button.tsx)
+✅ Inputs (Input.tsx, TextArea.tsx, Select.tsx)
+✅ Cards (Card.tsx)
+✅ Badges (Badge.tsx)
+✅ Modales (Modal.tsx)
+✅ Toasts/Notifications (Toast.tsx)
+✅ Loading States (Spinner.tsx, Skeleton.tsx)
+✅ Tabs (Tabs.tsx)
+✅ Accordéon (Accordion.tsx)
+✅ Pagination (Pagination.tsx)
+✅ Breadcrumb (Breadcrumb.tsx)
+✅ Tooltip (Tooltip.tsx)
+✅ Dropdown (Dropdown.tsx)
+
+Phase 3 : Layout & Navigation (Partiellement complété)
+
+✅ Header/Navbar (Header.tsx)
+✅ Footer (Footer.tsx)
+✅ Sidebar (Sidebar.tsx)
+✅ Layout Principal (MainLayout.tsx)
+
+
+⏳ Scripts Non Générés (En Attente)
+Phase 3 : Layout & Navigation (Suite - ARRÊT ICI)
+
+❌ Composant de recherche avancée (AdvancedSearch.tsx)
+❌ Barre de filtres (FilterBar.tsx)
+❌ Menu utilisateur (UserMenu.tsx)
+❌ Navigation mobile/responsive (MobileNav.tsx)
+
+Phase 4 : Pages Principales (Catalogue)
+
+❌ Page d'accueil (HomePage.tsx)
+❌ Page de découverte/recherche (SearchPage.tsx)
+❌ Vignettes de sujets (SubjectCard.tsx)
+❌ Liste de sujets (SubjectList.tsx)
+❌ Fiche détaillée sujet (SubjectDetailPage.tsx)
+❌ Carousel d'aperçu (PreviewCarousel.tsx)
+❌ Section métadonnées (SubjectMetadata.tsx)
+❌ Système de tags (TagSystem.tsx)
+❌ Actions rapides (QuickActions.tsx)
+
+Phase 5 : Système de Panier & Commande
+
+❌ Mini panier (MiniCart.tsx)
+❌ Page panier complète (CartPage.tsx)
+❌ Item de panier (CartItem.tsx)
+❌ Résumé commande (OrderSummary.tsx)
+❌ Codes promo (PromoCode.tsx)
+❌ Processus checkout (CheckoutFlow.tsx)
+❌ Formulaire coordonnées (ContactForm.tsx)
+❌ Page de paiement (PaymentPage.tsx)
+❌ Page de confirmation (ConfirmationPage.tsx)
+
+Phase 6 : Historique & Favoris
+
+❌ Page historique (HistoryPage.tsx)
+❌ Page favoris (FavoritesPage.tsx)
+❌ Système de dossiers (FolderSystem.tsx)
+❌ Filtres avancés historique (HistoryFilters.tsx)
+❌ Statistiques personnelles (PersonalStats.tsx)
+❌ Export/Partage (ExportShare.tsx)
+
+Phase 7 : Fonctionnalités IA
+
+❌ Assistant intelligent (AIAssistant.tsx)
+❌ Chat contextuel (AIChat.tsx)
+❌ Recommandations personnalisées (Recommendations.tsx)
+❌ Planification d'étude (StudyPlanner.tsx)
+❌ Analyse de progression (ProgressAnalytics.tsx)
+❌ Détection de bundles (BundleDetector.tsx)
+❌ Suggestions cross-sell (CrossSellSuggestions.tsx)
+
+Phase 8 : Authentification & Profil
+
+❌ Page de connexion (LoginPage.tsx)
+❌ Page d'inscription (RegisterPage.tsx)
+❌ Page profil utilisateur (ProfilePage.tsx)
+❌ Paramètres compte (AccountSettings.tsx)
+❌ Gestion abonnement (SubscriptionManager.tsx)
+❌ Mot de passe oublié (ForgotPassword.tsx)
+❌ Vérification email (EmailVerification.tsx)
+
+Phase 9 : Services & Hooks
+
+❌ API Service (api.service.ts)
+❌ Auth Service (auth.service.ts)
+❌ Storage Service (storage.service.ts)
+❌ useAuth (useAuth.ts)
+❌ useCart (useCart.ts)
+❌ useSearch (useSearch.ts)
+❌ useFavorites (useFavorites.ts)
+❌ useTheme (useTheme.ts)
+❌ useAPI (useAPI.ts)
+
+Phase 10 : Utilitaires & Helpers
+
+❌ Formatage dates (dateUtils.ts)
+❌ Formatage prix (priceUtils.ts)
+❌ Validation formulaires (validation.ts)
+❌ Gestion erreurs (errorHandler.ts)
+❌ Constantes (constants.ts)
+❌ Types TypeScript (types.ts)
+
+Phase 11 : Tests & Documentation
+
+❌ Tests unitaires composants
+❌ Tests d'intégration
+❌ Documentation Storybook
+❌ Guide de contribution

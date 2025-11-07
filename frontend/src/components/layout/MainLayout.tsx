@@ -1,54 +1,62 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import Footer from './Footer';
+import React, { ReactNode } from 'react';
+import { Header } from './Header';
+import { Footer } from './Footer';
 import './MainLayout.css';
 
-const MainLayout: React.FC = () => {
-	const [sidebarOpen, setSidebarOpen] = useState(false);
+/**
+ * Props du composant MainLayout
+ */
+export interface MainLayoutProps {
+  children: ReactNode;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  showSearch?: boolean;
+  stickyHeader?: boolean;
+  className?: string;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  padding?: boolean;
+}
 
-	const toggleSidebar = () => {
-		setSidebarOpen(prev => !prev);
-	};
+/**
+ * Composant MainLayout - Layout principal de l'application
+ */
+export const MainLayout: React.FC<MainLayoutProps> = ({
+  children,
+  showHeader = true,
+  showFooter = true,
+  showSearch = true,
+  stickyHeader = true,
+  className = '',
+  maxWidth = '2xl',
+  padding = true,
+}) => {
+  const containerClasses = [
+    'main-layout-content',
+    `main-layout-max-width-${maxWidth}`,
+    padding ? 'main-layout-padding' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-	const closeSidebar = () => {
-		setSidebarOpen(false);
-	};
+  return (
+    <div className="main-layout">
+      {/* Header */}
+      {showHeader && (
+        <Header showSearch={showSearch} sticky={stickyHeader} />
+      )}
 
-	return (
-		<div className="main-layout">
-			{/* Header */}
-			<Header 
-				onMenuClick={toggleSidebar}
-				sidebarOpen={sidebarOpen}
-			/>
+      {/* Main Content */}
+      <main className="main-layout-main">
+        <div className={containerClasses}>{children}</div>
+      </main>
 
-			{/* Overlay pour mobile */}
-			{sidebarOpen && (
-				<div 
-					className="sidebar-overlay"
-					onClick={closeSidebar}
-					aria-hidden="true"
-				/>
-			)}
-
-			{/* Sidebar */}
-			<Sidebar 
-				isOpen={sidebarOpen}
-				onClose={closeSidebar}
-			/>
-
-			{/* Main content */}
-			<main className="main-content">
-				<div className="content-wrapper">
-					<Outlet />
-				</div>
-				{/* Footer */}
-				<Footer />
-			</main>
-		</div>
-	);
+      {/* Footer */}
+      {showFooter && <Footer />}
+    </div>
+  );
 };
+
+MainLayout.displayName = 'MainLayout';
 
 export default MainLayout;
