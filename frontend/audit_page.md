@@ -1,150 +1,133 @@
-# Audit des fichiers frontend
+# Audit des fichiers frontend (Mise à jour 12/11/2025)
 
-## 1. Fichiers dont la logique est déjà implémentée
+## 1. Fichiers dont la logique est déjà implémentée (COMPLETS)
 
-- components/common/ProtectedRoute.tsx : Route protégée, gère l'accès selon l'authentification et le rôle utilisateur, redirige si non autorisé.
-- components/catalog/SubjectCard.tsx : Carte de sujet, affiche image, titre, description, tags, favori, bouton panier, badge difficulté, prix, etc.
-- services/catalogService.ts : Service d'accès au catalogue, recherche, favoris, historique, prédiction IA, appels API REST.
-- contexts/CartContext.tsx : Contexte panier, gestion des items, codes promo, persistance localStorage, provider React.
-- contexts/ToastContext.tsx : Contexte pour afficher des notifications toast, gestion de la pile, provider React.
-- pages/NotFound.tsx : Page 404, affiche code, message, bouton retour, navigation.
-- pages/Login.tsx : Page de connexion, gère formulaire, authentification, Google, feedback, navigation, toast.
+- `components/common/ProtectedRoute.tsx` : Route protégée, accès auth/role, redirection, écran de chargement.
+- `components/catalog/SubjectCard.tsx` : Carte sujet complète (image, titre, tags, favori, panier, badges, prix).
+- `services/catalogService.ts` : Service catalogue (recherche, favoris, historique, IA, API REST).
+- `contexts/CartContext.tsx` : Panier (items, codes promo, persistance, provider).
+- `contexts/ToastContext.tsx` : Toast notifications (pile, provider).
+- `pages/NotFound.tsx` : Page 404 complète (code, message, bouton retour).
+- `pages/Login.tsx` : Connexion complète (formulaire, auth, Google, feedback, navigation, toast).
+- `services/api.ts` : Service API TypeScript (Axios, interceptors, typage, gestion erreurs).
+- `services/auth.ts` : Authentification (login, logout, inscription, token, récupération, vérification email).
+- `services/storage.ts` : Stockage local sécurisé (localStorage, encryption, helpers).
+- `types/catalog.ts` : Types catalogue (Subject, Filters, Search, etc.).
+- `types/cart.ts` : Types panier (Cart, Order, Payment, etc.).
+- `contexts/AuthContext.tsx` : AuthContext complet (état, méthodes, provider).
+- `hooks/useAuth.ts` : Hook auth (helpers, accès context).
+- `hooks/useCart.ts` : Hook panier (helpers, accès context).
+- `components/common/Button.tsx` : Bouton UI complet (toutes variantes, accessibilité).
+- `components/common/Input.tsx` : Champ de saisie complet (toutes variantes, accessibilité).
+- `components/common/Card.tsx` : Carte UI générique complète.
+- `components/common/Modal.tsx` : Modale complète (gestion focus, scroll, fermeture, accessibilité).
+- `components/common/Select.tsx` : Sélecteur complet (menu déroulant, clavier, accessibilité).
+- `components/common/Spinner.tsx` : Loader complet (plusieurs variantes).
+- `components/common/Alert.tsx` : Message alerte complet (types, dismissible).
+- `components/common/Badge.tsx` : Badge complet (types, couleurs).
+- `components/common/Pagination.tsx` : Pagination dynamique complète.
+- `components/common/Tabs.tsx` : Tabs navigation complète.
+- `components/common/SearchBar.tsx` : Barre de recherche avec suggestions.
+- `components/layout/Header.tsx` : En-tête responsive.
+- `components/layout/Footer.tsx` : Pied de page responsive.
+- `components/layout/MainLayout.tsx` : Layout principal responsive.
 
-## 2. Fichiers vides ou partiellement implémentés
+## 2. Fichiers vides ou partiellement implémentés (À COMPLÉTER)
 
-- components/common/Tabs.tsx : Squelette, affiche juste "Navigation tabs".
-- components/common/Spinner.tsx : Squelette, affiche juste "Spinner" ou loader basique.
-- components/common/Select.tsx : Squelette, menu déroulant sans logique avancée.
-- components/common/SearchBar.tsx : Squelette, barre de recherche sans logique.
-- components/common/Pagination.tsx : Squelette, pagination sans logique.
-- components/common/Modal.tsx : Squelette, fenêtre modale sans gestion d'état.
-- components/common/Badge.tsx : Squelette, badge statique.
-- components/common/Alert.tsx : Squelette, message alerte statique.
-- components/common/EmptyState.tsx : Squelette, affiche "Aucun résultat".
-- components/catalog/SubjectList.tsx : Squelette, vue liste statique.
-- components/catalog/SubjectGrid.tsx : Squelette, grille statique.
-- components/catalog/SubjectFilters.tsx : Squelette, filtres statiques.
-- components/catalog/SortDropdown.tsx : Squelette, menu de tri statique.
-- components/catalog/CategoryList.tsx : Squelette, liste catégories statique.
-- components/cart/CartItem.tsx : Squelette, item panier statique.
-- components/cart/CartSummary.tsx : Squelette, résumé panier statique.
-- components/cart/PromoCodeInput.tsx : Squelette, champ code promo statique.
-- components/cart/BundleSuggestions.tsx : Squelette, suggestions bundles statiques.
-- pages/Profile.jsx : Squelette, affiche juste "Profil utilisateur".
-- pages/SubjectDetails.tsx : Squelette, affiche juste "Détails du sujet".
+- `components/common/EmptyState.tsx` : Affiche "Aucun résultat" (statique).
+- `components/catalog/SubjectList.tsx` : Vue liste statique.
+- `components/catalog/SubjectGrid.tsx` : Grille statique.
+- `components/catalog/SubjectFilters.tsx` : Filtres statiques.
+- `components/catalog/SortDropdown.tsx` : Menu de tri statique.
+- `components/catalog/CategoryList.tsx` : Liste catégories statique.
+- `components/cart/CartItem.tsx` : Item panier statique.
+- `components/cart/CartSummary.tsx` : Résumé panier statique.
+- `components/cart/PromoCodeInput.tsx` : Champ code promo statique.
+- `components/cart/BundleSuggestions.tsx` : Suggestions bundles statiques.
+- `pages/Profile.tsx` : Squelette, formulaire profil partiel.
+- `pages/SubjectDetails.tsx` : Squelette, affiche juste "Détails du sujet".
+- `pages/Signup.tsx` : Formulaire d’inscription, logique à vérifier/compléter.
+- `pages/CompleteProfile.tsx` : Complétion profil, logique à enrichir.
+- `pages/AdminDashboard.tsx` : Dashboard admin, logique à compléter.
+- `pages/CartPage.tsx` : Squelette, logique panier à compléter.
+- `pages/DashboardPage.tsx` : Squelette, logique utilisateur à compléter.
+- `components/dashboard/UserDashboard.tsx` : Logique utilisateur partielle.
+- `components/dashboard/AdminDashboard.tsx` : Logique admin partielle.
 
-## 3. Fichiers avec homologues (doublons)
+## 3. Fichiers avec homologues (DOUBLONS À NETTOYER)
 
-- services/api.ts & services/api.js : Deux versions du service API.
-- contexts/AuthContext.tsx & contexts/AuthContext.jsx : Deux versions du contexte d'authentification.
-- contexts/ThemeContext.tsx & contexts/ThemeContext.jsx : Deux versions du contexte thème.
-- pages/Profile.tsx & pages/Profile.jsx : Deux versions de la page profil.
-- components/cart/CartItem.tsx (doublon dans le dossier).
-- components/cart/CartSummary.tsx (doublon dans le dossier).
-- components/cart/PromoCodeInput.tsx (doublon dans le dossier).
-- components/cart/BundleSuggestions.tsx (doublon dans le dossier).
-- components/catalog/SubjectList.tsx (doublon dans le dossier).
-- components/catalog/SubjectGrid.tsx (doublon dans le dossier).
-- components/catalog/SubjectFilters.tsx (doublon dans le dossier).
-- components/catalog/SubjectCard.tsx (doublon dans le dossier).
-- components/catalog/SortDropdown.tsx (doublon dans le dossier).
-- components/catalog/CategoryList.tsx (doublon dans le dossier).
+- `services/api.ts` & `services/api.js` : Garder uniquement `.ts`.
+- `contexts/AuthContext.tsx` & `contexts/AuthContext.jsx` : Garder `.ts`.
+- `contexts/ThemeContext.tsx` & `contexts/ThemeContext.jsx` : Garder `.ts`.
+- `pages/Profile.tsx` & `pages/Profile.jsx` : Garder `.ts`.
+- `components/cart/CartItem.tsx` (doublon dans le dossier).
+- `components/cart/CartSummary.tsx` (doublon dans le dossier).
+- `components/cart/PromoCodeInput.tsx` (doublon dans le dossier).
+- `components/cart/BundleSuggestions.tsx` (doublon dans le dossier).
+- `components/catalog/SubjectList.tsx` (doublon dans le dossier).
+- `components/catalog/SubjectGrid.tsx` (doublon dans le dossier).
+- `components/catalog/SubjectFilters.tsx` (doublon dans le dossier).
+- `components/catalog/SubjectCard.tsx` (doublon dans le dossier).
+- `components/catalog/SortDropdown.tsx` (doublon dans le dossier).
+- `components/catalog/CategoryList.tsx` (doublon dans le dossier).
 
 ---
 
-## Résumés des fichiers complets
+## 4. Synthèse d'avancement (Sprints 1 & 2)
 
-### components/common/ProtectedRoute.tsx
-Gère l'accès aux routes selon l'état d'authentification et le rôle utilisateur. Redirige vers la page de login si l'utilisateur n'est pas connecté ou n'a pas le bon rôle. Affiche un écran de chargement si l'état d'authentification est en attente.
+- **Fichiers complets (logique avancée) :** 30+ (Foundation, UI, services, hooks, contexts)
+- **Fichiers partiels/squelettes :** ~15 (UI avancée, catalogue, panier, pages secondaires)
+- **Doublons à supprimer :** 13 paires (26 fichiers)
 
-### components/catalog/SubjectCard.tsx
-Affiche une carte détaillée d'un sujet : image, titre, description, tags, badge de difficulté, année, thème, favori, bouton "Ajouter au panier", prix, badge "Gratuit". Utilise le contexte panier pour ajouter l'item, gère l'état favori, et propose une navigation vers la page de détails du sujet.
+**Sprints 1 & 2 :**
+    - Foundation (services, types, contexts, hooks) : 100% fait
+    - UI de base (Button, Input, Card, Modal, Select, Spinner, Alert, Badge, Pagination, Tabs, SearchBar, Header, Footer, MainLayout) : 100% fait
 
-### services/catalogService.ts
-Service centralisé pour interagir avec le backend catalogue. Permet la recherche de sujets, la gestion des favoris, l'historique d'achat, la prédiction de réussite via IA, et la communication avec l'API REST. Regroupe toutes les méthodes liées au catalogue.
+**Sprint 3 (en cours) :**
+    - HomePage.tsx, SearchPage.tsx : faits
+    - SubjectDetailsPage.tsx, CartPage.tsx, DashboardPage.tsx : à compléter
 
-### contexts/CartContext.tsx
-Contexte React pour le panier d'achat. Gère l'ajout, la suppression, la persistance des items (localStorage), les codes promo, le calcul du total, et expose un provider pour l'application.
+**Prochaines actions :**
+    - Compléter les composants partiels (UI avancée, catalogue, panier)
+    - Supprimer tous les doublons listés
+    - Finaliser les pages critiques du Sprint 3
 
-### contexts/ToastContext.tsx
-Contexte React pour les notifications toast. Permet d'afficher des messages d'information, d'erreur ou de succès, gère la pile de toasts, et propose un provider pour l'application.
+---
 
-### pages/NotFound.tsx
-Page d'erreur 404. Affiche le code d'erreur, un message explicite, et propose un bouton pour revenir à l'accueil ou à la page précédente. Utilise la navigation React Router.
+## 5. Récapitulatif des services, types, hooks, contexts (inchangé)
 
-### pages/Login.tsx
-Page de connexion complète : formulaire, gestion de l'état, authentification classique et Google, feedback utilisateur (erreur, succès), navigation, et intégration avec le contexte d'authentification et de toast.
+### Services principaux
+- `services/api.ts` : Instance Axios, gestion erreurs, interceptors.
+- `services/auth.ts` : Authentification, gestion token, inscription.
+- `services/catalogService.ts` : Catalogue, recherche, favoris, historique.
+- `services/storage.ts` : Stockage local sécurisé.
+- `services/user.ts` : CRUD utilisateur.
+- `services/googleAuth.ts` : Auth Google OAuth.
+- `services/awsConfig.ts` : Config AWS.
+- (À créer : `services/cartService.ts`, `services/favoriteService.ts`, etc.)
 
-## Résumés des services
+### Types principaux
+- `types/api.ts` : Typage API.
+- `types/auth.ts` : Typage auth/utilisateur.
+- `types/catalog.ts` : Typage catalogue.
+- `types/cart.ts` : Typage panier.
+- `types/card.ts` : Typage UI Card.
+- `types/theme.ts` : Typage thème.
+- `types/user.ts` : Typage utilisateur.
+- `types/index.ts` : Ré-export global.
 
-### services/api.js & services/api.ts
-Service d’accès à l’API backend. Fournit une instance Axios configurée (baseURL, headers, interceptors) pour les appels HTTP. La version TypeScript ajoute typage et sécurité sur les réponses.
+### Hooks principaux
+- `hooks/useApi.ts` : Hook API.
+- `hooks/useAuth.ts` : Hook auth.
+- `hooks/useCart.ts` : Hook panier.
+- `hooks/useLocalStorage.ts` : Hook localStorage.
+- `hooks/useTheme.ts` : Hook thème.
+- `hooks/useToast.ts` : Hook toast.
+- (À créer : `hooks/useDebounce.ts`, `hooks/useInfiniteScroll.ts`, etc.)
 
-### services/auth.ts
-Service d’authentification : gère login, logout, inscription, récupération de mot de passe, vérification email, et stockage du token. Utilise Axios pour communiquer avec le backend.
-
-### services/awsConfig.ts
-Configuration AWS Amplify/Cognito pour l’authentification et le stockage. Centralise les clés, endpoints et options pour l’intégration cloud.
-
-### services/catalogService.ts
-Service pour le catalogue de sujets : recherche, favoris, historique, prédiction IA, gestion des appels API REST pour les sujets et utilisateurs.
-
-### services/googleAuth.ts
-Service d’authentification Google OAuth. Gère la redirection, l’échange de token, et l’intégration avec le backend pour la connexion sociale.
-
-### services/storage.ts
-Service utilitaire pour le stockage local (localStorage, sessionStorage). Fournit des méthodes pour sauvegarder, récupérer et supprimer des données côté client.
-
-### services/user.ts
-Service utilisateur : récupération des infos profil, mise à jour, gestion des préférences, et communication avec l’API utilisateur.
-
-## Résumés des types
-
-### types/api.ts
-Définit les types pour les réponses et requêtes API (payloads, statuts, erreurs, etc.). Permet de typer les appels et les données échangées.
-
-### types/auth.ts
-Définit les types liés à l’authentification : utilisateur, rôles, token, statuts, payloads d’inscription et de login.
-
-### types/card.ts
-Définit les types pour le composant Card : props, variantes, sections, image, typage des sous-composants.
-
-### types/index.ts
-Regroupe et ré-exporte les types principaux du projet pour simplifier les imports.
-
-### types/theme.ts
-Définit les types pour la gestion des thèmes (clair/sombre, couleurs, préférences utilisateur).
-
-### types/user.ts
-Définit les types pour l’utilisateur : profil, préférences, historique, favoris, etc.
-
-## Résumés des hooks
-
-### hooks/useApi.ts
-Hook personnalisé pour effectuer des appels API. Gère l’état de chargement, les erreurs, et le typage des réponses. Simplifie l’utilisation d’Axios dans les composants.
-
-### hooks/useAuth.ts
-Hook pour accéder au contexte d’authentification. Permet de récupérer l’état utilisateur, les méthodes de login/logout, et les statuts d’authentification.
-
-### hooks/useLocalStorage.ts
-Hook utilitaire pour synchroniser un état React avec localStorage. Permet de persister des données entre les sessions navigateur.
-
-### hooks/useTheme.ts
-Hook pour accéder et modifier le thème de l’application (clair/sombre). Permet de changer dynamiquement le style global.
-
-### hooks/useToast.ts
-Hook pour afficher des notifications toast via le contexte dédié. Permet de déclencher des messages d’erreur, succès ou info depuis n’importe quel composant.
-
-## Résumés des contextes
-
-### contexts/AuthContext.jsx & AuthContext.tsx
-Contexte React pour l’authentification. Gère l’état utilisateur, les méthodes de login/logout, la persistance du token, et expose ces fonctionnalités à toute l’application.
-
-### contexts/CartContext.tsx
-Contexte React pour le panier d’achat. Gère les items, le total, les codes promo, la persistance, et expose les méthodes d’ajout/suppression.
-
-### contexts/ThemeContext.jsx & ThemeContext.tsx
-Contexte pour la gestion du thème (clair/sombre). Permet de changer le style global et de mémoriser la préférence utilisateur.
-
-### contexts/ToastContext.tsx
-Contexte pour les notifications toast. Gère la pile de messages, l’affichage, et propose des méthodes pour déclencher des toasts depuis n’importe quel composant.
+### Contexts principaux
+- `contexts/AuthContext.tsx` : Auth global.
+- `contexts/CartContext.tsx` : Panier global.
+- `contexts/ThemeContext.tsx` : Thème global.
+- `contexts/ToastContext.tsx` : Toast global.
+- (À créer : `contexts/ModalContext.tsx`, `contexts/HistoryContext.tsx`, etc.)

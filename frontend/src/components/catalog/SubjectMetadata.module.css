@@ -1,0 +1,334 @@
+/* src/components/catalog/SubjectMetadata.module.css */
+
+/* Container principal */
+.metadataContainer {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+.metadataContainer.compact {
+  padding: var(--spacing-lg);
+}
+
+/* Titre */
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.compact .title {
+  font-size: var(--font-size-body);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Grille de métadonnées */
+.metadataGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.compact .metadataGrid {
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Item de métadonnée */
+.metadataItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.metadataItem:hover {
+  border-color: var(--color-primary-blue);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.compact .metadataItem {
+  padding: var(--spacing-sm);
+}
+
+/* Header de l'item */
+.itemHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.icon {
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.compact .icon {
+  font-size: var(--font-size-lg);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.compact .label {
+  font-size: var(--font-size-xs);
+}
+
+/* Valeur */
+.value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  padding-left: calc(var(--font-size-xl) + var(--spacing-sm));
+}
+
+.compact .value {
+  font-size: var(--font-size-body);
+  padding-left: calc(var(--font-size-lg) + var(--spacing-sm));
+}
+
+/* Difficulté */
+.difficulty {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.difficulty.facile {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.difficulty.moyen {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.difficulty.difficile {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+/* Informations supplémentaires */
+.additionalInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.compact .additionalInfo {
+  padding-top: var(--spacing-md);
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.infoIcon {
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.infoText {
+  line-height: var(--line-height-normal);
+}
+
+/* Badge de qualité */
+.qualityBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--color-success-light);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
+  animation: pulse var(--duration-slow) var(--easing-ease-out) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.compact .qualityBadge {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+}
+
+.badgeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--color-success);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+.badgeText {
+  font-size: var(--font-size-sm);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .metadataContainer {
+    padding: var(--spacing-lg);
+  }
+
+  .title {
+    font-size: var(--font-size-body);
+  }
+
+  .metadataGrid {
+    gap: var(--spacing-md);
+  }
+
+  .metadataItem {
+    padding: var(--spacing-sm);
+  }
+
+  .value {
+    font-size: var(--font-size-body);
+  }
+
+  .additionalInfo {
+    gap: var(--spacing-xs);
+  }
+
+  .infoItem {
+    font-size: var(--font-size-xs);
+  }
+
+  .qualityBadge {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .metadataContainer {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="dark"] .title {
+  color: var(--color-text-primary-dark);
+  border-bottom-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .metadataItem {
+  background: var(--color-background-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .metadataItem:hover {
+  border-color: var(--color-primary-blue);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .label {
+  color: var(--color-text-secondary-dark);
+}
+
+[data-theme="dark"] .value {
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .difficulty.facile {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .difficulty.moyen {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}
+
+[data-theme="dark"] .difficulty.difficile {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+}
+
+[data-theme="dark"] .additionalInfo {
+  border-top-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .infoItem {
+  color: var(--color-text-secondary-dark);
+}
+
+[data-theme="dark"] .qualityBadge {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--color-success);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .metadataItem,
+  .qualityBadge {
+    transition: none;
+    animation: none;
+  }
+
+  .metadataItem:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .metadataContainer {
+    background: white;
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+
+  .metadataItem {
+    border-color: #ccc;
+    break-inside: avoid;
+  }
+
+  .qualityBadge {
+    animation: none;
+  }
+}
