@@ -184,7 +184,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 };
 
 // Exemple d'utilisation avec des données mockées
-export const QuickActionsExample: React.FC = () => {
+const QuickActionsExample: React.FC = () => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [favorited, setFavorited] = useState(false);
 

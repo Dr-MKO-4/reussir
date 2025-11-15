@@ -4,7 +4,7 @@ import { Heart, ShoppingCart, TrendingUp, Clock } from 'lucide-react';
 import Card from '@components/common/Card';
 import Button from '@components/common/Button';
 import { Subject } from '@/types';
-import { useCart } from '@contexts/CartContext';
+import useCart from '../../hooks/useCart';
 import './SubjectCard.css';
 
 interface SubjectCardProps {

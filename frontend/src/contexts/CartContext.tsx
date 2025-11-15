@@ -13,7 +13,7 @@ import {
   PaymentData,
   PaymentResult,
 } from '../types/cart';
-import { localStorage as storage } from '../services/storage';
+import { localStore as storage } from '../services/storage';
 
 /**
  * Configuration du panier

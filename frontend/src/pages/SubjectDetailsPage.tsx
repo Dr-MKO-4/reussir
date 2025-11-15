@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
-import { Card } from '../components/common/Card';
+import Card from '../components/common/Card';
 import { Tabs } from '../components/common/Tabs';
 import { Spinner } from '../components/common/Spinner';
 import { Alert } from '../components/common/Alert';
@@ -17,7 +17,7 @@ import SearchBar from '../components/common/SearchBar';
 /**
  * Page de détails d'un sujet
  */
-export const SubjectDetailsPage: React.FC = () => {
+const SubjectDetailsPage: React.FC = () => {
   // État pour la recherche et les filtres avancés
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});

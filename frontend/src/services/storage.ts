@@ -32,7 +32,7 @@ class StorageService {
   private storage: Storage;
 
   constructor(storageType: 'local' | 'session' = 'local') {
-    this.storage = storageType === 'local' ? localStorage : sessionStorage;
+    this.storage = storageType === 'local' ? window.localStorage : window.sessionStorage;
   }
 
   /**
@@ -289,8 +289,8 @@ class SecureStorage extends StorageService {
 }
 
 // Instances globales
-export const localStorage = new StorageService('local');
-export const sessionStorage = new StorageService('session');
+export const localStore = new StorageService('local');
+export const sessionStore = new StorageService('session');
 export const secureStorage = new SecureStorage('local');
 
 /**
@@ -301,49 +301,49 @@ export const storageUtils = {
    * Sauvegarder les préférences utilisateur
    */
   saveUserPreferences(preferences: Record<string, any>): void {
-    localStorage.setNamespaced('user', 'preferences', preferences);
+    localStore.setNamespaced('user', 'preferences', preferences);
   },
 
   /**
    * Récupérer les préférences utilisateur
    */
   getUserPreferences(): Record<string, any> | null {
-    return localStorage.getNamespaced('user', 'preferences');
+    return localStore.getNamespaced('user', 'preferences');
   },
 
   /**
    * Sauvegarder le thème
    */
   saveTheme(theme: 'light' | 'dark'): void {
-    localStorage.set('theme', theme);
+    localStore.set('theme', theme);
   },
 
   /**
    * Récupérer le thème
    */
   getTheme(): 'light' | 'dark' | null {
-    return localStorage.get<'light' | 'dark'>('theme');
+    return localStore.get<'light' | 'dark'>('theme');
   },
 
   /**
    * Sauvegarder la langue
    */
   saveLanguage(language: string): void {
-    localStorage.set('language', language);
+    localStore.set('language', language);
   },
 
   /**
    * Récupérer la langue
    */
   getLanguage(): string | null {
-    return localStorage.get<string>('language');
+    return localStore.get<string>('language');
   },
 
   /**
    * Sauvegarder l'historique de recherche
    */
   saveSearchHistory(history: string[]): void {
-    localStorage.setNamespaced('search', 'history', history, {
+    localStore.setNamespaced('search', 'history', history, {
       expiresIn: 7 * 24 * 60 * 60 * 1000, // 7 jours
     });
   },
@@ -352,15 +352,15 @@ export const storageUtils = {
    * Récupérer l'historique de recherche
    */
   getSearchHistory(): string[] | null {
-    return localStorage.getNamespaced<string[]>('search', 'history');
+    return localStore.getNamespaced<string[]>('search', 'history');
   },
 
   /**
    * Nettoyer toutes les données utilisateur
    */
   clearUserData(): void {
-    localStorage.clearNamespace('user');
-    localStorage.clearNamespace('search');
+    localStore.clearNamespace('user');
+    localStore.clearNamespace('search');
     secureStorage.clear();
   },
 
@@ -370,12 +370,12 @@ export const storageUtils = {
   getStorageStats() {
     return {
       localStorage: {
-        size: localStorage.getSize(),
-        keys: localStorage.keys().length,
+        size: localStore.getSize(),
+        keys: localStore.keys().length,
       },
       sessionStorage: {
-        size: sessionStorage.getSize(),
-        keys: sessionStorage.keys().length,
+        size: sessionStore.getSize(),
+        keys: sessionStore.keys().length,
       },
     };
   },

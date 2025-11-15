@@ -1,6 +1,6 @@
 // src/pages/Profile.tsx
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import styles from './Profile.module.css';

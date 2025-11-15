@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from '@contexts/CartContext';
+// Update the path below to the correct relative path if needed
+import { useCart } from '../../contexts/CartContext';
 import { X, ShoppingBag } from 'lucide-react';
-import Button from '@components/common/Button';
+import {Button} from '../common/Button';
 import './CartDropdown.css';
 
 const CartDropdown = ({ onClose }) => {

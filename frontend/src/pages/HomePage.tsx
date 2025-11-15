@@ -1,6 +1,6 @@
 import React, { useState, useEffect, MouseEvent, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { FaWhatsapp, FaGoogle } from "react-icons/fa";
 import { Rocket, Crown ,BadgeDollarSign, Cpu, Layers, BookOpen, Mail, Phone, Send, MessageSquare, MapPin, Clock, Search, Users, Trophy, Star, Check, Menu, X, Sun, Moon, Filter, ChevronDown, Play, ArrowRight, Zap, Target, Award, Eye, Download, Heart, MessageCircle, Shield, Globe } from 'lucide-react';
 import './HomePage.css';

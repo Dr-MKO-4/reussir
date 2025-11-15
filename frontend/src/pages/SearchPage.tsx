@@ -5,7 +5,7 @@ import { SearchBar } from '../components/common/SearchBar';
 import { Button } from '../components/common/Button';
 import { Select } from '../components/common/Select';
 import { Badge } from '../components/common/Badge';
-import { Card } from '../components/common/Card';
+import Card from '../components/common/Card';
 import { Pagination } from '../components/common/Pagination';
 import { Spinner } from '../components/common/Spinner';
 import { SubjectCardData, SearchFilters, SortOption } from '../types/catalog';

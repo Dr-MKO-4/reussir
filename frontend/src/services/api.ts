@@ -316,4 +316,6 @@ export { apiClient };
 // Exporter les types axios pour utilisation externe
 export type { AxiosRequestConfig, AxiosResponse, AxiosError };
 
-export default api;
+export const apiService = api;
+
+export default apiClient;

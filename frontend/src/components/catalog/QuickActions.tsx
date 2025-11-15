@@ -1,6 +1,6 @@
 // src/components/catalog/QuickActions.tsx
 import React, { useState } from 'react';
-import Button from '../common/Button';
+import Button from '../components/common/Button';
 import styles from './QuickActions.module.css';
 
 interface QuickActionsProps {

@@ -4,8 +4,8 @@ import { Subject } from '../../types/catalog';
 import PreviewCarousel from './PreviewCarousel';
 import SubjectMetadata from './SubjectMetadata';
 import QuickActions from './QuickActions';
-import Badge from '../common/Badge';
-import Tabs from '../common/Tabs';
+import Badge from '../components/common/Badge';
+import Tabs from '../components/common/Tabs';
 import styles from './SubjectDetailView.module.css';
 
 interface SubjectDetailViewProps {

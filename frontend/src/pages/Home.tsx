@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import catalogService from '@services/catalogService';
 import Button from '@components/common/Button';
-import Card from '@components/common/Card';
+import Card, { CardBody } from '../components/common/Card';
 import Spinner from '@components/common/Spinner';
 import { 
   Search, 
@@ -150,13 +150,13 @@ const Home = () => {
         <div className="features-grid">
           {features.map((feature, index) => (
             <Card key={index} variant="elevated" hoverable>
-              <Card.Body>
+              <CardBody>
                 <div className="feature-icon">
                   <feature.icon size={32} />
                 </div>
                 <h3 className="feature-title">{feature.title}</h3>
                 <p className="feature-description">{feature.description}</p>
-              </Card.Body>
+              </CardBody>
             </Card>
           ))}
         </div>
@@ -191,7 +191,7 @@ const Home = () => {
                     src={subject.image || '/placeholder.jpg'} 
                     alt={subject.title}
                   />
-                  <Card.Body>
+                  <CardBody>
                     <div className="subject-meta">
                       <span className="subject-badge">{subject.category}</span>
                       <span className="subject-year">{subject.year}</span>
@@ -200,7 +200,7 @@ const Home = () => {
                     <p className="subject-description">
                       {subject.description}
                     </p>
-                  </Card.Body>
+                  </CardBody>
                   <Card.Footer>
                     <Button variant="ghost" size="sm" fullWidth>
                       Voir les détails
@@ -248,7 +248,7 @@ const Home = () => {
       {!isAuthenticated && (
         <section className="cta-section">
           <Card variant="elevated">
-            <Card.Body>
+            <CardBody>
               <div className="cta-content">
                 <h2 className="cta-title">
                   Prêt à commencer votre préparation ?
@@ -270,7 +270,7 @@ const Home = () => {
                   </Link>
                 </div>
               </div>
-            </Card.Body>
+            </CardBody>
           </Card>
         </section>
       )}

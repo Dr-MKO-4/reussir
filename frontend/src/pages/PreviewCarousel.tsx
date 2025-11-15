@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '../common/Button';
+import { Button } from '../components/common/Button';
 import './PreviewCarousel.css';
 
 interface PreviewImage {
@@ -16,7 +16,7 @@ interface PreviewCarouselProps {
 /**
  * Carrousel d'aperçu des pages d'un sujet
  */
-export const PreviewCarousel: React.FC<PreviewCarouselProps> = ({
+const PreviewCarousel: React.FC<PreviewCarouselProps> = ({
   images,
   className = '',
 }) => {

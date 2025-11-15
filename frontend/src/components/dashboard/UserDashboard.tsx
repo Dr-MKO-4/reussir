@@ -1,8 +1,8 @@
 // src/components/dashboard/UserDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import useAuth from '../../hooks/useAuth';
 import { useToast } from '../../contexts/ToastContext';
-import { apiService } from '../../services/api';
+import {apiClient} from '../../services/api';
 import { User, UserStats, SessionInfo } from '../../types/auth';
 import styles from './Dashboard.module.css';
 
@@ -74,13 +74,13 @@ const [preferences, setPreferences] = useState<PreferencesState>({
     setLoading(true);
     
     // Charger les statistiques utilisateur
-    const statsResponse = await apiService.get<UserStats>('/users/me/stats');
+    const statsResponse = await apiClient.get<UserStats>('/users/me/stats');
     // statsResponse.data === ApiResponse<UserStats>
     const stats = statsResponse.data?.data ?? null;
     setUserStats(stats);
 
     // Charger les sessions actives
-    const sessionsResponse = await apiService.get<SessionInfo[]>('/auth/sessions');
+    const sessionsResponse = await apiClient.get<SessionInfo[]>('/auth/sessions');
     // sessionsResponse.data === ApiResponse<SessionInfo[]>
     const fetchedSessions = sessionsResponse.data?.data ?? [];
     setSessions(fetchedSessions);
@@ -110,7 +110,7 @@ const [preferences, setPreferences] = useState<PreferencesState>({
   // Mettre à jour les préférences
   const handleUpdatePreferences = async () => {
     try {
-      await apiService.put('/users/me/preferences', preferences);
+      await apiClient.put('/users/me/preferences', preferences);
       success('Préférences mises à jour', 'Vos préférences ont été sauvegardées');
     } catch (error: any) {
       showError('Erreur', error?.error?.message || 'Impossible de mettre à jour les préférences');
@@ -124,7 +124,7 @@ const [preferences, setPreferences] = useState<PreferencesState>({
     }
 
     try {
-      await apiService.delete(`/auth/sessions/${sessionId}`);
+      await apiClient.delete(`/auth/sessions/${sessionId}`);
       setSessions(sessions.filter(s => s.id !== sessionId));
       success('Session terminée', 'La session a été terminée avec succès');
     } catch (error: any) {
@@ -139,7 +139,7 @@ const [preferences, setPreferences] = useState<PreferencesState>({
     }
 
     try {
-      await apiService.delete('/auth/sessions/others');
+      await apiClient.delete('/auth/sessions/others');
       setSessions(sessions.filter(s => s.isCurrent));
       success('Sessions terminées', 'Toutes les autres sessions ont été terminées');
     } catch (error: any) {

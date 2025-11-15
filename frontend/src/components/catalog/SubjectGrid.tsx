@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Subject } from '../../types/catalog';
 import SubjectCard from './SubjectCard';
-import EmptyState from '../common/EmptyState';
-import Spinner from '../common/Spinner';
-import Pagination from '../common/Pagination';
+import EmptyState from '../components/common/EmptyState';
+import Spinner from '../components/common/Spinner';
+import Pagination from '../components/common/Pagination';
 import styles from './SubjectGrid.module.css';
 
 interface SubjectGridProps {

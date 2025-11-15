@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
-import { Card } from '../components/common/Card';
+import Card from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { Spinner } from '../components/common/Spinner';
@@ -35,7 +35,7 @@ interface UpcomingExam {
 /**
  * Page du tableau de bord utilisateur
  */
-export const DashboardPage: React.FC = () => {
+const DashboardPage: React.FC = () => {
   // État pour la recherche et les filtres avancés
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});

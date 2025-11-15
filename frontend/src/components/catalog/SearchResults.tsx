@@ -2,8 +2,8 @@
 import React from 'react';
 import { Subject } from '../../types/catalog';
 import SubjectCard from './SubjectCard';
-import EmptyState from '../common/EmptyState';
-import Spinner from '../common/Spinner';
+import EmptyState from '../components/common/EmptyState';
+import Spinner from '../components/common/Spinner';
 import styles from './SearchResults.module.css';
 
 interface SearchResultsProps {

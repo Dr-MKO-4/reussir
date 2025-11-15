@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
-import { Card } from '../components/common/Card';
+import Card from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { SearchBar } from '../components/common/SearchBar';
 import { Badge } from '../components/common/Badge';
@@ -22,7 +22,7 @@ interface Category {
 /**
  * Page d'accueil
  */
-export const HomePage: React.FC = () => {
+const HomeCatalog: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [featuredSubjects, setFeaturedSubjects] = useState<SubjectCardData[]>([]);
@@ -357,4 +357,4 @@ export const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default HomeCatalog;
