@@ -1,0 +1,335 @@
+/* src/components/catalog/QuickActions.module.css */
+
+/* Container principal */
+.quickActions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: stretch;
+}
+
+.quickActions.compact {
+  gap: var(--spacing-sm);
+}
+
+/* Bouton panier principal */
+.cartButton {
+  flex: 1;
+  min-height: 52px;
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+.cartButton:disabled:not(:has(.spinner)) {
+  background: var(--color-success);
+  opacity: 1;
+  cursor: default;
+}
+
+.compact .cartButton {
+  min-height: 44px;
+  font-size: var(--font-size-sm);
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Actions secondaires */
+.secondaryActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Boutons d'action */
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 52px;
+  padding: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  position: relative;
+}
+
+.compact .actionButton {
+  min-width: 44px;
+  height: 44px;
+}
+
+.actionButton:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+.actionButton:disabled {
+  opacity: var(--opacity-50);
+  cursor: not-allowed;
+}
+
+.actionButton.active {
+  background: var(--color-primary-blue-light);
+  border-color: var(--color-primary-blue);
+}
+
+/* Icônes */
+.icon {
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+  transition: transform var(--duration-fast) var(--easing-ease-out);
+}
+
+.compact .icon {
+  font-size: var(--font-size-xl);
+}
+
+.actionButton:hover:not(:disabled) .icon {
+  transform: scale(1.2);
+}
+
+/* Container de partage */
+.shareContainer {
+  position: relative;
+}
+
+/* Menu de partage */
+.shareMenu {
+  position: absolute;
+  top: calc(100% + var(--spacing-sm));
+  right: 0;
+  min-width: 200px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-index-dropdown);
+  overflow: hidden;
+  animation: slideDown var(--duration-fast) var(--easing-ease-out);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Option de partage */
+.shareOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--easing-ease-out);
+}
+
+.shareOption:hover {
+  background: var(--color-surface-hover);
+}
+
+.shareOption:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: -2px;
+}
+
+.shareIcon {
+  font-size: var(--font-size-xl);
+  flex-shrink: 0;
+}
+
+.shareLabel {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive - Tablette */
+@media (max-width: 1024px) {
+  .cartButton {
+    min-height: 48px;
+  }
+
+  .actionButton {
+    min-width: 48px;
+    height: 48px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .quickActions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cartButton {
+    min-height: 48px;
+    font-size: var(--font-size-sm);
+  }
+
+  .secondaryActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .actionButton {
+    width: 100%;
+    min-width: auto;
+    height: 44px;
+  }
+
+  .shareMenu {
+    right: auto;
+    left: 0;
+  }
+}
+
+/* Petit mobile */
+@media (max-width: 480px) {
+  .quickActions {
+    gap: var(--spacing-xs);
+  }
+
+  .cartButton {
+    min-height: 44px;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .actionButton {
+    height: 40px;
+  }
+
+  .icon {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .actionButton {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .actionButton:hover:not(:disabled) {
+  background: var(--color-surface-hover-dark);
+  border-color: var(--color-primary-blue);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .actionButton.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--color-primary-blue);
+}
+
+[data-theme="dark"] .shareMenu {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .shareOption {
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .shareOption:hover {
+  background: var(--color-surface-hover-dark);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .cartButton,
+  .actionButton,
+  .icon,
+  .shareMenu {
+    transition: none;
+    animation: none;
+  }
+
+  .actionButton:hover:not(:disabled),
+  .actionButton:hover:not(:disabled) .icon {
+    transform: none;
+  }
+
+  .spinner {
+    animation: none;
+    border-top-color: currentColor;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .actionButton {
+    border-width: 3px;
+  }
+
+  .actionButton:focus-visible,
+  .shareOption:focus-visible {
+    outline-width: 3px;
+  }
+
+  .shareMenu {
+    border-width: 2px;
+  }
+}
+
+/* États de hover améliorés */
+.cartButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.cartButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Animation du clic */
+@keyframes clickFeedback {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+}
+
+.actionButton:active:not(:disabled) {
+  animation: clickFeedback var(--duration-fast) var(--easing-ease-out);
+}

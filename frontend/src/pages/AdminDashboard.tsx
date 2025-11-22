@@ -1,617 +1,402 @@
-// src/components/dashboard/AdminDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
-import { apiService } from '../services/api';
-import { User, UserRole, AuditLog, SecurityLog, DashboardStats } from '../types/auth';
-import styles from './Dashboard.module.css';
+import { useNavigate } from 'react-router-dom';
+import Card from '../components/common/Card';
+import { Button } from '../components/common/Button';
+import { Badge } from '../components/common/Badge';
+import { Tabs } from '../components/common/Tabs';
+import { Spinner } from '../components/common/Spinner';
+import { Alert } from '../components/common/Alert';
+import { AdminStats } from './admin/AdminStats';
+import { UserManagement } from './admin/UserManagement';
+import { SubjectManagement } from './admin/SubjectManagement';
+import { OrderManagement } from './admin/OrderManagement';
+import { AnalyticsDashboard } from './admin/AnalyticsDashboard';
+import './admin/AdminDashboard.css';
 
-interface AdminDashboardProps {
-  onLogout: () => void;
+interface DashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersToday: number;
+  totalSubjects: number;
+  publishedSubjects: number;
+  pendingSubjects: number;
+  totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  revenue: number;
+  revenueGrowth: number;
+  conversionRate: number;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
-  const { user } = useAuth();
-  const { success, error: showError } = useToast();
+interface RecentActivity {
+  id: string;
+  type: 'user' | 'subject' | 'order' | 'system';
+  title: string;
+  description: string;
+  timestamp: string;
+  severity?: 'info' | 'warning' | 'error' | 'success';
+}
 
-  // États pour les données
+interface SystemHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  uptime: number;
+  serverLoad: number;
+  memoryUsage: number;
+  diskUsage: number;
+  apiResponseTime: number;
+}
+
+/**
+ * AdminDashboard - Tableau de bord administrateur complet
+ */
+export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
-  
-  // États UI
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs' | 'security'>('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
-  
-  // Pagination
-  const [userPage, setUserPage] = useState(1);
-  const [logsPage, setLogsPage] = useState(1);
-  const usersPerPage = 10;
-  const logsPerPage = 20;
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+  const [notifications, setNotifications] = useState<number>(5);
 
-  // Charger les données initiales
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true);
-      
-      // Charger les statistiques
-      const statsResponse = await apiService.get<DashboardStats>('/admin/stats');
-      setStats(statsResponse.data.data);
-      
-      // Charger les utilisateurs récents
-      const usersResponse = await apiService.get<User[]>('/admin/users', {
-        params: { page: 1, limit: 50, sortBy: 'createdAt', sortOrder: 'desc' }
+      setIsLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
+      // Données mockées
+      setStats({
+        totalUsers: 12547,
+        activeUsers: 8934,
+        newUsersToday: 127,
+        totalSubjects: 1843,
+        publishedSubjects: 1687,
+        pendingSubjects: 156,
+        totalOrders: 45632,
+        pendingOrders: 234,
+        completedOrders: 45398,
+        revenue: 125680000,
+        revenueGrowth: 12.5,
+        conversionRate: 3.8,
       });
-      setUsers(usersResponse.data.data);
-      
-      // Charger les logs récents
-      const [auditResponse, securityResponse] = await Promise.all([
-        apiService.get<AuditLog[]>('/admin/audit-logs', {
-          params: { page: 1, limit: 50 }
-        }),
-        apiService.get<SecurityLog[]>('/admin/security-logs', {
-          params: { page: 1, limit: 50 }
-        })
+
+      setRecentActivities([
+        {
+          id: '1',
+          type: 'user',
+          title: 'Nouvel utilisateur inscrit',
+          description: 'Jean Dupont vient de créer un compte',
+          timestamp: new Date().toISOString(),
+          severity: 'success',
+        },
+        {
+          id: '2',
+          type: 'order',
+          title: 'Nouvelle commande',
+          description: 'Commande #45632 - Pack Premium Bac C',
+          timestamp: new Date(Date.now() - 300000).toISOString(),
+          severity: 'info',
+        },
+        {
+          id: '3',
+          type: 'subject',
+          title: 'Sujet en attente de validation',
+          description: 'Mathématiques Bac 2025 attend approbation',
+          timestamp: new Date(Date.now() - 600000).toISOString(),
+          severity: 'warning',
+        },
+        {
+          id: '4',
+          type: 'system',
+          title: 'Sauvegarde système',
+          description: 'Sauvegarde automatique effectuée avec succès',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          severity: 'success',
+        },
+        {
+          id: '5',
+          type: 'system',
+          title: 'Pic de charge serveur',
+          description: 'Utilisation CPU à 85% - surveillance active',
+          timestamp: new Date(Date.now() - 7200000).toISOString(),
+          severity: 'warning',
+        },
       ]);
-      
-      setAuditLogs(auditResponse.data.data);
-      setSecurityLogs(securityResponse.data.data);
-      
-    } catch (error: any) {
-      showError('Erreur de chargement', 'Impossible de charger les données du dashboard');
-      console.error('Dashboard loading error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Gérer la suppression d'un utilisateur
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      return;
-    }
-
-    try {
-      await apiService.delete(`/admin/users/${userId}`);
-      setUsers(users.filter(u => u.id !== userId));
-      success('Utilisateur supprimé', 'L\'utilisateur a été supprimé avec succès');
-    } catch (error: any) {
-      showError('Erreur', error?.error?.message || 'Impossible de supprimer l\'utilisateur');
-    }
-  };
-
-  // Gérer la suspension d'un utilisateur
-  const handleSuspendUser = async (userId: string, suspend: boolean) => {
-    try {
-      await apiService.patch(`/admin/users/${userId}/status`, { 
-        isActive: !suspend 
+      setSystemHealth({
+        status: 'healthy',
+        uptime: 99.98,
+        serverLoad: 45,
+        memoryUsage: 62,
+        diskUsage: 38,
+        apiResponseTime: 125,
       });
-      
-      setUsers(users.map(u => 
-        u.id === userId ? { ...u, isActive: !suspend } : u
-      ));
-      
-      success(
-        suspend ? 'Utilisateur suspendu' : 'Utilisateur réactivé',
-        `L'utilisateur a été ${suspend ? 'suspendu' : 'réactivé'} avec succès`
-      );
-    } catch (error: any) {
-      showError('Erreur', error?.error?.message || 'Impossible de modifier le statut');
+
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Filtrer les utilisateurs
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getHealthStatusColor = (status: SystemHealth['status']) => {
+    const colors = {
+      healthy: 'success',
+      warning: 'warning',
+      critical: 'danger',
+    };
+    return colors[status] as any;
+  };
 
-  // Pagination des utilisateurs
-  const paginatedUsers = filteredUsers.slice(
-    (userPage - 1) * usersPerPage,
-    userPage * usersPerPage
-  );
+  const getActivityIcon = (type: RecentActivity['type']) => {
+    const icons = {
+      user: (
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      subject: (
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      order: (
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      system: (
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+    };
+    return icons[type];
+  };
 
-  if (loading) {
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now.getTime() - time.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    return time.toLocaleDateString('fr-FR');
+  };
+
+  if (isLoading) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <span>Chargement du dashboard...</span>
+      <div className="admin-dashboard-loading">
+        <Spinner size="xl" label="Chargement du tableau de bord..." />
       </div>
     );
   }
 
+  if (!stats) {
+    return (
+      <Alert variant="error" title="Erreur">
+        Impossible de charger les données du tableau de bord
+      </Alert>
+    );
+  }
+
   return (
-    <div className={styles.adminDashboard}>
+    <div className="admin-dashboard">
       {/* Header */}
-      <header className={styles.dashboardHeader}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerTitle}>
-            <h1>Dashboard Administrateur</h1>
-            <p>Bienvenue, {user?.firstName} {user?.lastName}</p>
+      <div className="admin-header">
+        <div className="admin-header-content">
+          <div>
+            <h1 className="admin-title">Administration</h1>
+            <p className="admin-subtitle">Tableau de bord et gestion de la plateforme</p>
           </div>
-          <div className={styles.headerActions}>
-            <button
-              className={styles.refreshButton}
-              onClick={loadDashboardData}
-              title="Actualiser"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          <div className="admin-header-actions">
+            <button className="notification-button" onClick={() => navigate('/admin/notifications')}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
+              {notifications > 0 && <span className="notification-badge">{notifications}</span>}
             </button>
-            <button className={styles.logoutButton} onClick={onLogout}>
-              Déconnexion
-            </button>
+            <Button variant="primary" onClick={() => navigate('/admin/settings')}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Paramètres
+            </Button>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Navigation */}
-      <nav className={styles.tabNavigation}>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'overview' ? styles.active : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-          Aperçu
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'users' ? styles.active : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-          </svg>
-          Utilisateurs ({users.length})
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'logs' ? styles.active : ''}`}
-          onClick={() => setActiveTab('logs')}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          Logs d'audit
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'security' ? styles.active : ''}`}
-          onClick={() => setActiveTab('security')}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
-          Sécurité
-        </button>
-      </nav>
-
-      {/* Contenu principal */}
-      <main className={styles.dashboardContent}>
-        {/* Onglet Aperçu */}
-        {activeTab === 'overview' && (
-          <div className={styles.overviewTab}>
-            {/* Statistiques */}
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-                  </svg>
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statNumber}>{stats?.totalUsers || 0}</div>
-                  <div className={styles.statLabel}>Utilisateurs total</div>
-                </div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statNumber}>{stats?.activeUsers || 0}</div>
-                  <div className={styles.statLabel}>Utilisateurs actifs</div>
-                </div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                  </svg>
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statNumber}>{stats?.newUsersToday || 0}</div>
-                  <div className={styles.statLabel}>Nouveaux aujourd'hui</div>
-                </div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                  </svg>
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statNumber}>{stats?.failedLoginsToday || 0}</div>
-                  <div className={styles.statLabel}>Échecs de connexion</div>
-                </div>
-              </div>
+      {/* System Health Banner */}
+      {systemHealth && (
+        <div className={`system-health-banner health-${systemHealth.status}`}>
+          <div className="health-status">
+            <div className="health-icon">
+              {systemHealth.status === 'healthy' ? '✓' : systemHealth.status === 'warning' ? '⚠' : '✕'}
             </div>
-
-            {/* Graphiques et activité récente */}
-            <div className={styles.overviewGrid}>
-              <div className={styles.chartCard}>
-                <h3>Activité récente</h3>
-                <div className={styles.activityList}>
-                  {auditLogs.slice(0, 5).map((log) => (
-                    <div key={log.id} className={styles.activityItem}>
-                      <div className={styles.activityIcon}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                      </div>
-                      <div className={styles.activityContent}>
-                        <div className={styles.activityAction}>{log.action}</div>
-                        <div className={styles.activityTime}>
-                          {new Date(log.createdAt).toLocaleString('fr-FR')}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="health-info">
+              <div className="health-title">
+                Système {systemHealth.status === 'healthy' ? 'opérationnel' : systemHealth.status === 'warning' ? 'sous surveillance' : 'critique'}
               </div>
-
-              <div className={styles.chartCard}>
-                <h3>Alertes de sécurité</h3>
-                <div className={styles.securityAlerts}>
-                  {securityLogs
-                    .filter(log => log.severity === 'ERROR' || log.severity === 'WARN')
-                    .slice(0, 5)
-                    .map((log) => (
-                    <div key={log.id} className={`${styles.alertItem} ${styles[log.severity.toLowerCase()]}`}>
-                      <div className={styles.alertIcon}>
-                        {log.severity === 'ERROR' ? (
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                        ) : (
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className={styles.alertContent}>
-                        <div className={styles.alertDescription}>{log.description}</div>
-                        <div className={styles.alertTime}>
-                          {new Date(log.createdAt).toLocaleString('fr-FR')}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="health-subtitle">
+                Uptime: {systemHealth.uptime}% • Charge: {systemHealth.serverLoad}% • Réponse API: {systemHealth.apiResponseTime}ms
               </div>
             </div>
           </div>
-        )}
-
-        {/* Onglet Utilisateurs */}
-        {activeTab === 'users' && (
-          <div className={styles.usersTab}>
-            {/* Barre de recherche */}
-            <div className={styles.searchBar}>
-              <div className={styles.searchInput}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Rechercher des utilisateurs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Table des utilisateurs */}
-            <div className={styles.tableContainer}>
-              <table className={styles.usersTable}>
-                <thead>
-                  <tr>
-                    <th>Utilisateur</th>
-                    <th>Email</th>
-                    <th>Rôle</th>
-                    <th>Statut</th>
-                    <th>Inscription</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <div className={styles.userInfo}>
-                          <div className={styles.userAvatar}>
-                            {user.avatar ? (
-                              <img src={user.avatar} alt={user.username} />
-                            ) : (
-                              <span>{user.firstName[0]}{user.lastName[0]}</span>
-                            )}
-                          </div>
-                          <div className={styles.userDetails}>
-                            <div className={styles.userName}>
-                              {user.firstName} {user.lastName}
-                            </div>
-                            <div className={styles.userUsername}>@{user.username}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{user.email}</td>
-                      <td>
-                        <span className={`${styles.roleTag} ${styles[user.role.toLowerCase()]}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`${styles.statusTag} ${user.isActive ? styles.active : styles.inactive}`}>
-                          {user.isActive ? 'Actif' : 'Suspendu'}
-                        </span>
-                      </td>
-                      <td>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</td>
-                      <td>
-                        <div className={styles.actionButtons}>
-                          <button
-                            className={styles.actionButton}
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowUserModal(true);
-                            }}
-                            title="Voir détails"
-                          >
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                          </button>
-                          
-                          {user.role !== UserRole.SUPER_ADMIN && (
-                            <>
-                              <button
-                                className={`${styles.actionButton} ${user.isActive ? styles.suspend : styles.activate}`}
-                                onClick={() => handleSuspendUser(user.id, user.isActive)}
-                                title={user.isActive ? 'Suspendre' : 'Réactiver'}
-                              >
-                                {user.isActive ? (
-                                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"/>
-                                  </svg>
-                                ) : (
-                                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                  </svg>
-                                )}
-                              </button>
-                              
-                              <button
-                                className={`${styles.actionButton} ${styles.delete}`}
-                                onClick={() => handleDeleteUser(user.id)}
-                                title="Supprimer"
-                              >
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {filteredUsers.length > usersPerPage && (
-              <div className={styles.pagination}>
-                <button
-                  disabled={userPage === 1}
-                  onClick={() => setUserPage(userPage - 1)}
-                  className={styles.paginationButton}
-                >
-                  Précédent
-                </button>
-                <span className={styles.paginationInfo}>
-                  Page {userPage} sur {Math.ceil(filteredUsers.length / usersPerPage)}
-                </span>
-                <button
-                  disabled={userPage >= Math.ceil(filteredUsers.length / usersPerPage)}
-                  onClick={() => setUserPage(userPage + 1)}
-                  className={styles.paginationButton}
-                >
-                  Suivant
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Onglet Logs d'audit */}
-        {activeTab === 'logs' && (
-          <div className={styles.logsTab}>
-            <div className={styles.tableContainer}>
-              <table className={styles.logsTable}>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Utilisateur</th>
-                    <th>Action</th>
-                    <th>Entité</th>
-                    <th>IP</th>
-                    <th>Détails</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.slice(0, logsPerPage).map((log) => (
-                    <tr key={log.id}>
-                      <td>{new Date(log.createdAt).toLocaleString('fr-FR')}</td>
-                      <td>{log.userId || 'Système'}</td>
-                      <td>
-                        <span className={styles.actionTag}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td>{log.entity || '-'}</td>
-                      <td>{log.ipAddress || '-'}</td>
-                      <td>
-                        {log.metadata && (
-                          <button
-                            className={styles.detailsButton}
-                            onClick={() => alert(JSON.stringify(log.metadata, null, 2))}
-                          >
-                            Voir
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Onglet Sécurité */}
-        {activeTab === 'security' && (
-          <div className={styles.securityTab}>
-            <div className={styles.tableContainer}>
-              <table className={styles.securityTable}>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Événement</th>
-                    <th>Utilisateur</th>
-                    <th>Sévérité</th>
-                    <th>IP</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {securityLogs.slice(0, logsPerPage).map((log) => (
-                    <tr key={log.id}>
-                      <td>{new Date(log.createdAt).toLocaleString('fr-FR')}</td>
-                      <td>
-                        <span className={styles.eventTag}>
-                          {log.event}
-                        </span>
-                      </td>
-                      <td>{log.userId || 'Anonyme'}</td>
-                      <td>
-                        <span className={`${styles.severityTag} ${styles[log.severity.toLowerCase()]}`}>
-                          {log.severity}
-                        </span>
-                      </td>
-                      <td>{log.ipAddress || '-'}</td>
-                      <td>{log.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Modal détails utilisateur */}
-      {showUserModal && selectedUser && (
-        <div className={styles.modalOverlay} onClick={() => setShowUserModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Détails utilisateur</h3>
-              <button
-                className={styles.modalClose}
-                onClick={() => setShowUserModal(false)}
-              >
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-            <div className={styles.modalContent}>
-              <div className={styles.userDetailGrid}>
-                <div className={styles.userDetailItem}>
-                  <label>Nom complet:</label>
-                  <span>{selectedUser.firstName} {selectedUser.lastName}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Nom d'utilisateur:</label>
-                  <span>{selectedUser.username}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Email:</label>
-                  <span>{selectedUser.email}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Rôle:</label>
-                  <span>{selectedUser.role}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Email vérifié:</label>
-                  <span>{selectedUser.isEmailVerified ? 'Oui' : 'Non'}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>2FA activé:</label>
-                  <span>{selectedUser.twoFactorEnabled ? 'Oui' : 'Non'}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Inscription:</label>
-                  <span>{new Date(selectedUser.createdAt).toLocaleString('fr-FR')}</span>
-                </div>
-                <div className={styles.userDetailItem}>
-                  <label>Dernière connexion:</label>
-                  <span>
-                    {selectedUser.lastLoginAt 
-                      ? new Date(selectedUser.lastLoginAt).toLocaleString('fr-FR')
-                      : 'Jamais'
-                    }
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/admin/system-health')}>
+            Détails système
+          </Button>
         </div>
       )}
+
+      {/* Main Stats Grid */}
+      <AdminStats stats={stats} />
+
+      {/* Main Content Tabs */}
+      <div className="admin-main-content">
+        <Tabs
+          tabs={[
+            {
+              id: 'overview',
+              label: 'Vue d\'ensemble',
+              icon: (
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              ),
+              content: (
+                <div className="overview-content">
+                  {/* Recent Activities */}
+                  <Card variant="outlined" className="recent-activities-card">
+                    <div className="card-header">
+                      <h3 className="card-title">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Activité récente
+                      </h3>
+                      <Button variant="secondary" size="sm" onClick={() => navigate('/admin/activity-log')}>
+                        Voir tout
+                      </Button>
+                    </div>
+                    <div className="activities-list">
+                      {recentActivities.map((activity) => (
+                        <div key={activity.id} className="activity-item">
+                          <div className={`activity-icon activity-icon-${activity.type}`}>
+                            {getActivityIcon(activity.type)}
+                          </div>
+                          <div className="activity-content">
+                            <div className="activity-header">
+                              <h4 className="activity-title">{activity.title}</h4>
+                              {activity.severity && (
+                                <Badge variant={activity.severity === 'error' ? 'danger' : activity.severity}>
+                                  {activity.severity}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="activity-description">{activity.description}</p>
+                            <span className="activity-time">{formatTimeAgo(activity.timestamp)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+
+                  {/* Quick Actions */}
+                  <Card variant="outlined" className="quick-actions-card">
+                    <div className="card-header">
+                      <h3 className="card-title">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Actions rapides
+                      </h3>
+                    </div>
+                    <div className="quick-actions-grid">
+                      <button className="quick-action-btn" onClick={() => setActiveTab('users')}>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        <span>Ajouter utilisateur</span>
+                      </button>
+
+                      <button className="quick-action-btn" onClick={() => setActiveTab('subjects')}>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>Nouveau sujet</span>
+                      </button>
+
+                      <button className="quick-action-btn" onClick={() => navigate('/admin/reports')}>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Générer rapport</span>
+                      </button>
+
+                      <button className="quick-action-btn" onClick={() => navigate('/admin/backup')}>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>Sauvegarder</span>
+                      </button>
+                    </div>
+                  </Card>
+                </div>
+              ),
+            },
+            {
+              id: 'users',
+              label: 'Utilisateurs',
+              icon: (
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ),
+              content: <UserManagement />,
+            },
+            {
+              id: 'subjects',
+              label: 'Sujets',
+              icon: (
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              ),
+              content: <SubjectManagement />,
+            },
+            {
+              id: 'orders',
+              label: 'Commandes',
+              icon: (
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              ),
+              content: <OrderManagement />,
+            },
+            {
+              id: 'analytics',
+              label: 'Analytics',
+              icon: (
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              ),
+              content: <AnalyticsDashboard />,
+            },
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </div>
     </div>
   );
 };

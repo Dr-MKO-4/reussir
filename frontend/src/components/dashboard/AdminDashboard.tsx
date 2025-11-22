@@ -1,8 +1,8 @@
 // src/components/dashboard/AdminDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import useAuth from '../../hooks/useAuth';
 import { useToast } from '../../contexts/ToastContext';
-import { apiService } from '../../services/api';
+import {apiClient} from '../../services/api';
 import { User, UserRole, AuditLog, SecurityLog, DashboardStats } from '../../types/auth';
 import styles from './Dashboard.module.css';
 
@@ -43,12 +43,12 @@ const loadDashboardData = async () => {
     setLoading(true);
 
     // Charger les statistiques
-    const statsResponse = await apiService.get<DashboardStats>('/admin/stats');
+    const statsResponse = await apiClient.get<DashboardStats>('/admin/stats');
     const fetchedStats = statsResponse.data?.data ?? null;
     setStats(fetchedStats);
 
     // Charger les utilisateurs récents
-    const usersResponse = await apiService.get<User[]>('/admin/users', {
+    const usersResponse = await apiClient.get<User[]>('/admin/users', {
       params: { page: 1, limit: 50, sortBy: 'createdAt', sortOrder: 'desc' }
     });
     const fetchedUsers = usersResponse.data?.data ?? [];
@@ -56,8 +56,8 @@ const loadDashboardData = async () => {
 
     // Charger les logs récents (audit + security)
     const [auditResponse, securityResponse] = await Promise.all([
-      apiService.get<AuditLog[]>('/admin/audit-logs', { params: { page: 1, limit: 50 } }),
-      apiService.get<SecurityLog[]>('/admin/security-logs', { params: { page: 1, limit: 50 } })
+      apiClient.get<AuditLog[]>('/admin/audit-logs', { params: { page: 1, limit: 50 } }),
+      apiClient.get<SecurityLog[]>('/admin/security-logs', { params: { page: 1, limit: 50 } })
     ]);
 
     const fetchedAuditLogs = auditResponse.data?.data ?? [];
@@ -81,7 +81,7 @@ const loadDashboardData = async () => {
     }
 
     try {
-      await apiService.delete(`/admin/users/${userId}`);
+      await apiClient.delete(`/admin/users/${userId}`);
       setUsers(users.filter(u => u.id !== userId));
       success('Utilisateur supprimé', 'L\'utilisateur a été supprimé avec succès');
     } catch (error: any) {
@@ -92,7 +92,7 @@ const loadDashboardData = async () => {
   // Gérer la suspension d'un utilisateur
   const handleSuspendUser = async (userId: string, suspend: boolean) => {
     try {
-      await apiService.patch(`/admin/users/${userId}/status`, { 
+      await apiClient.patch(`/admin/users/${userId}/status`, { 
         isActive: !suspend 
       });
       

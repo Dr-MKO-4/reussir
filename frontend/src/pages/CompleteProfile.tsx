@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import { Camera,FileText, Upload, User, School, GraduationCap, Target, MapPin, Calendar, BookOpen, Trophy, Star, ArrowRight, Check, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import './CompleteProfile.css';

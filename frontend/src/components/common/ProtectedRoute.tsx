@@ -1,11 +1,16 @@
-// src/components/common/ProtectedRoute.tsx
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import useAuth from '../../hooks/useAuth';
 import { UserRole } from '../../types/auth';
 
+/**
+ * Composant de route protégée avancé
+ * - Redirige vers /login si l'utilisateur n'est pas authentifié
+ * - Affiche un loader pendant la vérification
+ * - Gère les rôles autorisés et la vérification d'email
+ */
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
   allowedRoles?: UserRole[];
   requireEmailVerification?: boolean;
 }
@@ -15,30 +20,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles,
   requireEmailVerification = false
 }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
-  // Affichage du loader pendant la vérification
-  if (isLoading) {
+  // Afficher un loader pendant la vérification de l'authentification
+  if (loading) {
     return (
-      <div className="route-loading">
+      <div className="loading-screen">
         <div className="loading-container">
           <div className="spinner-ring"></div>
-          <span className="loading-text">Vérification...</span>
+          <p className="loading-text">Chargement...</p>
         </div>
       </div>
     );
   }
 
-  // Redirection vers login si non authentifié
+  // Rediriger vers login si non authentifié
   if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        state={{ from: location }}
-        replace
-      />
-    );
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Vérification des rôles autorisés
@@ -98,6 +97,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  // Afficher le composant enfant si authentifié et autorisé
   return <>{children}</>;
 };
 

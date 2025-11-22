@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import BackgroundAnimation from '../components/ui/BackgroundAnimation';
 import HeroSection from '../components/auth/HeroSection';
@@ -301,3 +301,5 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+

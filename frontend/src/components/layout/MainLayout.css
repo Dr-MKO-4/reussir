@@ -1,0 +1,79 @@
+/* Main Layout Container */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+/* Main Content Area */
+.main-layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout-content {
+  flex: 1;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Max Width Variants */
+.main-layout-max-width-sm {
+  max-width: var(--container-sm);
+}
+
+.main-layout-max-width-md {
+  max-width: var(--container-md);
+}
+
+.main-layout-max-width-lg {
+  max-width: var(--container-lg);
+}
+
+.main-layout-max-width-xl {
+  max-width: var(--container-xl);
+}
+
+.main-layout-max-width-2xl {
+  max-width: var(--container-2xl);
+}
+
+.main-layout-max-width-full {
+  max-width: 100%;
+}
+
+/* Padding */
+.main-layout-padding {
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+/* Dark Mode */
+[data-theme="dark"] .main-layout {
+  background: var(--color-background-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-layout-padding {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .main-layout-padding {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+}
+
+/* Print */
+@media print {
+  .main-layout {
+    min-height: auto;
+  }
+  
+  .main-layout-padding {
+    padding: 0;
+  }
+}

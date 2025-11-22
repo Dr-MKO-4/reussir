@@ -1,305 +1,321 @@
-// src/services/api.ts
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-// Types pour les réponses API
-export interface ApiResponse<T = any> {
-  data: T;
-  message?: string;
-  success: boolean;
+/**
+ * Configuration de base de l'API
+ */
+const API_CONFIG = {
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  timeout: 30000, // 30 secondes
+  headers: {
+    'Content-Type': 'application/json',
+  },
+};
+
+/**
+ * Instance Axios configurée
+ */
+const apiClient: AxiosInstance = axios.create(API_CONFIG);
+
+/**
+ * Request Interceptor - Ajoute le token d'authentification
+ */
+apiClient.interceptors.request.use(
+  (config) => {
+    // Récupérer le token depuis localStorage
+    const token = localStorage.getItem('authToken');
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Log des requêtes en développement
+    if (import.meta.env.DEV) {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+    }
+
+    return config;
+  },
+  (error) => {
+    console.error('[API Request Error]', error);
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Response Interceptor - Gestion des erreurs et refresh token
+ */
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Log des réponses en développement
+    if (import.meta.env.DEV) {
+      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    }
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+    // Gestion de l'erreur 401 (Non autorisé)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Tenter de rafraîchir le token
+        const refreshToken = localStorage.getItem('refreshToken');
+        
+        if (refreshToken) {
+          const response = await axios.post(`${API_CONFIG.baseURL}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { token, refreshToken: newRefreshToken } = response.data;
+
+          // Sauvegarder les nouveaux tokens
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('refreshToken', newRefreshToken);
+
+          // Réessayer la requête originale avec le nouveau token
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          }
+          
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        // Si le refresh échoue, déconnecter l'utilisateur
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        
+        // Rediriger vers la page de connexion
+        window.location.href = '/login';
+        
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Gestion des autres erreurs
+    const errorMessage = getErrorMessage(error);
+    
+    console.error('[API Error]', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: errorMessage,
+      data: error.response?.data,
+    });
+
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Extraire un message d'erreur lisible
+ */
+function getErrorMessage(error: AxiosError): string {
+  if (error.response) {
+    // Erreur de réponse du serveur
+    const data = error.response.data as any;
+    return data?.message || data?.error || `Erreur ${error.response.status}`;
+  } else if (error.request) {
+    // Pas de réponse reçue
+    return 'Aucune réponse du serveur. Vérifiez votre connexion.';
+  } else {
+    // Erreur lors de la configuration de la requête
+    return error.message || 'Erreur inconnue';
+  }
 }
 
+/**
+ * Interface pour les réponses API paginées
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Interface pour les réponses API standard
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+/**
+ * Interface pour les erreurs API
+ */
 export interface ApiError {
   message: string;
+  status?: number;
   code?: string;
-  field?: string;
   details?: any;
 }
 
-// Configuration de base d'Axios
-const API_BASE_URL ='http://localhost:5000/api';
-
+/**
+ * Classe de service API avec méthodes utilitaires
+ */
 class ApiService {
-  private client: AxiosInstance;
-  private refreshTokenPromise: Promise<string | null> | null = null;
-
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      timeout: 30000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Intercepteur de requête
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = this.getAccessToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Intercepteur de réponse
-    this.client.interceptors.response.use(
-      (response: AxiosResponse) => {
-        return response;
-      },
-      async (error: AxiosError) => {
-        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-
-        // Si l'erreur est 401 et qu'on n'a pas encore essayé de rafraîchir le token
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-
-          try {
-            const newToken = await this.refreshAccessToken();
-            if (newToken && originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              return this.client(originalRequest);
-            }
-          } catch (refreshError) {
-            // Si le refresh échoue, rediriger vers login
-            this.clearTokens();
-            window.location.href = '/login';
-            return Promise.reject(refreshError);
-          }
-        }
-
-        return Promise.reject(this.handleError(error));
-      }
-    );
-  }
-
-  // Récupérer le token d'accès
-  private getAccessToken(): string | null {
-    return localStorage.getItem('accessToken');
-  }
-
-  // Récupérer le token de rafraîchissement
-  private getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
-  }
-
-  // Supprimer les tokens
-  private clearTokens(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-  }
-
-  // Rafraîchir le token d'accès
-  private async refreshAccessToken(): Promise<string | null> {
-    // Éviter les appels multiples simultanés
-    if (this.refreshTokenPromise) {
-      return this.refreshTokenPromise;
-    }
-
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      return null;
-    }
-
-    this.refreshTokenPromise = this.performTokenRefresh(refreshToken);
-    
+  /**
+   * GET Request
+   */
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const newToken = await this.refreshTokenPromise;
-      return newToken;
-    } finally {
-      this.refreshTokenPromise = null;
+      const response = await apiClient.get<ApiResponse<T>>(url, config);
+      return response.data.data;
+    } catch (error) {
+      throw this.handleError(error as AxiosError);
     }
   }
 
-  // Effectuer le rafraîchissement du token
-  private async performTokenRefresh(refreshToken: string): Promise<string | null> {
+  /**
+   * POST Request
+   */
+  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await axios.post(`${API_BASE_URL}/refresh`, {
-        refreshToken
+      const response = await apiClient.post<ApiResponse<T>>(url, data, config);
+      return response.data.data;
+    } catch (error) {
+      throw this.handleError(error as AxiosError);
+    }
+  }
+
+  /**
+   * PUT Request
+   */
+  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response = await apiClient.put<ApiResponse<T>>(url, data, config);
+      return response.data.data;
+    } catch (error) {
+      throw this.handleError(error as AxiosError);
+    }
+  }
+
+  /**
+   * PATCH Request
+   */
+  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response = await apiClient.patch<ApiResponse<T>>(url, data, config);
+      return response.data.data;
+    } catch (error) {
+      throw this.handleError(error as AxiosError);
+    }
+  }
+
+  /**
+   * DELETE Request
+   */
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response = await apiClient.delete<ApiResponse<T>>(url, config);
+      return response.data.data;
+    } catch (error) {
+      throw this.handleError(error as AxiosError);
+    }
+  }
+
+  /**
+   * Upload de fichier avec progression
+   */
+  async upload<T>(
+    url: string,
+    file: File,
+    onUploadProgress?: (progressEvent: any) => void
+  ): Promise<T> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post<ApiResponse<T>>(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress,
       });
 
-      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-      
-      localStorage.setItem('accessToken', accessToken);
-      if (newRefreshToken) {
-        localStorage.setItem('refreshToken', newRefreshToken);
-      }
-
-      return accessToken;
+      return response.data.data;
     } catch (error) {
-      this.clearTokens();
-      throw error;
+      throw this.handleError(error as AxiosError);
     }
   }
 
-  // Gérer les erreurs
-  private handleError(error: AxiosError): ApiError {
-    if (error.response?.data) {
-      const errorData = error.response.data as any;
-      return {
-        message: errorData.error?.message || errorData.message || 'Une erreur est survenue',
-        code: errorData.error?.code || errorData.code,
-        field: errorData.error?.field || errorData.field,
-        details: errorData.error?.details || errorData.details,
-      };
-    }
-
-    if (error.request) {
-      return {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        code: 'NETWORK_ERROR',
-      };
-    }
-
-    return {
-      message: error.message || 'Une erreur inattendue est survenue',
-      code: 'UNKNOWN_ERROR',
-    };
-  }
-
-  // Méthodes HTTP génériques
-  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
-    return this.client.get(url, config);
-  }
-
-  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
-    return this.client.post(url, data, config);
-  }
-
-  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
-    return this.client.put(url, data, config);
-  }
-
-  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
-    return this.client.patch(url, data, config);
-  }
-
-  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
-    return this.client.delete(url, config);
-  }
-
-  // Méthodes utilitaires
-  setTokens(accessToken: string, refreshToken: string): void {
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-  }
-
-  clearAllTokens(): void {
-    this.clearTokens();
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.getAccessToken();
-  }
-
-  // Upload de fichiers
-  async uploadFile<T = any>(
-    url: string, 
-    file: File, 
-    onUploadProgress?: (progressEvent: any) => void
-  ): Promise<AxiosResponse<ApiResponse<T>>> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.client.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress,
-    });
-  }
-
-  // Download de fichiers
-  async downloadFile(url: string, filename?: string): Promise<void> {
-    const response = await this.client.get(url, {
-      responseType: 'blob',
-    });
-
-    const blob = new Blob([response.data]);
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl);
-  }
-
-  // Obtenir l'instance Axios brute si nécessaire
-  getClient(): AxiosInstance {
-    return this.client;
-  }
-
-  // Définir les headers par défaut
-  setDefaultHeader(key: string, value: string): void {
-    this.client.defaults.headers.common[key] = value;
-  }
-
-  // Supprimer un header par défaut
-  removeDefaultHeader(key: string): void {
-    delete this.client.defaults.headers.common[key];
-  }
-
-  // Obtenir les informations du token (sans validation)
-  getTokenPayload(): any {
-    const token = this.getAccessToken();
-    if (!token) return null;
-
+  /**
+   * Téléchargement de fichier
+   */
+  async download(url: string, filename?: string): Promise<void> {
     try {
-      const payload = token.split('.')[1];
-      const decoded = atob(payload);
-      return JSON.parse(decoded);
+      const response = await apiClient.get(url, {
+        responseType: 'blob',
+      });
+
+      // Créer un lien de téléchargement
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      return null;
+      throw this.handleError(error as AxiosError);
     }
   }
 
-  // Vérifier si le token est expiré
-  isTokenExpired(): boolean {
-    const payload = this.getTokenPayload();
-    if (!payload?.exp) return true;
+  /**
+   * Gestion centralisée des erreurs
+   */
+  private handleError(error: AxiosError): ApiError {
+    const apiError: ApiError = {
+      message: getErrorMessage(error),
+      status: error.response?.status,
+      code: (error.response?.data as any)?.code,
+      details: error.response?.data,
+    };
 
-    const now = Math.floor(Date.now() / 1000);
-    return payload.exp < now;
+    return apiError;
   }
 
-  // Obtenir le temps restant avant expiration (en secondes)
-  getTokenExpirationTime(): number {
-    const payload = this.getTokenPayload();
-    if (!payload?.exp) return 0;
-
-    const now = Math.floor(Date.now() / 1000);
-    return Math.max(0, payload.exp - now);
+  /**
+   * Vérifier si une erreur est une erreur réseau
+   */
+  isNetworkError(error: any): boolean {
+    return error.message === 'Network Error' || !error.response;
   }
 
-  // Configurer la base URL
-  setBaseURL(baseURL: string): void {
-    this.client.defaults.baseURL = baseURL;
+  /**
+   * Vérifier si une erreur est une erreur d'authentification
+   */
+  isAuthError(error: any): boolean {
+    return error.status === 401 || error.status === 403;
   }
 
-  // Obtenir la base URL actuelle
-  getBaseURL(): string | undefined {
-    return this.client.defaults.baseURL;
-  }
-
-  // Configurer le timeout
-  setTimeout(timeout: number): void {
-    this.client.defaults.timeout = timeout;
-  }
-
-  // Créer une instance avec des paramètres spécifiques
-  createInstance(config?: AxiosRequestConfig): AxiosInstance {
-    return axios.create({
-      ...this.client.defaults,
-      ...config,
-    });
+  /**
+   * Vérifier si une erreur est une erreur de validation
+   */
+  isValidationError(error: any): boolean {
+    return error.status === 400 || error.status === 422;
   }
 }
 
-// Instance singleton
-export const apiService = new ApiService();
-export default apiService;
+// Exporter l'instance singleton
+export const api = new ApiService();
+
+// Exporter l'instance axios brute pour les cas spéciaux
+export { apiClient };
+
+// Exporter les types axios pour utilisation externe
+export type { AxiosRequestConfig, AxiosResponse, AxiosError };
+
+export const apiService = api;
+
+export default apiClient;

@@ -1,521 +1,351 @@
-// AuthContext.tsx - Corrections complètes avec fonction generateUsername
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { authService, User, LoginCredentials, SignupData, AuthResponse } from '../services/auth';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import apiService, { ApiError } from '../services/api';
+/**
+ * État d'authentification
+ */
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
-interface AuthContextType {
-  user: any;
+/**
+ * Interface du contexte d'authentification
+ */
+interface AuthContextValue {
+  // État
+  user: User | null;
+  status: AuthStatus;
+  isAuthenticated: boolean;
   isLoading: boolean;
-  isAuthenticated?: boolean;
+  isEmailVerified: boolean;
   error: string | null;
+
+  // Actions d'authentification
+  login: (credentials: LoginCredentials) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
-  login: (emailOrUsername: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  googleLogin: (code: string) => Promise<void>;
+
+  // Gestion du mot de passe
   forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string, passwordConfirmation: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string, newPasswordConfirmation: string) => Promise<void>;
+
+  // Gestion email
   verifyEmail: (token: string) => Promise<void>;
-  resendVerificationEmail: (email: string) => Promise<void>;
-  updateProfile: (profileData: FormData | any) => Promise<void>;
-  refreshUserData: () => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
+
+  // Utilitaires
+  refreshUser: () => Promise<void>;
+  hasRole: (role: User['role']) => boolean;
+  hasAnyRole: (roles: User['role'][]) => boolean;
   clearError: () => void;
 }
 
-interface SignupData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  username?: string;
-  acceptTerms: boolean;
-  marketingConsent?: boolean;
+/**
+ * Contexte d'authentification
+ */
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+/**
+ * Props du Provider
+ */
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+/**
+ * Provider du contexte d'authentification
+ */
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [status, setStatus] = useState<AuthStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  // Utiliser useRef pour suivre les opérations en cours
-  const activeVerifications = useRef(new Set<string>());
-  const sessionCheckInterval = useRef<NodeJS.Timeout>();
-
-  // CORRECTION: Fonction generateUsername ajoutée
-  const generateUsername = (firstName: string, lastName: string): string => {
-    const baseUsername = `${firstName.toLowerCase()}${lastName.toLowerCase()}`;
-    const randomSuffix = Math.floor(Math.random() * 1000);
-    return `${baseUsername}${randomSuffix}`;
-  };
-
-  // Fonction pour rafraîchir les données utilisateur
-  const refreshUserData = async (): Promise<void> => {
-    try {
-      const response = await apiService.get('/auth/me');
-      
-      if (response.data.success && response.data.data) {
-        const updatedUser = response.data.data;
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
-    } catch (error) {
-      console.warn('Failed to refresh user data:', error);
-    }
-  };
-
-  // Fonction pour mettre à jour le profil utilisateur
-  const updateProfile = async (profileData: FormData | any): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      let response;
-      
-      // Déterminer le type de données et l'endpoint approprié
-      if (profileData instanceof FormData) {
-        // Upload avec fichier (photo de profil)
-        response = await apiService.post('/user/profile/complete', profileData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-      } else {
-        // Données JSON simples pour la complétion de profil
-        response = await apiService.post('/user/profile/complete', profileData);
-      }
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de la mise à jour du profil');
-      }
-
-      // Mettre à jour les données utilisateur locales
-      if (response.data.data?.user) {
-        const updatedUser = response.data.data.user;
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        
-        // CRITIQUE : Supprimer le flag de complétion de profil une fois terminé
-        localStorage.removeItem('shouldCompleteProfile');
-        
-        console.log('Profil complété avec succès:', updatedUser);
-      } else {
-        // Rafraîchir les données depuis le serveur
-        await refreshUserData();
-      }
-
-    } catch (error: any) {
-      console.error('Profile completion error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la complétion du profil';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // CORRECTION: Fonction signup corrigée avec generateUsername
-  const signup = async (data: SignupData): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // CORRECTION: Générer le username si pas fourni
-      const username = data.username || generateUsername(data.firstName, data.lastName);
-      const signupData = { ...data, username };
-
-      const response = await apiService.post('/auth/signup', signupData);
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de l\'inscription');
-      }
-
-      if (!response.data.data) {
-        throw new Error('Réponse d\'inscription incomplète');
-      }
-
-      const { user: newUser, requiresEmailVerification } = response.data.data;
-
-      // MODIFICATION CRITIQUE : Ne pas connecter automatiquement l'utilisateur
-      if (requiresEmailVerification) {
-        // Stocker temporairement l'email pour la page de vérification
-        localStorage.setItem('tempUserEmail', data.email);
-        
-        console.log('Inscription réussie, email de vérification requis');
-        // NE PAS définir setUser ici - l'utilisateur n'est pas encore authentifié
-      } else if (newUser?.role === 'admin') {
-        // Cas spécial pour les admins en attente de validation
-        localStorage.setItem('tempUser', JSON.stringify(newUser));
-        console.log('Admin créé, validation requise');
-      } else {
-        // Cas où l'utilisateur serait immédiatement connecté (rare)
-        const { accessToken, refreshToken } = response.data.data;
-        if (accessToken && refreshToken) {
-          apiService.setTokens(accessToken, refreshToken);
-          localStorage.setItem('user', JSON.stringify(newUser));
-          setUser(newUser);
-          startSessionCheck();
-        }
-      }
-
-      console.log('Signup successful:', response.data.message);
-
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de l\'inscription';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // CORRECTION: Fonction login améliorée
-  const login = async (emailOrUsername: string, password: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await apiService.post('/auth/login', {
-        email: emailOrUsername,
-        password,
-      });
-
-      if (response.status === 202 && response.data.data?.requires2FA) {
-        throw new Error('Code d\'authentification à deux facteurs requis');
-      }
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de la connexion');
-      }
-
-      if (!response.data.data) {
-        throw new Error('Réponse de connexion incomplète');
-      }
-
-      const { user: loggedUser, accessToken, refreshToken } = response.data.data;
-
-      if (!accessToken) {
-        throw new Error('Token d\'accès manquant');
-      }
-
-      apiService.setTokens(accessToken, refreshToken || '');
-      localStorage.setItem('user', JSON.stringify(loggedUser));
-      setUser(loggedUser);
-
-      // Marquer l'activité utilisateur et démarrer la vérification de session
-      localStorage.setItem('lastActivity', Date.now().toString());
-      startSessionCheck();
-
-      console.log('Login successful');
-
-    } catch (error: any) {
-      console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la connexion';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // CORRECTION CRITIQUE: Fonction verifyEmail avec protection contre les appels multiples
-  const verifyEmail = async (token: string): Promise<void> => {
-    // Vérifier si cette vérification est déjà en cours
-    if (activeVerifications.current.has(token)) {
-      console.log('Vérification déjà en cours pour ce token, ignorée');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Marquer cette vérification comme active
-      activeVerifications.current.add(token);
-
-      console.log('Frontend - Vérification token avec connexion automatique:', token?.substring(0, 10) + '...');
-
-      const response = await apiService.post('/auth/verify-email', { token });
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de la vérification');
-      }
-
-      // MODIFICATION CRITIQUE : Traiter la réponse avec les tokens de connexion
-      const { user: verifiedUser, accessToken, refreshToken, shouldCompleteProfile } = response.data.data;
-
-      if (!verifiedUser) {
-        throw new Error('Données utilisateur manquantes dans la réponse');
-      }
-
-      if (accessToken && refreshToken) {
-        // CONNEXION AUTOMATIQUE après vérification d'email
-        apiService.setTokens(accessToken, refreshToken);
-        localStorage.setItem('user', JSON.stringify(verifiedUser));
-        setUser(verifiedUser);
-        localStorage.setItem('lastActivity', Date.now().toString());
-        
-        // Démarrer la vérification de session
-        startSessionCheck();
-        
-        console.log('Utilisateur connecté automatiquement après vérification email:', verifiedUser.email);
-
-        // MODIFICATION CRITIQUE : Stocker l'information sur la complétion du profil
-        if (shouldCompleteProfile) {
-          localStorage.setItem('shouldCompleteProfile', 'true');
-          console.log('Profil incomplet détecté - redirection vers complete-profile nécessaire');
-        } else {
-          localStorage.removeItem('shouldCompleteProfile');
-          console.log('Profil complet - redirection vers dashboard possible');
-        }
-      } else {
-        // Cas où la vérification réussit mais sans connexion automatique (rare)
-        console.log('Email vérifié mais pas de connexion automatique');
-      }
-
-      // Nettoyer les données temporaires
-      localStorage.removeItem('tempUserEmail');
-
-      console.log('Email verification successful avec connexion automatique');
-
-    } catch (error: any) {
-      console.error('Email verification error:', error);
-      
-      let errorMessage = 'Erreur lors de la vérification';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-      // CRITIQUE : Nettoyer le Set des vérifications actives
-      activeVerifications.current.delete(token);
-    }
-  };
-
-  const resendVerificationEmail = async (email: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      console.log('Frontend - Renvoi email:', email);
-
-      const response = await apiService.post('/auth/resend-verification-public', { email });
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors du renvoi');
-      }
-
-      console.log('Verification email resent successfully');
-
-    } catch (error: any) {
-      console.error('Resend email error:', error);
-      
-      let errorMessage = 'Erreur lors du renvoi';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithGoogle = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const configResponse = await apiService.get('/auth/google/url');
-      
-      if (!configResponse.data.success || !configResponse.data.data?.authUrl) {
-        throw new Error('URL d\'autorisation Google manquante');
-      }
-
-      window.location.href = configResponse.data.data.authUrl;
-
-    } catch (error: any) {
-      console.error('Google login error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la connexion Google';
-      setError(errorMessage);
-      setIsLoading(false);
-      throw new Error(errorMessage);
-    }
-  };
-
-  // CORRECTION: Fonction logout améliorée
-  const logout = (): void => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      
-      if (refreshToken) {
-        apiService.post('/auth/logout', { refreshToken })
-          .catch(err => console.warn('Logout API call failed:', err));
-      }
-
-      // Nettoyer toutes les données locales
-      apiService.clearAllTokens();
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastActivity');
-      localStorage.removeItem('tempUser');
-      localStorage.removeItem('tempUserEmail');
-      localStorage.removeItem('shouldCompleteProfile');
-      
-      setUser(null);
-      setError(null);
-
-      // CORRECTION: Nettoyer aussi les vérifications actives et arrêter la vérification de session
-      activeVerifications.current.clear();
-      stopSessionCheck();
-
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const forgotPassword = async (email: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await apiService.post('/auth/forgot-password', { email });
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de l\'envoi de l\'email');
-      }
-
-      console.log('Password reset email sent');
-
-    } catch (error: any) {
-      console.error('Forgot password error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de l\'envoi de l\'email';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const clearError = (): void => {
-    setError(null);
-  };
-
-  // AJOUTÉ: Gestion de la vérification de session
-  const startSessionCheck = () => {
-    if (sessionCheckInterval.current) {
-      clearInterval(sessionCheckInterval.current);
-    }
-
-    sessionCheckInterval.current = setInterval(() => {
-      const lastActivity = localStorage.getItem('lastActivity');
-      const sessionTimeout = 24 * 60 * 60 * 1000; // 24 heures
-
-      if (lastActivity && Date.now() - parseInt(lastActivity) > sessionTimeout) {
-        console.log('Session expired, logging out');
-        logout();
-      } else if (user) {
-        // Mettre à jour l'activité si l'utilisateur est actif
-        localStorage.setItem('lastActivity', Date.now().toString());
-      }
-    }, 60000); // Vérifier chaque minute
-  };
-
-  const stopSessionCheck = () => {
-    if (sessionCheckInterval.current) {
-      clearInterval(sessionCheckInterval.current);
-      sessionCheckInterval.current = undefined;
-    }
-  };
-
-  // CORRECTION: Initialisation au chargement
+  /**
+   * Initialiser l'authentification au chargement de l'app
+   */
   useEffect(() => {
-    const initAuth = () => {
-      try {
-        const storedUser = localStorage.getItem('user');
-        const accessToken = localStorage.getItem('accessToken');
-
-        if (storedUser && accessToken) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          
-          // Vérifier la validité de la session
-          const lastActivity = localStorage.getItem('lastActivity');
-          const sessionTimeout = 24 * 60 * 60 * 1000; // 24 heures
-
-          if (lastActivity && Date.now() - parseInt(lastActivity) > sessionTimeout) {
-            console.log('Stored session expired, clearing data');
-            logout();
-          } else {
-            // Session valide, démarrer la vérification
-            localStorage.setItem('lastActivity', Date.now().toString());
-            startSessionCheck();
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        apiService.clearAllTokens();
-        localStorage.removeItem('user');
-        localStorage.removeItem('lastActivity');
-      }
-    };
-
-    initAuth();
-
-    // Nettoyer à la fermeture
-    return () => {
-      stopSessionCheck();
-    };
+    initializeAuth();
   }, []);
 
-  // Mettre à jour l'activité utilisateur sur les interactions
-  useEffect(() => {
-    const handleUserActivity = () => {
-      if (user) {
-        localStorage.setItem('lastActivity', Date.now().toString());
+  /**
+   * Initialisation de l'authentification
+   */
+  const initializeAuth = async () => {
+    try {
+      setStatus('loading');
+      
+      // Vérifier si l'utilisateur est déjà connecté
+      const currentUser = await authService.initialize();
+      
+      if (currentUser) {
+        setUser(currentUser);
+        setStatus('authenticated');
+      } else {
+        setStatus('unauthenticated');
       }
-    };
+    } catch (err) {
+      console.error('[AuthContext] Initialization error:', err);
+      setStatus('unauthenticated');
+      setError('Failed to initialize authentication');
+    }
+  };
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, { passive: true });
-    });
+  /**
+   * Connexion
+   */
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      setStatus('loading');
+      setError(null);
 
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserActivity);
+      const response: AuthResponse = await authService.login(credentials);
+      
+      setUser(response.user);
+      setStatus('authenticated');
+    } catch (err: any) {
+      console.error('[AuthContext] Login error:', err);
+      setStatus('unauthenticated');
+      
+      const errorMessage = err.message || 'Email ou mot de passe incorrect';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Inscription
+   */
+  const signup = useCallback(async (data: SignupData) => {
+    try {
+      setStatus('loading');
+      setError(null);
+
+      const response: AuthResponse = await authService.signup(data);
+      
+      setUser(response.user);
+      setStatus('authenticated');
+    } catch (err: any) {
+      console.error('[AuthContext] Signup error:', err);
+      setStatus('unauthenticated');
+      
+      const errorMessage = err.message || 'Erreur lors de l\'inscription';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Connexion avec Google
+   */
+  const googleLogin = useCallback(async (code: string) => {
+    try {
+      setStatus('loading');
+      setError(null);
+
+      const response: AuthResponse = await authService.googleLogin({ code });
+      
+      setUser(response.user);
+      setStatus('authenticated');
+    } catch (err: any) {
+      console.error('[AuthContext] Google login error:', err);
+      setStatus('unauthenticated');
+      
+      const errorMessage = err.message || 'Erreur lors de la connexion avec Google';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Déconnexion
+   */
+  const logout = useCallback(async () => {
+    try {
+      setStatus('loading');
+      
+      await authService.logout();
+      
+      setUser(null);
+      setStatus('unauthenticated');
+      setError(null);
+    } catch (err: any) {
+      console.error('[AuthContext] Logout error:', err);
+      
+      // Même en cas d'erreur, on déconnecte côté client
+      setUser(null);
+      setStatus('unauthenticated');
+      setError(null);
+    }
+  }, []);
+
+  /**
+   * Mot de passe oublié
+   */
+  const forgotPassword = useCallback(async (email: string) => {
+    try {
+      setError(null);
+      await authService.forgotPassword({ email });
+    } catch (err: any) {
+      console.error('[AuthContext] Forgot password error:', err);
+      
+      const errorMessage = err.message || 'Erreur lors de l\'envoi de l\'email';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Réinitialiser le mot de passe
+   */
+  const resetPassword = useCallback(async (
+    token: string,
+    password: string,
+    passwordConfirmation: string
+  ) => {
+    try {
+      setError(null);
+      await authService.resetPassword({ token, password, passwordConfirmation });
+    } catch (err: any) {
+      console.error('[AuthContext] Reset password error:', err);
+      
+      const errorMessage = err.message || 'Erreur lors de la réinitialisation du mot de passe';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Changer le mot de passe
+   */
+  const changePassword = useCallback(async (
+    currentPassword: string,
+    newPassword: string,
+    newPasswordConfirmation: string
+  ) => {
+    try {
+      setError(null);
+      await authService.changePassword({
+        currentPassword,
+        newPassword,
+        newPasswordConfirmation,
       });
-    };
+    } catch (err: any) {
+      console.error('[AuthContext] Change password error:', err);
+      
+      const errorMessage = err.message || 'Erreur lors du changement de mot de passe';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  /**
+   * Vérifier l'email
+   */
+  const verifyEmail = useCallback(async (token: string) => {
+    try {
+      setError(null);
+      await authService.verifyEmail({ token });
+      
+      // Mettre à jour le user local
+      if (user) {
+        setUser({ ...user, isEmailVerified: true });
+      }
+    } catch (err: any) {
+      console.error('[AuthContext] Verify email error:', err);
+      
+      const errorMessage = err.message || 'Erreur lors de la vérification de l\'email';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
   }, [user]);
 
-  // CORRECTION: Calculer isAuthenticated de manière dynamique
-  const isAuthenticated = !!user && !!localStorage.getItem('accessToken');
+  /**
+   * Renvoyer l'email de vérification
+   */
+  const resendVerificationEmail = useCallback(async () => {
+    try {
+      setError(null);
+      await authService.resendVerificationEmail();
+    } catch (err: any) {
+      console.error('[AuthContext] Resend verification email error:', err);
+      
+      const errorMessage = err.message || 'Erreur lors de l\'envoi de l\'email';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
 
-  const value: AuthContextType = {
+  /**
+   * Rafraîchir les données utilisateur
+   */
+  const refreshUser = useCallback(async () => {
+    try {
+      const updatedUser = await authService.getCurrentUserProfile();
+      setUser(updatedUser);
+    } catch (err: any) {
+      console.error('[AuthContext] Refresh user error:', err);
+      
+      // Si le refresh échoue, on déconnecte
+      if (err.status === 401) {
+        setUser(null);
+        setStatus('unauthenticated');
+      }
+    }
+  }, []);
+
+  /**
+   * Vérifier si l'utilisateur a un rôle spécifique
+   */
+  const hasRole = useCallback((role: User['role']): boolean => {
+    return user?.role === role;
+  }, [user]);
+
+  /**
+   * Vérifier si l'utilisateur a l'un des rôles
+   */
+  const hasAnyRole = useCallback((roles: User['role'][]): boolean => {
+    return user ? roles.includes(user.role) : false;
+  }, [user]);
+
+  /**
+   * Nettoyer l'erreur
+   */
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  /**
+   * Valeurs calculées
+   */
+  const isAuthenticated = status === 'authenticated' && user !== null;
+  const isLoading = status === 'loading';
+  const isEmailVerified = user?.isEmailVerified || false;
+
+  /**
+   * Valeur du contexte
+   */
+  const value: AuthContextValue = {
+    // État
     user,
-    isLoading,
+    status,
     isAuthenticated,
+    isLoading,
+    isEmailVerified,
     error,
-    signup,
+
+    // Actions
     login,
-    loginWithGoogle,
+    signup,
     logout,
+    googleLogin,
     forgotPassword,
+    resetPassword,
+    changePassword,
     verifyEmail,
     resendVerificationEmail,
-    updateProfile,
-    refreshUserData,
+    refreshUser,
+    hasRole,
+    hasAnyRole,
     clearError,
   };
 
@@ -526,10 +356,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+/**
+ * Hook pour utiliser le contexte d'authentification
+ */
+export const useAuthContext = (): AuthContextValue => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuthContext must be used within an AuthProvider');
   }
+  
   return context;
 };
+
+export default AuthContext;
