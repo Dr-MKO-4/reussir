@@ -46,6 +46,8 @@ const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<UserStats>({
     totalCourses: 0,
     coursesInProgress: 0,
+  });
+
   // Redirection si non authentifié
   useEffect(() => {
     if (!isAuthenticated) {
