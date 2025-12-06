@@ -1,19 +1,15 @@
 import { useCallback } from 'react';
 import api from '../services/api';
-import { useToast } from './useToast';
 
 interface UseApiOptions {
   onSuccess?: (data: any) => void;
   onError?: (error: any) => void;
-  showNotification?: boolean;
 }
 
 /**
  * Hook personnalisé pour les appels API
  */
 export const useApi = () => {
-  const toast = useToast();
-
   const request = useCallback(
     async (
       method: 'get' | 'post' | 'put' | 'delete' | 'patch',
@@ -23,19 +19,15 @@ export const useApi = () => {
     ) => {
       try {
         const response = await api[method](url, data);
-        if (options?.showNotification) {
-          toast.showToast('success', 'Succès', 'Opération réalisée avec succès');
-        }
         options?.onSuccess?.(response.data);
         return response.data;
       } catch (error: any) {
-        const errorMessage = error.response?.data?.message || 'Une erreur est survenue';
-        toast.showToast('error', 'Erreur', errorMessage);
+        console.error(`API Error [${method.toUpperCase()} ${url}]:`, error);
         options?.onError?.(error);
         throw error;
       }
     },
-    [toast]
+    []
   );
 
   return {

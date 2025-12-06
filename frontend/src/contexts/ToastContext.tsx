@@ -27,7 +27,7 @@ interface ToastContextType {
   info: (message: string, title?: string, duration?: number) => string;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
+export const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 interface ToastProviderProps {
   children: React.ReactNode;
