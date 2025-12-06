@@ -623,10 +623,10 @@ const HomePage = () => {
                 <div className={styles.logoIcon}>  
                 <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
                 </div>
-                <span className={styles.logoText}>Win+</span>
+                 <span className={styles.logoText}>Win+</span>
               </div>
               <p className={styles.footerText}>
-                Autonomiser les éducateurs pour améliorer notre monde
+                Autonomiser les éducateurs pour améliorer notre monde win +
               </p>
               <div className={styles.socialIcons}>
                 <a href="#" className={styles.socialIcon} aria-label="Facebook">
