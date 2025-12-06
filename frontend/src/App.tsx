@@ -162,8 +162,8 @@ const DashboardRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// Composant de chargement global pour l'app
-const AppLoadingWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Composant de routage avec gestion de l'authentification
+const AppRoutes: React.FC = () => {
   const { isLoading } = useAuth();
 
   if (isLoading) {
@@ -180,19 +180,8 @@ const AppLoadingWrapper: React.FC<{ children: React.ReactNode }> = ({ children }
     );
   }
 
-  return <>{children}</>;
-};
-
-const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <ToastProvider position="top-right">
-            <Router>
-              <div className="app">
-                <AppLoadingWrapper>
-                  <Routes>
+    <Routes>
                   {/* Routes publiques accessibles à tous */}
                   <Route path="/" element={<HomePage />} />
                   <Route path="/student" element={<Student />} />
@@ -208,25 +197,31 @@ const App: React.FC = () => {
                   <Route path="/home" element={<Home />} />
                   <Route path="/email-verified" element={<EmailVerified />} />
                   <Route path="/dashboard-page" element={<DashboardPage />} />
-                  <Route path="/preview-carousel" element={<PreviewCarousel />} />
-                  <Route path="/stats-card" element={<StatsCard />} />
-                  <Route path="/recent-activity" element={<RecentActivity />} />
-                  <Route path="/study-progress" element={<StudyProgress />} />
-                  <Route path="/performance-chart" element={<PerformanceChart />} />
-                  <Route path="/upcoming-exams" element={<UpcomingExams />} />
-                  <Route path="/achievement-badges" element={<AchievementBadges />} />
-                  <Route path="/recommendation-widget" element={<RecommendationWidget />} />
-                  <Route path="/study-streak" element={<StudyStreak />} />
-                  <Route path="/profile-header" element={<ProfileHeader />} />
-                  <Route path="/profile-form" element={<ProfileForm />} />
-                  <Route path="/password-change-form" element={<PasswordChangeForm />} />
-                  <Route path="/notification-settings" element={<NotificationSettings />} />
-                  <Route path="/privacy-settings" element={<PrivacySettings />} />
-                  <Route path="/account-deletion" element={<AccountDeletion />} />
-                  <Route path="/preferences-form" element={<PreferencesForm />} />
-                  <Route path="/subscription-card" element={<SubscriptionCard />} />
-                  <Route path="/quick-actions-example" element={<QuickActionsExample />} />
-                  <Route path="/home-catalog" element={<HomeCatalog />} />
+
+                  {/* Routes de test - développement uniquement */}
+                  {import.meta.env.DEV && (
+                    <>
+                      <Route path="/dev/preview-carousel" element={<PreviewCarousel />} />
+                      <Route path="/dev/stats-card" element={<StatsCard />} />
+                      <Route path="/dev/recent-activity" element={<RecentActivity />} />
+                      <Route path="/dev/study-progress" element={<StudyProgress />} />
+                      <Route path="/dev/performance-chart" element={<PerformanceChart />} />
+                      <Route path="/dev/upcoming-exams" element={<UpcomingExams />} />
+                      <Route path="/dev/achievement-badges" element={<AchievementBadges />} />
+                      <Route path="/dev/recommendation-widget" element={<RecommendationWidget />} />
+                      <Route path="/dev/study-streak" element={<StudyStreak />} />
+                      <Route path="/dev/profile-header" element={<ProfileHeader />} />
+                      <Route path="/dev/profile-form" element={<ProfileForm />} />
+                      <Route path="/dev/password-change-form" element={<PasswordChangeForm />} />
+                      <Route path="/dev/notification-settings" element={<NotificationSettings />} />
+                      <Route path="/dev/privacy-settings" element={<PrivacySettings />} />
+                      <Route path="/dev/account-deletion" element={<AccountDeletion />} />
+                      <Route path="/dev/preferences-form" element={<PreferencesForm />} />
+                      <Route path="/dev/subscription-card" element={<SubscriptionCard />} />
+                      <Route path="/dev/quick-actions-example" element={<QuickActionsExample />} />
+                      <Route path="/dev/home-catalog" element={<HomeCatalog />} />
+                    </>
+                  )}
 
                   {/* Routes publiques - accessibles seulement si non connecté */}
                   <Route
@@ -358,10 +353,21 @@ const App: React.FC = () => {
                     }
                   />
                 </Routes>
-              </AppLoadingWrapper>
-            </div>
-          </Router>
-        </ToastProvider>
+              );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <CartProvider>
+          <ToastProvider position="top-right">
+            <Router>
+              <div className="app">
+                <AppRoutes />
+              </div>
+            </Router>
+          </ToastProvider>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>

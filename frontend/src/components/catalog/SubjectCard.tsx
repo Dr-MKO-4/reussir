@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, TrendingUp, Clock } from 'lucide-react';
-import Card from '@components/common/Card';
-import Button from '@components/common/Button';
-import { Subject } from '@/types';
+import Card from '../common/Card';
+import Button from '../common/Button';
+import { Subject } from 'types';
 import useCart from '../../hooks/useCart';
 import './SubjectCard.css';
 

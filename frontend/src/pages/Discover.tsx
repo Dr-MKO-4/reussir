@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import catalogService from '@services/catalogService';
-import SubjectCard from '@components/catalog/SubjectCard';
-import Spinner from '@components/common/Spinner';
-import Input from '@components/common/Input';
-import Button from '@components/common/Button';
+import catalogService from '../services/catalogService';
+import SubjectCard from '../components/catalog/SubjectCard';
+import Spinner from '../components/common/Spinner';
+import Input from '../components/common/Input';
+import Button from '../components/common/Button';
 import { Search, Filter, Grid, List, X } from 'lucide-react';
-import { Subject, SearchParams, Filters } from '@/types';
+import { Subject, SearchParams, Filters } from 'types';
 import './Discover.css';
 
 type ViewMode = 'grid' | 'list';

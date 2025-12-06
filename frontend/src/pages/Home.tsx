@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import catalogService from '@services/catalogService';
-import Button from '@components/common/Button';
+import catalogService from '../services/catalogService';
+import Button from '../components/common/Button';
 import Card, { CardBody } from '../components/common/Card';
-import Spinner from '@components/common/Spinner';
+import Spinner from '../components/common/Spinner';
 import { 
   Search, 
   TrendingUp, 

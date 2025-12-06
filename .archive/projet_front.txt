@@ -238,7 +238,7 @@ frontend/
 │   │   ├── variables.css
 │   │   └── ...
 │   ├── assets/
-│   │   └── ReussirLogo1.png
+│   │   └── Reussir1.png
 │   ├── components/
 │   │   ├── common/
 │   │   │   ├── Button.tsx
