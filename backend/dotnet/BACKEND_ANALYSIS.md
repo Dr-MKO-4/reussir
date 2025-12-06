@@ -12,7 +12,7 @@
 
 #### Stack Tech Actuel:
 ```
-✅ ASP.NET Core 7.0
+✅ ASP.NET Core 8.0
 ✅ AWS Cognito (Authentification)
 ✅ JWT Bearer (Tokens)
 ✅ Flask AI Service (Microservice Python)
