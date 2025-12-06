@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { useToast } from '../contexts/ToastContext';
 import BackgroundAnimation from '../components/ui/BackgroundAnimation';
 import Modal from '../components/ui/Modal';

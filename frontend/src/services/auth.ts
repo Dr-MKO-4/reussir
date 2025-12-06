@@ -1,341 +1,372 @@
-// src/services/auth.ts
-import { apiService } from './api';
-import { 
-  User, 
-  LoginRequest, 
-  LoginResponse,
-  SignupRequest, 
-  SignupResponse,
-  RefreshTokenRequest,
-  RefreshTokenResponse,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  ChangePasswordRequest,
-  UpdateProfileRequest
-} from '../types/auth';
+import { api } from './api';
 
-export class AuthService {
-  // Connexion avec email/username et mot de passe
-  async login(emailOrUsername: string, password: string): Promise<LoginResponse> {
-    const loginData: LoginRequest = {
-      emailOrUsername,
-      password
-    };
+/**
+ * Types pour l'authentification
+ */
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
 
-    const response = await apiService.post<LoginResponse>('/auth/login', loginData);
-    
-    // Stocker les tokens
-    if (response.data.data.tokens) {
-      apiService.setTokens(
-        response.data.data.tokens.accessToken,
-        response.data.data.tokens.refreshToken
-      );
-    }
+export interface SignupData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  role: 'student' | 'parent' | 'teacher';
+  termsAccepted: boolean;
+}
 
-    return response.data.data;
-  }
+export interface AuthTokens {
+  token: string;
+  refreshToken: string;
+}
 
-  // Inscription
-  async signup(userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    username?: string;
-    password: string;
-    confirmPassword: string;
-    acceptTerms: boolean;
-  }): Promise<SignupResponse> {
-    const signupData: SignupRequest = {
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      username: userData.username,
-      password: userData.password,
-      confirmPassword: userData.confirmPassword,
-      acceptTerms: userData.acceptTerms
-    };
+export interface AuthResponse {
+  user: User;
+  tokens: AuthTokens;
+}
 
-    const response = await apiService.post<SignupResponse>('/auth/signup', signupData);
-    
-    // Stocker les tokens
-    if (response.data.data.tokens) {
-      apiService.setTokens(
-        response.data.data.tokens.accessToken,
-        response.data.data.tokens.refreshToken
-      );
-    }
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: 'student' | 'parent' | 'teacher' | 'admin';
+  avatar?: string;
+  isEmailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-    return response.data.data;
-  }
+export interface ForgotPasswordData {
+  email: string;
+}
 
-  // Connexion avec Google
-  async loginWithGoogle(): Promise<LoginResponse> {
-    // Dans un vrai projet, vous utiliseriez l'API Google OAuth
-    // Ici, nous simulons le processus
+export interface ResetPasswordData {
+  token: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+  newPasswordConfirmation: string;
+}
+
+export interface VerifyEmailData {
+  token: string;
+}
+
+export interface GoogleAuthData {
+  code: string;
+}
+
+/**
+ * Service d'authentification
+ */
+class AuthService {
+  private readonly STORAGE_KEYS = {
+    TOKEN: 'authToken',
+    REFRESH_TOKEN: 'refreshToken',
+    USER: 'user',
+  };
+
+  /**
+   * Connexion utilisateur
+   */
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Ouvrir une popup pour l'authentification Google
-      const popup = window.open(
-        `${apiService.getBaseURL()}/auth/google`,
-        'googleAuth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
+      const response = await api.post<AuthResponse>('/auth/login', credentials);
+      
+      // Sauvegarder les tokens et l'utilisateur
+      this.saveAuthData(response);
+      
+      return response;
+    } catch (error) {
+      console.error('[Auth Service] Login error:', error);
+      throw error;
+    }
+  }
 
-      if (!popup) {
-        throw new Error('Impossible d\'ouvrir la fenêtre d\'authentification');
-      }
+  /**
+   * Inscription utilisateur
+   */
+  async signup(data: SignupData): Promise<AuthResponse> {
+    try {
+      const response = await api.post<AuthResponse>('/auth/signup', data);
+      
+      // Sauvegarder les tokens et l'utilisateur
+      this.saveAuthData(response);
+      
+      return response;
+    } catch (error) {
+      console.error('[Auth Service] Signup error:', error);
+      throw error;
+    }
+  }
 
-      // Attendre la réponse de la popup
-      return new Promise((resolve, reject) => {
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            reject(new Error('Authentification annulée'));
-          }
-        }, 1000);
+  /**
+   * Connexion avec Google
+   */
+  async googleLogin(data: GoogleAuthData): Promise<AuthResponse> {
+    try {
+      const response = await api.post<AuthResponse>('/auth/google', data);
+      
+      // Sauvegarder les tokens et l'utilisateur
+      this.saveAuthData(response);
+      
+      return response;
+    } catch (error) {
+      console.error('[Auth Service] Google login error:', error);
+      throw error;
+    }
+  }
 
-        // Écouter les messages de la popup
-        const messageHandler = (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-
-          if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-            clearInterval(checkClosed);
-            window.removeEventListener('message', messageHandler);
-            popup.close();
-
-            // Stocker les tokens
-            if (event.data.tokens) {
-              apiService.setTokens(
-                event.data.tokens.accessToken,
-                event.data.tokens.refreshToken
-              );
-            }
-
-            resolve({
-              user: event.data.user,
-              tokens: event.data.tokens
-            });
-          } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-            clearInterval(checkClosed);
-            window.removeEventListener('message', messageHandler);
-            popup.close();
-            reject(new Error(event.data.error || 'Erreur d\'authentification Google'));
-          }
-        };
-
-        window.addEventListener('message', messageHandler);
+  /**
+   * Déconnexion utilisateur
+   */
+  async logout(): Promise<void> {
+    try {
+      // Appeler l'API pour invalider le refresh token
+      await api.post('/auth/logout', {
+        refreshToken: this.getRefreshToken(),
       });
-    } catch (error: any) {
-      throw new Error(error.message || 'Erreur lors de l\'authentification Google');
+    } catch (error) {
+      console.error('[Auth Service] Logout error:', error);
+      // Continuer même si l'API échoue
+    } finally {
+      // Nettoyer le storage local
+      this.clearAuthData();
     }
   }
 
-  // Déconnexion
-  async logout(refreshToken?: string): Promise<void> {
+  /**
+   * Rafraîchir le token d'accès
+   */
+  async refreshToken(): Promise<AuthTokens> {
     try {
-      const token = refreshToken || localStorage.getItem('refreshToken');
-      if (token) {
-        await apiService.post('/auth/logout', { refreshToken: token });
+      const refreshToken = this.getRefreshToken();
+      
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await api.post<AuthTokens>('/auth/refresh', {
+        refreshToken,
+      });
+
+      // Sauvegarder les nouveaux tokens
+      this.saveTokens(response);
+
+      return response;
+    } catch (error) {
+      console.error('[Auth Service] Refresh token error:', error);
+      // Si le refresh échoue, déconnecter
+      this.clearAuthData();
+      throw error;
+    }
+  }
+
+  /**
+   * Demander un reset de mot de passe
+   */
+  async forgotPassword(data: ForgotPasswordData): Promise<void> {
+    try {
+      await api.post('/auth/forgot-password', data);
+    } catch (error) {
+      console.error('[Auth Service] Forgot password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Réinitialiser le mot de passe
+   */
+  async resetPassword(data: ResetPasswordData): Promise<void> {
+    try {
+      await api.post('/auth/reset-password', data);
+    } catch (error) {
+      console.error('[Auth Service] Reset password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Changer le mot de passe (utilisateur connecté)
+   */
+  async changePassword(data: ChangePasswordData): Promise<void> {
+    try {
+      await api.post('/auth/change-password', data);
+    } catch (error) {
+      console.error('[Auth Service] Change password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifier l'email
+   */
+  async verifyEmail(data: VerifyEmailData): Promise<void> {
+    try {
+      await api.post('/auth/verify-email', data);
+      
+      // Mettre à jour le statut de vérification dans le user stocké
+      const user = this.getCurrentUser();
+      if (user) {
+        user.isEmailVerified = true;
+        this.saveUser(user);
       }
     } catch (error) {
-      // Continuer même si la requête échoue
-      console.error('Erreur lors de la déconnexion:', error);
-    } finally {
-      this.clearTokens();
+      console.error('[Auth Service] Verify email error:', error);
+      throw error;
     }
   }
 
-  // Rafraîchir le token
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    const refreshData: RefreshTokenRequest = {
-      refreshToken
-    };
-
-    const response = await apiService.post<RefreshTokenResponse>('/auth/refresh', refreshData);
-    
-    // Mettre à jour les tokens stockés
-    if (response.data.data.accessToken) {
-      localStorage.setItem('accessToken', response.data.data.accessToken);
-    }
-    if (response.data.data.refreshToken) {
-      localStorage.setItem('refreshToken', response.data.data.refreshToken);
-    }
-
-    return response.data.data;
-  }
-
-  // Mot de passe oublié
-  async forgotPassword(emailOrUsername: string): Promise<void> {
-    const forgotPasswordData: ForgotPasswordRequest = {
-      emailOrUsername
-    };
-
-    await apiService.post('/auth/forgot-password', forgotPasswordData);
-  }
-
-  // Réinitialiser le mot de passe
-  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<void> {
-    const resetPasswordData: ResetPasswordRequest = {
-      token,
-      newPassword,
-      confirmPassword
-    };
-
-    await apiService.post('/auth/reset-password', resetPasswordData);
-  }
-
-  // Changer le mot de passe
-  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
-    const changePasswordData: ChangePasswordRequest = {
-      currentPassword,
-      newPassword,
-      confirmPassword
-    };
-
-    await apiService.post('/auth/change-password', changePasswordData);
-  }
-
-  // Vérifier le token et obtenir les informations utilisateur
-  async verifyToken(): Promise<User> {
-    const response = await apiService.get<User>('/auth/me');
-    return response.data.data;
-  }
-
-  // Mettre à jour le profil
-  async updateProfile(profileData: Partial<User>): Promise<User> {
-    const updateData: UpdateProfileRequest = {
-      firstName: profileData.firstName,
-      lastName: profileData.lastName,
-      bio: profileData.profile?.bio,
-      website: profileData.profile?.website,
-      location: profileData.profile?.location,
-      company: profileData.profile?.company,
-      jobTitle: profileData.profile?.jobTitle
-    };
-
-    const response = await apiService.put<User>('/users/me', updateData);
-    return response.data.data;
-  }
-
-  // Renvoyer l'email de vérification
+  /**
+   * Renvoyer l'email de vérification
+   */
   async resendVerificationEmail(): Promise<void> {
-    await apiService.post('/auth/resend-verification');
-  }
-
-  // Vérifier l'email avec le token
-  async verifyEmail(token: string): Promise<void> {
-    await apiService.post('/auth/verify-email', { token });
-  }
-
-  // Activer l'authentification à deux facteurs
-  async enable2FA(): Promise<{ qrCode: string; secret: string }> {
-    const response = await apiService.post<{ qrCode: string; secret: string }>('/auth/2fa/enable');
-    return response.data.data;
-  }
-
-  // Confirmer l'activation de l'authentification à deux facteurs
-  async confirm2FA(token: string): Promise<{ backupCodes: string[] }> {
-    const response = await apiService.post<{ backupCodes: string[] }>('/auth/2fa/confirm', { token });
-    return response.data.data;
-  }
-
-  // Désactiver l'authentification à deux facteurs
-  async disable2FA(password: string): Promise<void> {
-    await apiService.post('/auth/2fa/disable', { password });
-  }
-
-  // Vérifier le token 2FA
-  async verify2FA(token: string): Promise<{ valid: boolean }> {
-    const response = await apiService.post<{ valid: boolean }>('/auth/2fa/verify', { token });
-    return response.data.data;
-  }
-
-  // Obtenir les sessions actives
-  async getActiveSessions(): Promise<any[]> {
-    const response = await apiService.get<any[]>('/auth/sessions');
-    return response.data.data;
-  }
-
-  // Terminer une session spécifique
-  async terminateSession(sessionId: string): Promise<void> {
-    await apiService.delete(`/auth/sessions/${sessionId}`);
-  }
-
-  // Terminer toutes les autres sessions
-  async terminateOtherSessions(): Promise<void> {
-    await apiService.delete('/auth/sessions/others');
-  }
-
-  // Obtenir l'historique de connexion
-  async getLoginHistory(): Promise<any[]> {
-    const response = await apiService.get<any[]>('/auth/login-history');
-    return response.data.data;
-  }
-
-  // Supprimer le compte
-  async deleteAccount(password: string): Promise<void> {
-    await apiService.delete('/users/me', {
-      data: { password }
-    });
-    this.clearTokens();
-  }
-
-  // Exporter les données utilisateur
-  async exportUserData(): Promise<Blob> {
-    // IMPORTANT:
-    // - On précise le type générique <Blob> pour que apiService.get infère que response.data.data est un Blob.
-    // - responseType: 'blob' as const est nécessaire pour que TS conserve la valeur littérale 'blob'.
-    const response = await apiService.get<Blob>('/users/me/export', {
-      responseType: 'blob' as const
-    });
-
-    // Selon la structure de ton wrapper apiService (tu utilises ailleurs response.data.data),
-    // on retourne response.data.data ici pour rester cohérent.
-    return response.data.data as Blob;
-  }
-
-  // Méthodes utilitaires
-  clearTokens(): void {
-    apiService.clearAllTokens();
-  }
-
-  isAuthenticated(): boolean {
-    return apiService.isAuthenticated() && !apiService.isTokenExpired();
-  }
-
-  getCurrentUser(): Promise<User> {
-    return this.verifyToken();
-  }
-
-  getStoredTokens(): { accessToken: string | null; refreshToken: string | null } {
-    return {
-      accessToken: localStorage.getItem('accessToken'),
-      refreshToken: localStorage.getItem('refreshToken')
-    };
-  }
-
-  // Vérifier si l'utilisateur a un rôle spécifique
-  async hasRole(role: string): Promise<boolean> {
     try {
-      const user = await this.verifyToken();
-      return user.role === role;
+      await api.post('/auth/resend-verification');
     } catch (error) {
-      return false;
+      console.error('[Auth Service] Resend verification error:', error);
+      throw error;
     }
   }
 
-  // Vérifier si l'utilisateur a une permission spécifique
-  async hasPermission(permission: string): Promise<boolean> {
+  /**
+   * Récupérer le profil utilisateur actuel
+   */
+  async getCurrentUserProfile(): Promise<User> {
     try {
-      const user = await this.verifyToken();
-      // Logique de vérification des permissions selon votre implémentation
-      // Par exemple, les admins ont toutes les permissions
-      return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+      const user = await api.get<User>('/auth/me');
+      
+      // Mettre à jour le user stocké
+      this.saveUser(user);
+      
+      return user;
     } catch (error) {
-      return false;
+      console.error('[Auth Service] Get current user error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifier si l'utilisateur est connecté
+   */
+  isAuthenticated(): boolean {
+    return !!this.getToken() && !!this.getCurrentUser();
+  }
+
+  /**
+   * Vérifier si l'email est vérifié
+   */
+  isEmailVerified(): boolean {
+    const user = this.getCurrentUser();
+    return user?.isEmailVerified || false;
+  }
+
+  /**
+   * Récupérer le token d'accès
+   */
+  getToken(): string | null {
+    return localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+  }
+
+  /**
+   * Récupérer le refresh token
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+  }
+
+  /**
+   * Récupérer l'utilisateur actuel depuis le storage
+   */
+  getCurrentUser(): User | null {
+    try {
+      const userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
+      return userJson ? JSON.parse(userJson) : null;
+    } catch (error) {
+      console.error('[Auth Service] Error parsing user from storage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Vérifier si l'utilisateur a un rôle spécifique
+   */
+  hasRole(role: User['role']): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === role;
+  }
+
+  /**
+   * Vérifier si l'utilisateur a l'un des rôles
+   */
+  hasAnyRole(roles: User['role'][]): boolean {
+    const user = this.getCurrentUser();
+    return user ? roles.includes(user.role) : false;
+  }
+
+  /**
+   * Sauvegarder les données d'authentification
+   */
+  private saveAuthData(authResponse: AuthResponse): void {
+    this.saveTokens(authResponse.tokens);
+    this.saveUser(authResponse.user);
+  }
+
+  /**
+   * Sauvegarder les tokens
+   */
+  private saveTokens(tokens: AuthTokens): void {
+    localStorage.setItem(this.STORAGE_KEYS.TOKEN, tokens.token);
+    localStorage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+  }
+
+  /**
+   * Sauvegarder l'utilisateur
+   */
+  private saveUser(user: User): void {
+    localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
+  }
+
+  /**
+   * Nettoyer toutes les données d'authentification
+   */
+  private clearAuthData(): void {
+    localStorage.removeItem(this.STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(this.STORAGE_KEYS.USER);
+  }
+
+  /**
+   * Initialiser le service (à appeler au démarrage de l'app)
+   */
+  async initialize(): Promise<User | null> {
+    try {
+      // Vérifier si on a un token
+      if (!this.isAuthenticated()) {
+        return null;
+      }
+
+      // Récupérer le profil utilisateur pour vérifier que le token est valide
+      const user = await this.getCurrentUserProfile();
+      return user;
+    } catch (error) {
+      // Si l'initialisation échoue, nettoyer le storage
+      this.clearAuthData();
+      return null;
     }
   }
 }
 
-// Instance singleton
+// Exporter l'instance singleton
 export const authService = new AuthService();
+
 export default authService;

@@ -1,0 +1,220 @@
+/* src/components/catalog/SubjectFilters.module.css */
+
+/* Container principal */
+.filtersContainer {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+/* Header */
+.filtersHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filtersTitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.activeCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--spacing-xs);
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-full);
+}
+
+.toggleButton {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+  color: var(--color-primary-blue);
+  transition: transform var(--duration-fast) var(--easing-ease-out);
+}
+
+.toggleButton:hover {
+  transform: scale(1.1);
+}
+
+/* Filtres principaux */
+.mainFilters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Filtres avancés */
+.advancedFilters {
+  display: grid;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+.advancedFilters.collapsed {
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  opacity: 0;
+}
+
+.advancedFilters.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Groupe de filtre */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.filterLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Actions */
+.filterActions {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+}
+
+.resetButton {
+  color: var(--color-error);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.resetButton:hover {
+  color: var(--color-error);
+  text-decoration: underline;
+  transform: translateY(-1px);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .filtersContainer {
+    padding: var(--spacing-md);
+  }
+
+  .filtersHeader {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .filtersTitle {
+    font-size: var(--font-size-body);
+  }
+
+  .mainFilters,
+  .advancedFilters {
+    gap: var(--spacing-md);
+  }
+
+  .advancedFilters {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+  }
+
+  .filterActions {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .filtersContainer {
+  background: var(--color-surface-dark);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="dark"] .filtersHeader {
+  border-bottom-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .filtersTitle {
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .filterLabel {
+  color: var(--color-text-secondary-dark);
+}
+
+[data-theme="dark"] .advancedFilters {
+  border-top-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .filterActions {
+  border-top-color: var(--color-border-dark);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .filtersContainer,
+  .advancedFilters,
+  .toggleButton,
+  .resetButton {
+    transition: none;
+  }
+
+  .toggleButton:hover,
+  .resetButton:hover {
+    transform: none;
+  }
+}
+
+/* Focus pour accessibilité */
+.toggleButton:focus-visible,
+.resetButton:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Animation du compteur */
+@keyframes countPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.activeCount {
+  animation: countPulse var(--duration-fast) var(--easing-ease-out);
+}

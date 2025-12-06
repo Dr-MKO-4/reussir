@@ -1,0 +1,319 @@
+/* src/components/catalog/TagCloud.module.css */
+
+/* Container principal */
+.tagCloudContainer {
+  width: 100%;
+  padding: var(--spacing-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.clearButton {
+  background: transparent;
+  border: none;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.clearButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  text-decoration: underline;
+}
+
+.clearButton:focus-visible {
+  outline: 2px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+/* Nuage de tags */
+.tagCloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  min-height: 200px;
+}
+
+/* Tag individuel */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tag:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary-blue);
+  z-index: 1;
+}
+
+.tag:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+.tag.selected {
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+  border-color: var(--color-primary-blue);
+  box-shadow: var(--shadow-button);
+}
+
+.tag.selected:hover {
+  background: var(--color-primary-blue-hover);
+}
+
+.tag.hovered {
+  animation: pulse var(--duration-fast) var(--easing-ease-out);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Nom du tag */
+.tagName {
+  line-height: 1;
+}
+
+/* Compteur du tag */
+.tagCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--spacing-xs);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-full);
+}
+
+.tag.selected .tagCount {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-white);
+}
+
+/* Variante minimal */
+.tagCloud.minimal .tag {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.tagCloud.minimal .tag:hover {
+  background: var(--color-surface-hover);
+}
+
+.tagCloud.minimal .tag.selected {
+  background: var(--color-primary-blue-light);
+  color: var(--color-primary-blue);
+}
+
+/* Variante colorful */
+.tagCloud.colorful .tag {
+  border-width: 2px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.tagCloud.colorful .tag:hover {
+  border-width: 2px;
+  box-shadow: 0 4px 12px currentColor;
+  opacity: 0.9;
+}
+
+.tagCloud.colorful .tag.selected {
+  background: currentColor;
+  color: var(--color-white);
+}
+
+/* Info */
+.info {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .tagCloudContainer {
+    padding: var(--spacing-md);
+  }
+
+  .header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .title {
+    font-size: var(--font-size-body);
+  }
+
+  .clearButton {
+    font-size: var(--font-size-xs);
+  }
+
+  .tagCloud {
+    padding: var(--spacing-md);
+    gap: var(--spacing-xs);
+    min-height: 150px;
+  }
+
+  .tag {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .tag:hover {
+    transform: scale(1.05);
+  }
+
+  .tagCount {
+    min-width: 18px;
+    height: 18px;
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .tagCloudContainer {
+  background: var(--color-surface-dark);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .title {
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .tag {
+  background: var(--color-background-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .tag:hover {
+  border-color: var(--color-primary-blue);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .tag.selected {
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+}
+
+[data-theme="dark"] .tagCount {
+  background: var(--color-surface-dark);
+  color: var(--color-text-secondary-dark);
+}
+
+[data-theme="dark"] .tagCloud.minimal .tag:hover {
+  background: var(--color-surface-hover-dark);
+}
+
+[data-theme="dark"] .tagCloud.minimal .tag.selected {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .info {
+  border-top-color: var(--color-border-dark);
+  color: var(--color-text-secondary-dark);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .tag,
+  .tag:hover {
+    transition: none;
+    animation: none;
+    transform: none;
+  }
+
+  .tag.hovered {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .tag {
+    border-width: 2px;
+  }
+
+  .tag:focus-visible {
+    outline-width: 3px;
+  }
+
+  .tag.selected {
+    border-width: 3px;
+  }
+}
+
+/* Animation d'entrée */
+.tag {
+  animation: fadeInScale var(--duration-normal) var(--easing-ease-out) backwards;
+}
+
+.tag:nth-child(1) { animation-delay: 0ms; }
+.tag:nth-child(2) { animation-delay: 50ms; }
+.tag:nth-child(3) { animation-delay: 100ms; }
+.tag:nth-child(4) { animation-delay: 150ms; }
+.tag:nth-child(5) { animation-delay: 200ms; }
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

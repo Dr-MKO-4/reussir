@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/useAuth';
 import { UserRole } from '../types/auth';
 import UserDashboard from '../components/dashboard/UserDashboard';
 import AdminDashboard from '../components/dashboard/AdminDashboard';

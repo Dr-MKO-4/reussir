@@ -1,0 +1,470 @@
+# 📊 Reporting Frontend - Projet Catalogue Réussir
+
+## 1. Synthèse de l'Audit (croisement des sources)
+
+### Fichiers complets (logique avancée)
+- UI de base : Button, Input, Card, Modal, Select, Spinner, Alert, Badge, Pagination, Tabs, SearchBar
+- Layout : Header, Footer, MainLayout
+- Services : api.ts, auth.ts, storage.ts, catalogService.ts
+- Types : catalog.ts, cart.ts
+- Contexts : AuthContext.tsx, CartContext.tsx, ToastContext.tsx
+- Hooks : useAuth.ts, useCart.ts
+- Pages : NotFound.tsx, Login.tsx
+- Composant catalogue : SubjectCard.tsx
+
+### Fichiers partiels/squelettes (à compléter)
+- UI avancée : EmptyState, Skeleton, Avatar, Chip, Tooltip, Dropdown, Breadcrumb, Accordion, Switch, Checkbox, Radio, Textarea, Divider, Progress, Slider
+- Catalogue : SubjectList, SubjectGrid, SubjectFilters, SortDropdown, CategoryList, SubjectDetailView, PreviewCarousel, SubjectMetadata, QuickActions, TagCloud, SearchResults, FeaturedSubjects, RecommendedSubjects
+- Panier : CartItem, CartSummary, PromoCodeInput, BundleSuggestions, CartIcon, CartDropdown, CartEmpty, CheckoutFlow, CheckoutStep, OrderSummaryCard, PaymentForm, ContactForm, OrderConfirmation
+- Dashboard/Profile : UserDashboard, AdminDashboard, StatsCard, RecentActivity, StudyProgress, PerformanceChart, QuickActions, UpcomingExams, RecommendationWidget, AchievementBadges, StudyStreak, ProfileHeader, ProfileForm, PasswordChangeForm, NotificationSettings, PrivacySettings, AccountDeletion, PreferencesForm, SubscriptionCard
+- Pages : Profile.tsx, SubjectDetails.tsx, Signup.tsx, CompleteProfile.tsx, AdminDashboard.tsx, CartPage.tsx, DashboardPage.tsx
+
+### Doublons à nettoyer
+- api.ts/api.js, AuthContext.tsx/AuthContext.jsx, ThemeContext.tsx/ThemeContext.jsx, Profile.tsx/Profile.jsx
+- Plusieurs doublons dans cart/ et catalog/ (voir audit détaillé)
+
+---
+
+## 2. État d'Avancement des Sprints
+
+### Sprint 1 - Foundation ✅ TERMINÉ
+- Nettoyage des doublons principaux
+- Création/amélioration des services core (api, auth, storage, catalogService)
+- Types principaux (catalog, cart)
+- Contexts (Auth, Cart)
+- Hooks (useAuth, useCart)
+
+### Sprint 2 - UI Foundation ✅ TERMINÉ
+- Composants UI de base (Button, Input, Card, Modal, Select, Spinner, Alert, Badge, Pagination, Tabs, SearchBar)
+- Layout (Header, Footer, MainLayout)
+- CSS modules associés
+
+### Sprint 3 - Pages & Features (TERMINÉ)
+
+#### Ce qu'il manque pour finaliser le Sprint 3 :
+
+---
+#### Intégration concrète des pages du Sprint 3
+
+**SubjectDetailsPage.tsx**
+- Utiliser `components/catalog/SubjectDetailView.tsx` pour la structure principale de la fiche sujet.
+- Intégrer `PreviewCarousel.tsx` pour l’aperçu des documents.
+- Afficher les métadonnées via `SubjectMetadata.tsx`.
+- Ajouter les actions rapides avec `QuickActions.tsx` (ajout panier/favori).
+- Utiliser `Tabs.tsx` pour les sections (description, avis, corrections, etc.).
+- Afficher les tags avec `Badge.tsx` et les infos principales avec `Card.tsx`.
+- Gérer le chargement avec `Spinner.tsx` et l’état vide avec `EmptyState.tsx`.
+- Charger les données via `catalogService.ts`.
+- (Optionnel) Ajouter une section commentaires.
+
+**CartPage.tsx**
+- Utiliser le contexte `CartContext.tsx` pour récupérer les items.
+- Afficher chaque item avec `CartItem.tsx`.
+- Afficher le récapitulatif avec `CartSummary.tsx`.
+- Gérer les codes promo avec `PromoCodeInput.tsx`.
+- Afficher les suggestions IA avec `BundleSuggestions.tsx`.
+- Afficher `EmptyState.tsx` si le panier est vide.
+- Gérer le chargement avec `Spinner.tsx`.
+- Utiliser `Button.tsx` pour les actions (valider, continuer achats).
+
+**DashboardPage.tsx**
+- Utiliser `UserDashboard.tsx` comme composant principal.
+- Afficher les statistiques avec `StatsCard.tsx`.
+- Afficher l’historique avec `RecentActivity.tsx`.
+- Afficher les recommandations avec `RecommendationWidget.tsx`.
+- Afficher la progression d’étude avec `StudyProgress.tsx` et `PerformanceChart.tsx`.
+- Ajouter les actions rapides avec `QuickActions.tsx`.
+- Gérer le chargement avec `Spinner.tsx`.
+- Utiliser le contexte `AuthContext.tsx` pour les infos utilisateur.
+- Envelopper la page dans `MainLayout.tsx` ou `DashboardLayout.tsx`.
+
+**Fonctionnalités avancées à intégrer sur toutes les pages**
+- Ajouter la sidebar de filtres avancés avec `SubjectFilters.tsx` ou `FilterBar.tsx`.
+- Utiliser `SearchBar.tsx` pour la recherche avancée (avec suggestions, debounce, etc.).
+- Gérer les états vides avec `EmptyState.tsx` et le chargement avec `Spinner.tsx`.
+- S’assurer que tous les composants sont responsive et accessibles (props ARIA, tabIndex, etc.).
+- Utiliser les layouts (`MainLayout`, `Header`, `Footer`) pour la cohérence visuelle.
+
+### Sprint 4 - Catalogue & Panier
+ - Compléter les composants catalogue :
+	 - SubjectList.tsx, SubjectGrid.tsx, SubjectFilters.tsx, SortDropdown.tsx, CategoryList.tsx
+	 - SubjectDetailView.tsx, PreviewCarousel.tsx, SubjectMetadata.tsx, QuickActions.tsx, TagCloud.tsx, SearchResults.tsx, FeaturedSubjects.tsx, RecommendedSubjects.tsx
+ - Finaliser SubjectDetailsPage.tsx (fiche sujet complète)
+ - Compléter les composants panier :
+	 - CartItem.tsx, CartSummary.tsx, PromoCodeInput.tsx, BundleSuggestions.tsx, CartIcon.tsx, CartDropdown.tsx, CartEmpty.tsx, CheckoutFlow.tsx, CheckoutStep.tsx, OrderSummaryCard.tsx, PaymentForm.tsx, ContactForm.tsx, OrderConfirmation.tsx
+ - Finaliser CartPage.tsx (page panier)
+ - Intégrer les services avancés : cartService.ts, favoriteService.ts
+
+### Sprint 5 - Dashboard & Profil
+ - Compléter DashboardPage.tsx (tableau de bord utilisateur)
+ - Compléter les composants dashboard :
+	 - UserDashboard.tsx, AdminDashboard.tsx, StatsCard.tsx, RecentActivity.tsx, StudyProgress.tsx, PerformanceChart.tsx, QuickActions.tsx, UpcomingExams.tsx, RecommendationWidget.tsx, AchievementBadges.tsx, StudyStreak.tsx
+ - Compléter les composants profil :
+	 - ProfileHeader.tsx, ProfileForm.tsx, PasswordChangeForm.tsx, NotificationSettings.tsx, PrivacySettings.tsx, AccountDeletion.tsx, PreferencesForm.tsx, SubscriptionCard.tsx
+ - Finaliser Profile.tsx, CompleteProfile.tsx, AdminDashboard.tsx
+---
+### Sprint 6 - Historique & Favoris
+ - Créer et intégrer :
+	 - HistoryContext.tsx, FavoriteContext.tsx
+	 - HistoryList.tsx, HistoryFilters.tsx, HistoryStats.tsx, HistoryTimeline.tsx, HistoryExport.tsx
+	 - FavoritesList.tsx, FolderTree.tsx, FolderCard.tsx, CreateFolderModal.tsx, FavoriteNotes.tsx, ShareFavorites.tsx
+ - Finaliser pages History.tsx, Favorites.tsx
+
+### Sprint 7 - Fonctionnalités IA
+ - Créer et intégrer :
+	 - aiService.ts
+	 - AIAssistant.tsx, AISuggestions.tsx, StudyPlanCard.tsx, SuccessPrediction.tsx, AnalysisChart.tsx, ChatInterface.tsx, RecommendationCard.tsx, SuccessPredictionCard.tsx, StudyPlanGenerator.tsx, StudyPlanTimeline.tsx, PerformanceInsights.tsx, SmartFilters.tsx, DifficultyEstimator.tsx, QuizGenerator.tsx, CompletionPredictor.tsx
+ - Finaliser pages AIAssistant.tsx, StudyPlanner.tsx, Analytics.tsx
+## 3. Ce qui existe (forces du projet)
+### Sprint 8 - Authentification avancée
+ - Compléter et améliorer :
+	 - LoginForm.tsx, SignupForm.tsx, ForgotPasswordForm.tsx, PasswordResetForm.tsx, HeroSection.tsx, PageTransition.tsx, SocialLoginButtons.tsx, EmailVerificationBanner.tsx, TwoFactorInput.tsx, PasswordStrengthMeter.tsx, TermsCheckbox.tsx, RoleSelector.tsx, WelcomeMessage.tsx
+ - Finaliser toutes les pages auth (Login, Signup, ForgotPassword, ResetPassword, EmailVerification, EmailVerified, GoogleCallback)
+- Architecture TypeScript stricte, modulaire, scalable
+### Sprint 9 - UI avancée & Layouts
+ - Créer et intégrer :
+	 - Skeleton.tsx, Avatar.tsx, Chip.tsx, Tooltip.tsx, Dropdown.tsx, Breadcrumb.tsx, Accordion.tsx, Switch.tsx, Checkbox.tsx, Radio.tsx, Textarea.tsx, Divider.tsx, Progress.tsx, Slider.tsx
+	 - DashboardLayout.tsx, AuthLayout.tsx, Sidebar.tsx
+- Design system cohérent (UI de base, layout, CSS modules, dark mode)
+### Sprint 10 - Services & Hooks avancés
+ - Créer et intégrer :
+	 - historyService.ts, paymentService.ts, aiService.ts, notificationService.ts, analyticsService.ts, websocketService.ts, exportService.ts, searchService.ts, cacheService.ts, validationService.ts, errorTrackingService.ts, i18nService.ts, permissionService.ts, imageService.ts, pdfService.ts, reportService.ts
+ - Créer tous les hooks avancés : useDebounce, useInfiniteScroll, useMediaQuery, usePagination, useSearch, useFavorites, useModal, useForm, useClickOutside
+- Services API robustes (gestion erreurs, interceptors, sécurité)
+### Sprint 11 - Pages secondaires & Admin
+ - Créer et intégrer :
+	 - Pages : About.tsx, Contact.tsx, FAQ.tsx, Terms.tsx, Privacy.tsx, Pricing.tsx
+	 - Pages admin : admin/Users.tsx, admin/Subjects.tsx, admin/Orders.tsx, admin/Analytics.tsx
+- Contexts et hooks pour auth et panier opérationnels
+### Sprint 12 - Tests & Documentation
+ - Générer les tests unitaires pour tous les composants critiques (UI, services, hooks)
+ - Générer les tests d'intégration (auth flow, purchase flow, favorite management)
+ - Générer les tests E2E (onboarding, purchase, dashboard usage)
+ - Générer la documentation technique (Storybook, API, hooks, guides)
+- Pages principales d'accès (login, not found, home, search) déjà en place
+### Sprint 13 - Optimisations, SEO, Accessibilité
+ - Mettre en place :
+	 - Code splitting, lazy loading, image optimization, bundle optimization, memoization, caching
+	 - SEO (meta tags, sitemap, robots.txt, structured data)
+	 - Accessibilité (ARIA, contrastes, navigation clavier, focus)
+	 - Responsive utilities, animations, micro-interactions
+- Respect des bonnes pratiques (accessibilité, responsive, séparation logique/UI)
+### Sprint 14 - PWA, i18n, Monitoring, Déploiement
+ - Ajouter :
+	 - PWA (service worker, manifest, offline support, install prompt)
+	 - Internationalisation (i18n, fichiers de traduction, language switcher)
+	 - Analytics & monitoring (Google Analytics, Sentry, performance monitoring)
+	 - CI/CD, scripts de build, vérifications pré-déploiement
+	 - Documentation utilisateur et développeur
+
+## 4. Ce qu'il manque (axes prioritaires)
+- Finaliser les pages critiques du Sprint 3 (fiche sujet, panier, dashboard utilisateur)
+- Compléter tous les composants squelettes (UI avancée, catalogue, panier, dashboard, profile)
+- Nettoyer tous les doublons listés dans l'audit
+- Créer les services avancés (cartService, favoriteService, historyService, paymentService, aiService)
+- Ajouter les nouveaux types (dashboard, ai, etc.)
+- Compléter les hooks avancés (useDebounce, useInfiniteScroll, useSearch, etc.)
+- Mettre en place les nouveaux contexts (Search, Favorite, History, Modal)
+- Intégrer les pages secondaires (profile, admin, etc.)
+- Générer les tests unitaires et d'intégration
+- Générer la documentation technique et utilisateur
+
+---
+
+## 5. Prochaines Étapes Recommandées
+1. Nettoyer tous les doublons restants (voir section 3 de l'audit)
+2. Compléter les composants partiels/squelettes (priorité : catalogue, panier, dashboard)
+3. Finaliser les pages critiques du Sprint 3
+4. Créer les services et hooks avancés
+5. Ajouter les tests et la documentation
+
+---
+
+## 6. Statistiques Globales (croisement audit + roadmap)
+- Fichiers frontend identifiés : ~180
+- Fichiers complets : ~30 (17%)
+- Fichiers partiels/squelettes : ~25 (14%)
+- Fichiers à créer/restants : ~125 (69%)
+- Doublons à supprimer : 13 paires (26 fichiers)
+
+---
+
+## 7. Synthèse visuelle d'avancement
+
+| Sprint         | Statut      | Progression         |
+|---------------|-------------|---------------------|
+| Sprint 1      | ✅ Terminé   | 100% (10/10)        |
+| Sprint 2      | ✅ Terminé   | 100% (14/14)        |
+| Sprint 3      | ✅ Terminé | 40% (5/5)           |
+| Sprints 4+    | 🚧 En cours   | 0%                  |
+
+---
+
+**Dernière mise à jour : 12/11/2025**
+
+
+frontend/
+├── .env
+├── .env.exemple
+├── .gitignore
+├── App.css
+├── audit_page.md
+├── conflt.txt
+├── eslint.config.js
+├── index.html
+├── livraison.txt
+├── package.json
+├── page_front.md
+├── projet_front.txt
+├── README.md
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.js
+├── vite.config.ts
+├── public/
+│   ├── faviconReussir.ico
+│   ├── ReussirLogo1.png
+│   ├── apple-touch-icon.png
+│   ├── safari-pinned-tab.svg
+│   └── ...
+├── src/
+│   ├── App.tsx
+│   ├── App.jsx (doublon à supprimer)
+│   ├── main.tsx
+│   ├── styles/
+│   │   ├── globals.css
+│   │   ├── theme.css
+│   │   ├── variables.css
+│   │   └── ...
+│   ├── assets/
+│   │   └── Reussir1.png
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── Select.tsx
+│   │   │   ├── Spinner.tsx
+│   │   │   ├── Alert.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Pagination.tsx
+│   │   │   ├── Tabs.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── ...
+│   │   ├── catalog/
+│   │   │   ├── SubjectCard.tsx
+│   │   │   ├── SubjectList.tsx
+│   │   │   ├── SubjectGrid.tsx
+│   │   │   ├── SubjectFilters.tsx
+│   │   │   ├── SortDropdown.tsx
+│   │   │   ├── CategoryList.tsx
+│   │   │   ├── SubjectDetailView.tsx
+│   │   │   ├── PreviewCarousel.tsx
+│   │   │   ├── SubjectMetadata.tsx
+│   │   │   ├── QuickActions.tsx
+│   │   │   ├── TagCloud.tsx
+│   │   │   ├── SearchResults.tsx
+│   │   │   ├── FeaturedSubjects.tsx
+│   │   │   ├── RecommendedSubjects.tsx
+│   │   │   └── ...
+│   │   ├── cart/
+│   │   │   ├── CartItem.tsx
+│   │   │   ├── CartSummary.tsx
+│   │   │   ├── PromoCodeInput.tsx
+│   │   │   ├── BundleSuggestions.tsx
+│   │   │   ├── CartIcon.tsx
+│   │   │   ├── CartDropdown.tsx
+│   │   │   ├── CartEmpty.tsx
+│   │   │   ├── CheckoutFlow.tsx
+│   │   │   ├── CheckoutStep.tsx
+│   │   │   ├── OrderSummaryCard.tsx
+│   │   │   ├── PaymentForm.tsx
+│   │   │   ├── ContactForm.tsx
+│   │   │   ├── OrderConfirmation.tsx
+│   │   │   └── ...
+│   │   ├── dashboard/
+│   │   │   ├── UserDashboard.tsx
+│   │   │   ├── AdminDashboard.tsx
+│   │   │   ├── StatsCard.tsx
+│   │   │   ├── RecentActivity.tsx
+│   │   │   ├── StudyProgress.tsx
+│   │   │   ├── PerformanceChart.tsx
+│   │   │   ├── QuickActions.tsx
+│   │   │   ├── UpcomingExams.tsx
+│   │   │   ├── RecommendationWidget.tsx
+│   │   │   ├── AchievementBadges.tsx
+│   │   │   ├── StudyStreak.tsx
+│   │   │   └── ...
+│   │   ├── profile/
+│   │   │   ├── ProfileHeader.tsx
+│   │   │   ├── ProfileForm.tsx
+│   │   │   ├── PasswordChangeForm.tsx
+│   │   │   ├── NotificationSettings.tsx
+│   │   │   ├── PrivacySettings.tsx
+│   │   │   ├── AccountDeletion.tsx
+│   │   │   ├── PreferencesForm.tsx
+│   │   │   ├── SubscriptionCard.tsx
+│   │   │   └── ...
+│   │   ├── favorites/
+│   │   │   ├── FavoritesList.tsx
+│   │   │   ├── FolderTree.tsx
+│   │   │   ├── FolderCard.tsx
+│   │   │   ├── CreateFolderModal.tsx
+│   │   │   ├── FavoriteNotes.tsx
+│   │   │   ├── ShareFavorites.tsx
+│   │   │   └── ...
+│   │   ├── history/
+│   │   │   ├── HistoryList.tsx
+│   │   │   ├── HistoryFilters.tsx
+│   │   │   ├── HistoryStats.tsx
+│   │   │   ├── HistoryTimeline.tsx
+│   │   │   ├── HistoryExport.tsx
+│   │   │   └── ...
+│   │   ├── ai/
+│   │   │   ├── SuccessPredictionCard.tsx
+│   │   │   ├── StudyPlanGenerator.tsx
+│   │   │   ├── StudyPlanTimeline.tsx
+│   │   │   ├── QuizGenerator.tsx
+│   │   │   ├── CompletionPredictor.tsx
+│   │   │   └── ...
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── SignupForm.tsx
+│   │   │   ├── ForgotPasswordForm.tsx
+│   │   │   ├── PasswordResetForm.tsx
+│   │   │   ├── HeroSection.tsx
+│   │   │   ├── PageTransition.tsx
+│   │   │   ├── SocialLoginButtons.tsx
+│   │   │   ├── EmailVerificationBanner.tsx
+│   │   │   ├── TwoFactorInput.tsx
+│   │   │   ├── PasswordStrengthMeter.tsx
+│   │   │   ├── TermsCheckbox.tsx
+│   │   │   ├── RoleSelector.tsx
+│   │   │   ├── WelcomeMessage.tsx
+│   │   │   └── ...
+│   │   ├── ui/
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── LoadingSpinner.tsx
+│   │   │   ├── SuccessModal.tsx
+│   │   │   ├── GoogleButton.tsx
+│   │   │   ├── BackgroundAnimation.tsx
+│   │   │   ├── ImageUpload.tsx
+│   │   │   ├── FileUpload.tsx
+│   │   │   ├── DatePicker.tsx
+│   │   │   └── ...
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── MainLayout.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── DashboardLayout.tsx
+│   │   │   ├── AuthLayout.tsx
+│   │   │   └── ...
+│   │   └── ...
+│   ├── contexts/
+│   │   ├── AuthContext.tsx
+│   │   ├── CartContext.tsx
+│   │   ├── ThemeContext.tsx
+│   │   ├── ToastContext.tsx
+│   │   ├── FavoriteContext.tsx
+│   │   ├── HistoryContext.tsx
+│   │   ├── ModalContext.tsx
+│   │   └── ...
+│   ├── hooks/
+│   │   ├── useApi.ts
+│   │   ├── useAuth.ts
+│   │   ├── useCart.ts
+│   │   ├── useLocalStorage.ts
+│   │   ├── useTheme.ts
+│   │   ├── useToast.ts
+│   │   ├── useDebounce.ts
+│   │   ├── useInfiniteScroll.ts
+│   │   ├── useMediaQuery.ts
+│   │   ├── usePagination.ts
+│   │   ├── useSearch.ts
+│   │   ├── useFavorites.ts
+│   │   ├── useModal.ts
+│   │   ├── useForm.ts
+│   │   ├── useClickOutside.ts
+│   │   └── ...
+│   ├── pages/
+│   │   ├── HomePage.tsx
+│   │   ├── Home.tsx
+│   │   ├── Discover.tsx
+│   │   ├── SearchPage.tsx
+│   │   ├── SubjectDetailsPage.tsx
+│   │   ├── CartPage.tsx
+│   │   ├── Checkout.tsx
+│   │   ├── OrderSuccess.tsx
+│   │   ├── OrderHistory.tsx
+│   │   ├── DashboardPage.tsx
+│   │   ├── AdminDashboard.tsx
+│   │   ├── Student.tsx
+│   │   ├── Parent.tsx
+│   │   ├── professeur.tsx
+│   │   ├── Profile.tsx
+│   │   ├── CompleteProfile.tsx
+│   │   ├── Signup.tsx
+│   │   ├── Login.tsx
+│   │   ├── ForgotPassword.tsx
+│   │   ├── ResetPassword.tsx
+│   │   ├── EmailVerification.tsx
+│   │   ├── EmailVerified.tsx
+│   │   ├── GoogleCallback.tsx
+│   │   ├── History.tsx
+│   │   ├── Favorites.tsx
+│   │   ├── About.tsx
+│   │   ├── Contact.tsx
+│   │   ├── FAQ.tsx
+│   │   ├── Terms.tsx
+│   │   ├── Privacy.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── NotFound.tsx
+│   │   └── ...
+│   ├── services/
+│   │   ├── api.ts
+│   │   ├── auth.ts
+│   │   ├── storage.ts
+│   │   ├── catalogService.ts
+│   │   ├── user.ts
+│   │   ├── googleAuth.ts
+│   │   ├── awsConfig.ts
+│   │   ├── cartService.ts
+│   │   ├── favoriteService.ts
+│   │   ├── historyService.ts
+│   │   ├── paymentService.ts
+│   │   ├── aiService.ts
+│   │   ├── notificationService.ts
+│   │   ├── analyticsService.ts
+│   │   ├── websocketService.ts
+│   │   ├── exportService.ts
+│   │   ├── searchService.ts
+│   │   └── ...
+│   ├── types/
+│   │   ├── api.ts
+│   │   ├── auth.ts
+│   │   ├── catalog.ts
+│   │   ├── cart.ts
+│   │   ├── card.ts
+│   │   ├── theme.ts
+│   │   ├── user.ts
+│   │   ├── index.ts
+│   │   └── ...
+│   ├── utils/
+│   │   ├── constants.ts
+│   │   ├── validation.ts
+│   │   ├── helpers.ts
+│   │   ├── theme.ts
+│   │   ├── formatters.ts
+│   │   ├── analytics.ts
+│   │   ├── storage.ts
+│   │   ├── errors.ts
+│   │   └── ...
+│   └── ...
+└── ...

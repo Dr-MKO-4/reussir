@@ -1,0 +1,248 @@
+/* src/components/catalog/SubjectGrid.module.css */
+
+/* Container principal */
+.gridContainer {
+  width: 100%;
+  padding: var(--spacing-lg) 0;
+}
+
+/* Info résultats */
+.resultsInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding: 0 var(--spacing-sm);
+}
+
+.resultsCount {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.pageInfo {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+}
+
+/* Grille principale */
+.grid {
+  display: grid;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+  animation: fadeIn var(--duration-slow) var(--easing-ease-out);
+}
+
+/* Colonnes variables */
+.cols2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.cols3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.cols4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.cols5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Item de grille */
+.gridItem {
+  opacity: 0;
+  animation: slideUp var(--duration-normal) var(--easing-ease-out) forwards;
+  transition: transform var(--duration-normal) var(--easing-ease-out);
+}
+
+.gridItem:hover {
+  transform: translateY(-8px);
+  z-index: 1;
+}
+
+/* Animation d'entrée */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Container de pagination */
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-3xl);
+  padding: var(--spacing-lg) 0;
+}
+
+/* Loading state */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-5xl);
+  min-height: 500px;
+  gap: var(--spacing-lg);
+}
+
+.loadingText {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive - Grande tablette (1200px) */
+@media (max-width: 1200px) {
+  .cols5 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Responsive - Tablette (1024px) */
+@media (max-width: 1024px) {
+  .cols4,
+  .cols5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid {
+    gap: var(--spacing-lg);
+  }
+
+  .resultsInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* Responsive - Petite tablette (768px) */
+@media (max-width: 768px) {
+  .cols2,
+  .cols3,
+  .cols4,
+  .cols5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid {
+    gap: var(--spacing-md);
+  }
+
+  .resultsCount {
+    font-size: var(--font-size-body);
+  }
+
+  .pageInfo {
+    font-size: var(--font-size-sm);
+  }
+
+  .gridItem:hover {
+    transform: translateY(-4px);
+  }
+
+  .loadingContainer {
+    padding: var(--spacing-3xl);
+    min-height: 400px;
+  }
+}
+
+/* Responsive - Mobile (480px) */
+@media (max-width: 480px) {
+  .cols2,
+  .cols3,
+  .cols4,
+  .cols5 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    gap: var(--spacing-sm);
+  }
+
+  .gridContainer {
+    padding: var(--spacing-md) 0;
+  }
+
+  .resultsInfo {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .paginationContainer {
+    margin-top: var(--spacing-2xl);
+  }
+
+  .gridItem:hover {
+    transform: none;
+  }
+
+  .loadingContainer {
+    padding: var(--spacing-2xl);
+    min-height: 300px;
+  }
+
+  .loadingText {
+    font-size: var(--font-size-body);
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .resultsCount {
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .pageInfo,
+[data-theme="dark"] .loadingText {
+  color: var(--color-text-secondary-dark);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .grid,
+  .gridItem {
+    animation: none;
+  }
+
+  .gridItem:hover {
+    transform: none;
+  }
+
+  .gridItem {
+    opacity: 1;
+  }
+}
+
+/* Focus pour accessibilité */
+.gridItem:focus-within {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 4px;
+  border-radius: var(--radius-lg);
+}
+
+/* Optimisation performance - GPU acceleration */
+.gridItem {
+  will-change: transform;
+}
+
+.gridItem:hover {
+  will-change: transform;
+  backface-visibility: hidden;
+}

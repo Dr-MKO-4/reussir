@@ -1,0 +1,81 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: white;
+  background: var(--primary-color);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+/* Sizes */
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.md {
+  width: 48px;
+  height: 48px;
+  font-size: 0.9rem;
+}
+
+.lg {
+  width: 64px;
+  height: 64px;
+  font-size: 1.1rem;
+}
+
+.xl {
+  width: 80px;
+  height: 80px;
+  font-size: 1.3rem;
+}
+
+/* Variants */
+.circle {
+  border-radius: 50%;
+}
+
+.rounded {
+  border-radius: 8px;
+}
+
+/* Status indicator */
+.status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #10b981;
+}
+
+.status.offline {
+  background: #ef4444;
+}
+
+.status.away {
+  background: #f59e0b;
+}
+
+.avatar:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}

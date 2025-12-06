@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: educational_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: educational_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Flask Python (AI)
+  flask_service:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: educational_flask
+    environment:
+      FLASK_PORT: 5000
+      FLASK_DEBUG: "False"
+      DB_TYPE: postgresql
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: educational_ai
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # API Gateway .NET
+  dotnet_gateway:
+    build:
+      context: ./dotnet
+      dockerfile: Dockerfile
+    container_name: educational_gateway
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      AIService__BaseUrl: http://flask_service:5000
+    ports:
+      - "5001:80"
+      - "5002:443"
+    depends_on:
+      - flask_service
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
