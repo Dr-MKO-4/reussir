@@ -119,3 +119,47 @@ public class HealthCheckResponse
     public string Service { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
 }
+
+// ==================== AUTHENTICATION MODELS ====================
+public class AuthenticationResultDto
+{
+    public string? AccessToken { get; set; }
+    public string? IdToken { get; set; }
+    public string? RefreshToken { get; set; }
+    public int ExpiresIn { get; set; }
+    public string? TokenType { get; set; }
+}
+
+public class SignInRequestDto
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public class SignInResponse
+{
+    public string? AccessToken { get; set; }
+    public string? IdToken { get; set; }
+    public string? RefreshToken { get; set; }
+    public int ExpiresIn { get; set; }
+    public string? TokenType { get; set; } = "Bearer";
+    public string? Error { get; set; }
+}
+
+public class SignUpRequestDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}
+
+public class ConfirmSignUpRequestDto
+{
+    public string Username { get; set; } = string.Empty;
+    public string ConfirmationCode { get; set; } = string.Empty;
+}
+
+public class RefreshTokenRequestDto
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}
