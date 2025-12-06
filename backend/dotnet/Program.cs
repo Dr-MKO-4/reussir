@@ -4,8 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 using Amazon.CognitoIdentityProvider;
 using EducationalAI.Services;
+using Backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +61,11 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
+
+// Configure Entity Framework Core with PostgreSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        pgOptions => pgOptions.MigrationsAssembly("backend")));
 
 // AWS Services
 builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();

@@ -24,11 +24,11 @@ public class AIServiceClient : IAIServiceClient
         _httpClient = httpClient;
         _logger = logger;
         
-        // Configure JSON options (snake_case to PascalCase mapping)
+        // Configure JSON options (case insensitive for snake_case API responses)
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            PropertyNamingPolicy = JsonSerializerOptions.Default.PropertyNamingPolicy
         };
     }
 

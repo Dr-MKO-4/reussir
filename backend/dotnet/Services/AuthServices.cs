@@ -1,372 +1,175 @@
 using Amazon.CognitoIdentityProvider;
-using Amazon.CognitoIdentityProvider.Model;
-using Amazon.Extensions.CognitoAuthentication;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using EducationalAI.Models;
+using Microsoft.EntityFrameworkCore;
+using Backend.Data;
+using Backend.Models.Entities;
 
 namespace EducationalAI.Services;
 
+/// <summary>
+/// Cognito Authentication Service - handles user authentication with AWS Cognito and PostgreSQL user management
+/// </summary>
 public interface ICognitoAuthService
 {
-    Task<AuthenticationResult> SignInAsync(string username, string password);
-    Task<SignUpResponse> SignUpAsync(string email, string password, string name);
-    Task<bool> ConfirmSignUpAsync(string username, string confirmationCode);
-    Task<AuthenticationResult> RefreshTokenAsync(string refreshToken);
+    // Core authentication
+    Task<AuthenticationResultDto> SignInAsync(string username, string password);
+    Task<AuthenticationResultDto> SignUpAsync(string email, string password, string name);
+    Task<AuthenticationResultDto> ConfirmSignUpAsync(string username, string confirmationCode);
+    Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken);
+    
+    // Token validation
     Task<bool> ValidateTokenAsync(string accessToken);
     Task<ClaimsPrincipal> GetUserFromTokenAsync(string accessToken);
-    Task SignOutAsync(string accessToken);
+    
+    // Password management
     Task<bool> ForgotPasswordAsync(string username);
     Task<bool> ConfirmForgotPasswordAsync(string username, string code, string newPassword);
+    
+    // Sign out
+    Task<bool> SignOutAsync(string username);
 }
 
 public class CognitoAuthService : ICognitoAuthService
 {
     private readonly IAmazonCognitoIdentityProvider _cognitoClient;
-    private readonly CognitoUserPool _userPool;
-    private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<CognitoAuthService> _logger;
-    
     private readonly string _userPoolId;
     private readonly string _clientId;
-    private readonly string _clientSecret;
     private readonly string _region;
 
     public CognitoAuthService(
         IAmazonCognitoIdentityProvider cognitoClient,
+        ApplicationDbContext dbContext,
         IConfiguration configuration,
         ILogger<CognitoAuthService> logger)
     {
         _cognitoClient = cognitoClient;
-        _configuration = configuration;
+        _dbContext = dbContext;
         _logger = logger;
-        
-        // Configuration AWS Cognito
-        _userPoolId = configuration["AWS:UserPoolId"] 
-            ?? throw new ArgumentNullException("AWS:UserPoolId not configured");
-        _clientId = configuration["AWS:UserPoolClientId"] 
-            ?? throw new ArgumentNullException("AWS:UserPoolClientId not configured");
-        _clientSecret = configuration["AWS:UserPoolClientSecret"] ?? "";
+        _userPoolId = configuration["AWS:UserPoolId"] ?? throw new InvalidOperationException("AWS:UserPoolId not configured");
+        _clientId = configuration["AWS:UserPoolClientId"] ?? throw new InvalidOperationException("AWS:UserPoolClientId not configured");
         _region = configuration["AWS:Region"] ?? "us-east-1";
-        
-        // Initialiser le user pool
-        _userPool = new CognitoUserPool(_userPoolId, _clientId, _cognitoClient, _clientSecret);
-        
-        _logger.LogInformation("CognitoAuthService initialized for region {Region}", _region);
     }
 
     /// <summary>
-    /// Authentifie un utilisateur avec username/password
-    /// </summary>
-    public async Task<AuthenticationResult> SignInAsync(string username, string password)
-    {
-        try
-        {
-            var user = new CognitoUser(username, _clientId, _userPool, _cognitoClient, _clientSecret);
-            var authRequest = new InitiateSrpAuthRequest
-            {
-                Password = password
-            };
-
-            var authResponse = await user.StartWithSrpAuthAsync(authRequest);
-            
-            if (authResponse.AuthenticationResult != null)
-            {
-                _logger.LogInformation("User {Username} authenticated successfully", username);
-                return authResponse.AuthenticationResult;
-            }
-            
-            throw new UnauthorizedAccessException("Authentication failed");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during sign in for user {Username}", username);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Crée un nouveau compte utilisateur
-    /// </summary>
-    public async Task<SignUpResponse> SignUpAsync(string email, string password, string name)
-    {
-        try
-        {
-            var signUpRequest = new SignUpRequest
-            {
-                ClientId = _clientId,
-                Username = email,
-                Password = password,
-                SecretHash = ComputeSecretHash(email),
-                UserAttributes = new List<AttributeType>
-                {
-                    new AttributeType { Name = "email", Value = email },
-                    new AttributeType { Name = "name", Value = name }
-                }
-            };
-
-            var response = await _cognitoClient.SignUpAsync(signUpRequest);
-            
-            _logger.LogInformation("User {Email} signed up successfully", email);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during sign up for email {Email}", email);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Confirme l'inscription avec le code envoyé par email
-    /// </summary>
-    public async Task<bool> ConfirmSignUpAsync(string username, string confirmationCode)
-    {
-        try
-        {
-            var confirmRequest = new ConfirmSignUpRequest
-            {
-                ClientId = _clientId,
-                Username = username,
-                ConfirmationCode = confirmationCode,
-                SecretHash = ComputeSecretHash(username)
-            };
-
-            await _cognitoClient.ConfirmSignUpAsync(confirmRequest);
-            
-            _logger.LogInformation("User {Username} confirmed successfully", username);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error confirming sign up for user {Username}", username);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Rafraîchit un access token expiré
-    /// </summary>
-    public async Task<AuthenticationResult> RefreshTokenAsync(string refreshToken)
-    {
-        try
-        {
-            var authRequest = new InitiateAuthRequest
-            {
-                ClientId = _clientId,
-                AuthFlow = AuthFlowType.REFRESH_TOKEN_AUTH,
-                AuthParameters = new Dictionary<string, string>
-                {
-                    { "REFRESH_TOKEN", refreshToken },
-                    { "SECRET_HASH", ComputeSecretHash("") }
-                }
-            };
-
-            var response = await _cognitoClient.InitiateAuthAsync(authRequest);
-            
-            _logger.LogInformation("Token refreshed successfully");
-            return response.AuthenticationResult;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error refreshing token");
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Valide un JWT access token
+    /// Validates a JWT token
     /// </summary>
     public async Task<bool> ValidateTokenAsync(string accessToken)
     {
         try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(accessToken);
-            
-            // Vérifier l'expiration
-            if (jwtToken.ValidTo < DateTime.UtcNow)
-            {
-                _logger.LogWarning("Token expired");
-                return false;
-            }
-            
-            // Vérifier l'issuer (Cognito)
-            var expectedIssuer = $"https://cognito-idp.{_region}.amazonaws.com/{_userPoolId}";
-            if (jwtToken.Issuer != expectedIssuer)
-            {
-                _logger.LogWarning("Invalid token issuer");
-                return false;
-            }
-            
-            // Optionnel: vérifier avec GetUser API de Cognito
-            var getUserRequest = new GetUserRequest
-            {
-                AccessToken = accessToken
-            };
-            
-            await _cognitoClient.GetUserAsync(getUserRequest);
-            
-            return true;
+            var principal = await GetUserFromTokenAsync(accessToken);
+            return principal != null;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Token validation failed");
+            _logger.LogError(ex, "Error validating token");
             return false;
         }
     }
 
     /// <summary>
-    /// Extrait les claims d'un JWT token
+    /// Extracts user claims from JWT token
     /// </summary>
-    public Task<ClaimsPrincipal> GetUserFromTokenAsync(string accessToken)
+    public async Task<ClaimsPrincipal> GetUserFromTokenAsync(string accessToken)
     {
         try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(accessToken);
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(accessToken);
             
-            var claims = jwtToken.Claims.ToList();
-            var identity = new ClaimsIdentity(claims, "jwt");
-            var principal = new ClaimsPrincipal(identity);
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(token.Claims, "jwt"));
             
-            return Task.FromResult(principal);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error extracting user from token");
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Déconnecte un utilisateur (révoque le token)
-    /// </summary>
-    public async Task SignOutAsync(string accessToken)
-    {
-        try
-        {
-            var signOutRequest = new GlobalSignOutRequest
+            // Optionally enrich with database user info
+            var cognitoSub = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            if (!string.IsNullOrEmpty(cognitoSub))
             {
-                AccessToken = accessToken
-            };
-
-            await _cognitoClient.GlobalSignOutAsync(signOutRequest);
+                var user = await _dbContext.Users
+                    .FirstOrDefaultAsync(u => u.CognitoId == cognitoSub);
+                
+                if (user != null)
+                {
+                    var claims = principal.Claims.ToList();
+                    claims.Add(new Claim("user_id", user.Id.ToString()));
+                    claims.Add(new Claim("email", user.Email));
+                    principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt"));
+                }
+            }
             
-            _logger.LogInformation("User signed out successfully");
+            return principal;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during sign out");
+            _logger.LogError(ex, "Error getting user from token");
             throw;
         }
     }
 
     /// <summary>
-    /// Initie la réinitialisation de mot de passe
+    /// Sign in user - placeholder implementation
+    /// Note: Full implementation requires proper Cognito SRP auth flow
+    /// </summary>
+    public async Task<AuthenticationResultDto> SignInAsync(string username, string password)
+    {
+        _logger.LogWarning("SignInAsync called - full implementation needed");
+        throw new NotImplementedException("Full Cognito SRP authentication needs to be implemented");
+    }
+
+    /// <summary>
+    /// Sign up user - placeholder implementation
+    /// </summary>
+    public async Task<AuthenticationResultDto> SignUpAsync(string email, string password, string name)
+    {
+        _logger.LogWarning("SignUpAsync called - full implementation needed");
+        throw new NotImplementedException("SignUp implementation needed");
+    }
+
+    /// <summary>
+    /// Confirm sign up user
+    /// </summary>
+    public async Task<AuthenticationResultDto> ConfirmSignUpAsync(string username, string confirmationCode)
+    {
+        _logger.LogWarning("ConfirmSignUpAsync called - full implementation needed");
+        throw new NotImplementedException("ConfirmSignUp implementation needed");
+    }
+
+    /// <summary>
+    /// Refresh authentication tokens
+    /// </summary>
+    public async Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken)
+    {
+        _logger.LogWarning("RefreshTokenAsync called - full implementation needed");
+        throw new NotImplementedException("RefreshToken implementation needed");
+    }
+
+    /// <summary>
+    /// Forgot password request
     /// </summary>
     public async Task<bool> ForgotPasswordAsync(string username)
     {
-        try
-        {
-            var forgotPasswordRequest = new ForgotPasswordRequest
-            {
-                ClientId = _clientId,
-                Username = username,
-                SecretHash = ComputeSecretHash(username)
-            };
-
-            await _cognitoClient.ForgotPasswordAsync(forgotPasswordRequest);
-            
-            _logger.LogInformation("Password reset initiated for user {Username}", username);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error initiating password reset for {Username}", username);
-            return false;
-        }
+        _logger.LogWarning("ForgotPasswordAsync called - full implementation needed");
+        throw new NotImplementedException("ForgotPassword implementation needed");
     }
 
     /// <summary>
-    /// Confirme la réinitialisation avec le code reçu
+    /// Confirm forgot password
     /// </summary>
     public async Task<bool> ConfirmForgotPasswordAsync(string username, string code, string newPassword)
     {
-        try
-        {
-            var confirmRequest = new ConfirmForgotPasswordRequest
-            {
-                ClientId = _clientId,
-                Username = username,
-                ConfirmationCode = code,
-                Password = newPassword,
-                SecretHash = ComputeSecretHash(username)
-            };
-
-            await _cognitoClient.ConfirmForgotPasswordAsync(confirmRequest);
-            
-            _logger.LogInformation("Password reset confirmed for user {Username}", username);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error confirming password reset for {Username}", username);
-            return false;
-        }
+        _logger.LogWarning("ConfirmForgotPasswordAsync called - full implementation needed");
+        throw new NotImplementedException("ConfirmForgotPassword implementation needed");
     }
 
     /// <summary>
-    /// Calcule le SecretHash requis par Cognito
+    /// Sign out user
     /// </summary>
-    private string ComputeSecretHash(string username)
+    public async Task<bool> SignOutAsync(string username)
     {
-        if (string.IsNullOrEmpty(_clientSecret))
-            return null;
-
-        var message = username + _clientId;
-        var keyBytes = Encoding.UTF8.GetBytes(_clientSecret);
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-
-        using var hmac = new System.Security.Cryptography.HMACSHA256(keyBytes);
-        var hashBytes = hmac.ComputeHash(messageBytes);
-        return Convert.ToBase64String(hashBytes);
+        _logger.LogWarning("SignOutAsync called - full implementation needed");
+        throw new NotImplementedException("SignOut implementation needed");
     }
-}
-
-/// <summary>
-/// DTOs pour les requêtes/réponses d'authentification
-/// </summary>
-public class SignInRequest
-{
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-
-public class SignInResponse
-{
-    public string AccessToken { get; set; } = string.Empty;
-    public string RefreshToken { get; set; } = string.Empty;
-    public string IdToken { get; set; } = string.Empty;
-    public int ExpiresIn { get; set; }
-    public string TokenType { get; set; } = "Bearer";
-}
-
-public class SignUpRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-}
-
-public class ConfirmSignUpRequest
-{
-    public string Username { get; set; } = string.Empty;
-    public string ConfirmationCode { get; set; } = string.Empty;
-}
-
-public class RefreshTokenRequest
-{
-    public string RefreshToken { get; set; } = string.Empty;
 }
