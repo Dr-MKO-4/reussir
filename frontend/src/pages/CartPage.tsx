@@ -1,123 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import { Button } from '../components/common/Button';
+import { Card } from '../components/common/Card';
+import { Alert } from '../components/common/Alert';
+import { Spinner } from '../components/common/Spinner';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
+import cartService from '../services/cartService';
+import paymentService from '../services/paymentService';
+import { CartItem } from '../types';
 import './CartPage.css';
-import SubjectFilters, { FilterOptions } from '../components/catalog/SubjectFilters';
-import SearchBar from '../components/common/SearchBar';
-import CartItem from '../components/cart/CartItem';
-import CartSummary from '../components/cart/CartSummary';
-import PromoCodeInput from '../components/cart/PromoCodeInput';
-import BundleSuggestions from '../components/cart/BundleSuggestions';
-import CartEmpty from '../components/cart/CartEmpty';
-import catalogService from '../services/catalogService';
-import { CartItem as CartItemType } from '../types/cart';
 
-/**
- * Page du panier d'achat
- */
-export const CartPage: React.FC = () => {
-  // État pour la recherche et les filtres avancés
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<FilterOptions>({});
+interface PromoCodeState {
+  code: string;
+  isValid: boolean;
+  discount: number;
+}
 
-  // Callback pour la SearchBar
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // TODO: Lancer la recherche avancée ou filtrer les items du panier
-  };
-
-  // Callback pour les filtres
-  const handleFiltersChange = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
-    // TODO: Appliquer les filtres sur les items du panier
-  };
+const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const cart = useCart();
-  const items: CartItemType[] = cart.cart?.items || [];
-  const { removeItem, updateQuantity, getTotal, getSubtotal, getDiscount, clearCart } = cart;
+  const { items, removeItem, updateQuantity, clearCart, total } = useCart();
   const { isAuthenticated, user } = useAuth();
-  
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  const { showToast } = useToast();
+
   const [isProcessing, setIsProcessing] = useState(false);
+  const [promoCode, setPromoCode] = useState<PromoCodeState>({
+    code: '',
+    isValid: false,
+    discount: 0,
+  });
+  const [bundleSuggestions, setBundleSuggestions] = useState<any[]>([]);
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
 
-  const subtotal = getSubtotal ? getSubtotal() : 0;
-  const discount = promoApplied ? promoDiscount : getDiscount ? getDiscount() : 0;
-  const total = subtotal - discount;
+  // Charger les suggestions de bundle au montage
+  useEffect(() => {
+    if (items.length > 0) {
+      loadBundleSuggestions();
+    }
+  }, [items]);
 
-  /**
-   * Appliquer un code promo
-   */
-  const handleApplyPromo = () => {
-    if (!promoCode.trim()) return;
+  // Charger les suggestions de bundle
+  const loadBundleSuggestions = () => {
+    const suggestions = cartService.getBundleSuggestions(items);
+    setBundleSuggestions(suggestions);
+  };
 
-    // Simulation de validation de code promo
-    const validCodes: Record<string, number> = {
-      'REUSSIR10': 0.1,  // 10% de réduction
-      'REUSSIR20': 0.2,  // 20% de réduction
-      'WELCOME': 1000,   // 1000 FCFA de réduction
-    };
+  // Valider et appliquer un code promo
+  const handleApplyPromoCode = () => {
+    if (!promoCode.code.trim()) {
+      showToast('Veuillez entrer un code promo', 'error');
+      return;
+    }
 
-    const code = promoCode.toUpperCase();
-    if (validCodes[code]) {
-      const discountValue = validCodes[code];
-      const calculatedDiscount = discountValue < 1 
-        ? subtotal * discountValue 
-        : discountValue;
-      
-      setPromoDiscount(calculatedDiscount);
-      setPromoApplied(true);
+    const result = cartService.applyPromoCode(promoCode.code, total);
+    
+    if (result.success) {
+      setPromoCode({
+        code: promoCode.code,
+        isValid: true,
+        discount: result.discount,
+      });
+      setAppliedDiscount(result.discount);
+      showToast(result.message, 'success');
     } else {
-      alert('Code promo invalide');
+      setPromoCode({
+        ...promoCode,
+        isValid: false,
+        discount: 0,
+      });
+      setAppliedDiscount(0);
+      showToast(result.message, 'error');
     }
   };
 
-  /**
-   * Retirer le code promo
-   */
-  const handleRemovePromo = () => {
-    setPromoCode('');
-    setPromoApplied(false);
-    setPromoDiscount(0);
+  // Retirer un code promo
+  const handleRemovePromoCode = () => {
+    setPromoCode({ code: '', isValid: false, discount: 0 });
+    setAppliedDiscount(0);
+    showToast('Code promo supprimé', 'info');
   };
 
-  /**
-   * Procéder au paiement
-   */
+  // Calculer les totaux
+  const subtotal = total;
+  const { tax, discount } = cartService.calculateTotal(items, 0.2, appliedDiscount);
+  const finalTotal = subtotal - appliedDiscount + tax;
+
+  // Procéder au checkout
   const handleCheckout = async () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: '/cart' } });
       return;
     }
 
-    setIsProcessing(true);
-    
-    // Simulation du processus de paiement
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // TODO: Intégrer le vrai système de paiement
-    navigate('/checkout');
-    setIsProcessing(false);
-  };
+    // Valider le panier avant checkout
+    const validation = cartService.validateCheckout(items);
+    if (!validation.valid) {
+      validation.errors.forEach((error) => showToast(error, 'error'));
+      return;
+    }
 
-  /**
-   * Vider le panier
-   */
-  const handleClearCart = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir vider le panier ?')) {
-      clearCart();
+    try {
+      setIsProcessing(true);
+      navigate('/checkout', {
+        state: {
+          items,
+          subtotal,
+          discount: appliedDiscount,
+          tax,
+          total: finalTotal,
+          promoCode: promoCode.code,
+        },
+      });
+    } catch (error: any) {
+      showToast('Erreur lors de la procédure de paiement', 'error');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // État vide du panier
-  if (!items || items.length === 0) {
+  // Continuer les achats
+  const handleContinueShopping = () => {
+    navigate('/discover');
+  };
+
+  // Vider le panier
+  const handleClearCart = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir vider le panier ?')) {
+      clearCart();
+      showToast('Panier vidé', 'success');
+    }
+  };
+
+  // Affichage si panier vide
+  if (items.length === 0) {
     return (
       <MainLayout>
-        <CartEmpty onExplore={() => navigate('/discover')} />
+        <div className="cart-page">
+          <div className="empty-cart">
+            <svg className="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h2>Votre panier est vide</h2>
+            <p>Découvrez nos sujets d'examen et commencez à réviser.</p>
+            <Button variant="primary" size="lg" onClick={handleContinueShopping}>
+              Continuer les achats
+            </Button>
+          </div>
+        </div>
       </MainLayout>
     );
   }
@@ -125,87 +156,192 @@ export const CartPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="cart-page">
-        {/* Barre de recherche avancée */}
-        <div className="cart-searchbar">
-          <SearchBar
-            placeholder="Rechercher dans le panier..."
-            value={searchQuery}
-            onSearch={handleSearch}
-            onChange={setSearchQuery}
-            size="md"
-            fullWidth
-          />
-        </div>
-
-        {/* Sidebar de filtres avancés */}
-        <div className="cart-filters">
-          <SubjectFilters onFiltersChange={handleFiltersChange} />
-        </div>
+        {/* Header */}
         <div className="cart-header">
-          <h1 className="cart-title">Mon Panier ({items.length})</h1>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleClearCart}
-          >
-            Vider le panier
-          </Button>
+          <h1>Votre panier</h1>
+          <p className="cart-subtitle">{items.length} article(s) dans votre panier</p>
         </div>
 
         <div className="cart-layout">
-          {/* Liste des items */}
-          <div className="cart-items">
-            {items.map((item: CartItemType) => (
-              <CartItem
-                key={item.id}
-                item={item.subject}
-                onRemove={() => removeItem(item.id)}
-                // TODO: Ajouter gestion favoris ici (voir ci-dessous)
-              />
-            ))}
-            {/* Suggestions IA (bundles) - à brancher sur l'API IA plus tard */}
-            <BundleSuggestions
-              bundles={[]}
-              onAdd={(bundleId) => {}}
-            />
+          {/* Main Content */}
+          <div className="cart-main">
+            {/* Cart Items */}
+            <section className="cart-items-section">
+              <h2>Articles du panier</h2>
+              <div className="cart-items">
+                {items.map((item: CartItem) => (
+                  <Card key={item.id} variant="outlined" className="cart-item-card">
+                    <div className="cart-item-content">
+                      {item.image && (
+                        <div className="cart-item-image">
+                          <img src={item.image} alt={item.title} />
+                        </div>
+                      )}
+                      
+                      <div className="cart-item-details">
+                        <h3 className="cart-item-title">{item.title}</h3>
+                        <p className="cart-item-description">{item.description}</p>
+                        <p className="cart-item-price">{item.price} FCFA</p>
+                      </div>
+
+                      <div className="cart-item-controls">
+                        <div className="quantity-control">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="qty-btn"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                            className="qty-input"
+                          />
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="qty-btn"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <div className="cart-item-subtotal">
+                          {(item.price * item.quantity).toFixed(2)} FCFA
+                        </div>
+
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="remove-btn"
+                          title="Retirer du panier"
+                        >
+                          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            {/* Promo Code Section */}
+            <section className="promo-section">
+              <Card variant="outlined">
+                <h3>Appliquer un code promo</h3>
+                {promoCode.isValid ? (
+                  <div className="promo-applied">
+                    <div className="promo-badge">
+                      <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Code appliqué : {promoCode.code}
+                    </div>
+                    <p className="promo-discount">Réduction : -{appliedDiscount.toFixed(2)} FCFA</p>
+                    <Button variant="secondary" size="sm" onClick={handleRemovePromoCode}>
+                      Supprimer le code
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="promo-input-group">
+                    <input
+                      type="text"
+                      placeholder="Entrer votre code promo"
+                      value={promoCode.code}
+                      onChange={(e) => setPromoCode({ ...promoCode, code: e.target.value })}
+                      onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
+                      className="promo-input"
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={handleApplyPromoCode}
+                      isLoading={false}
+                    >
+                      Appliquer
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </section>
           </div>
 
-          {/* Résumé */}
+          {/* Sidebar */}
           <aside className="cart-sidebar">
-            <CartSummary
-              subtotal={subtotal}
-              discount={discount}
-              total={total}
-              itemCount={items.length}
-            />
-            <PromoCodeInput
-              value={promoCode}
-              onChange={setPromoCode}
-              onApply={handleApplyPromo}
-              onRemove={handleRemovePromo}
-              isApplied={promoApplied}
-              isLoading={isProcessing}
-            />
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={handleCheckout}
-              isLoading={isProcessing}
-              leftIcon={
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            <Card variant="outlined" className="order-summary">
+              <h2>Résumé de la commande</h2>
+
+              <div className="summary-row">
+                <span>Sous-total</span>
+                <span>{subtotal.toFixed(2)} FCFA</span>
+              </div>
+
+              {appliedDiscount > 0 && (
+                <div className="summary-row discount-row">
+                  <span>Réduction</span>
+                  <span>-{appliedDiscount.toFixed(2)} FCFA</span>
+                </div>
+              )}
+
+              <div className="summary-row tax-row">
+                <span>TVA (20%)</span>
+                <span>{tax.toFixed(2)} FCFA</span>
+              </div>
+
+              <div className="summary-divider" />
+
+              <div className="summary-row total-row">
+                <span className="total-label">Total</span>
+                <span className="total-amount">{finalTotal.toFixed(2)} FCFA</span>
+              </div>
+
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                onClick={handleCheckout}
+                isLoading={isProcessing}
+                disabled={isProcessing || !isAuthenticated}
+              >
+                <svg className="button-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-              }
-            >
-              Procéder au paiement
-            </Button>
-            <div className="security-info">
-              <svg className="security-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>Paiement 100% sécurisé</span>
-            </div>
+                Procéder au paiement
+              </Button>
+
+              {!isAuthenticated && (
+                <Alert variant="info" title="Connexion requise">
+                  Connectez-vous pour finaliser votre achat
+                </Alert>
+              )}
+
+              <Button
+                variant="secondary"
+                fullWidth
+                size="md"
+                onClick={handleContinueShopping}
+              >
+                Continuer les achats
+              </Button>
+
+              <Button
+                variant="outline"
+                fullWidth
+                size="sm"
+                onClick={handleClearCart}
+              >
+                Vider le panier
+              </Button>
+
+              <div className="security-section">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>Paiement 100% sécurisé</span>
+              </div>
+            </Card>
           </aside>
         </div>
       </div>

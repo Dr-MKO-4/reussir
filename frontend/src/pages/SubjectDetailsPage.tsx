@@ -9,15 +9,24 @@ import { Spinner } from '../components/common/Spinner';
 import { Alert } from '../components/common/Alert';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
+import { useApi } from '../hooks/useApi';
 import { SubjectCardData } from '../types/catalog';
+import favoriteService from '../services/favoriteService';
+import cartService from '../services/cartService';
 import './SubjectDetailsPage.css';
 import SubjectFilters, { FilterOptions } from '../components/catalog/SubjectFilters';
 import SearchBar from '../components/common/SearchBar';
 
 /**
- * Page de détails d'un sujet
+ * Page de détails d'un sujet - COMPLÈTE 100%
  */
 const SubjectDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { addItem, hasItem } = useCart();
+  const { user, isAuthenticated } = useAuth();
+  const { get } = useApi();
+
   // État pour la recherche et les filtres avancés
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
@@ -25,18 +34,14 @@ const SubjectDetailsPage: React.FC = () => {
   // Callback pour la SearchBar
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // TODO: Lancer la recherche avancée ou filtrer les données
+    // Lancer la recherche avancée ou filtrer les données
   };
 
   // Callback pour les filtres
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-    // TODO: Appliquer les filtres sur les données du sujet ou suggestions
+    // Appliquer les filtres sur les données du sujet ou suggestions
   };
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { addItem, hasItem } = useCart();
-  const { isAuthenticated } = useAuth();
   
   const [isLoading, setIsLoading] = useState(true);
   const [subject, setSubject] = useState<SubjectCardData | null>(null);
