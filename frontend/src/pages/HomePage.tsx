@@ -626,7 +626,7 @@ const HomePage = () => {
                  <span className={styles.logoText}>Win+</span>
               </div>
               <p className={styles.footerText}>
-                Autonomiser les éducateurs pour améliorer notre monde win +
+                Autonomiser les éducateurs pour améliorer notre monde 
               </p>
               <div className={styles.socialIcons}>
                 <a href="#" className={styles.socialIcon} aria-label="Facebook">
