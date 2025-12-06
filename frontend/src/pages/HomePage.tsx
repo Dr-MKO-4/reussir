@@ -1,89 +1,20 @@
-import React, { useState, useEffect, MouseEvent, ChangeEvent, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
-import { FaWhatsapp } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
 import { 
-  Rocket, Crown, BadgeDollarSign, Cpu, Layers, BookOpen, 
-  Mail, Phone, Send, MessageSquare, MapPin, Clock, Search, 
-  Users, Trophy, Star, Check, Menu, X, Sun, Moon, Filter, 
-  ArrowRight, Zap, Target, Award, Eye, Download, Heart, 
-  Shield, ChevronLeft, ChevronRight
+  Search, BookOpen, Trophy, Users, Star, Download, Clock, 
+  Eye, ChevronRight, Mail, Phone, MessageSquare, MapPin,
+  Check, Menu, X, Award, Shield, Zap, Target, Cpu,
+  Facebook, Twitter, Linkedin, Instagram, ChevronLeft
 } from 'lucide-react';
 import styles from './HomePage.module.css';
 
-interface Plan {
-  name: string;
-  color: "standard" | "premium" | "premium-trial" | "student-plus" | "student-plus-trial";
-  price: string | number;
-  period: string;
-  popular?: boolean;
-  features: string[];
-  ctaText: string;
-}
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-  contactMethod: 'email' | 'whatsapp';
-}
-
-interface Test {
-  id: number;
-  title: string;
-  subject: string;
-  class: string;
-  difficulty: string;
-  duration: string;
-  views: number;
-  downloads: number;
-  rating: number;
-  isFree: boolean;
-  image: string;
-}
-
-const HomePage: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('tous');
   const [selectedClass, setSelectedClass] = useState('tous');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentPlanSlide, setCurrentPlanSlide] = useState(0);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [contactForm, setContactForm] = useState<ContactFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-    contactMethod: 'email'
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Session management
-  useEffect(() => {
-    const checkAuth = () => {
-      const lastActivity = localStorage.getItem('lastActivity');
-      const timeout = 24 * 60 * 60 * 1000;
-      
-      if (lastActivity && Date.now() - parseInt(lastActivity) > timeout) {
-        logout();
-        localStorage.removeItem('lastActivity');
-      } else if (isAuthenticated && user) {
-        localStorage.setItem('lastActivity', Date.now().toString());
-      }
-    };
-
-    checkAuth();
-    const interval = setInterval(checkAuth, 60000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated, user, logout]);
-
-  // Data
   const subjects = [
     { value: 'tous', label: 'Toutes les matières' },
     { value: 'mathematiques', label: 'Mathématiques' },
@@ -91,9 +22,6 @@ const HomePage: React.FC = () => {
     { value: 'chimie', label: 'Chimie' },
     { value: 'svt', label: 'SVT' },
     { value: 'francais', label: 'Français' },
-    { value: 'philosophie', label: 'Philosophie' },
-    { value: 'histoire-geo', label: 'Histoire-Géographie' },
-    { value: 'anglais', label: 'Anglais' }
   ];
 
   const classes = [
@@ -101,12 +29,15 @@ const HomePage: React.FC = () => {
     { value: 'seconde', label: 'Seconde' },
     { value: 'premiere', label: 'Première' },
     { value: 'terminale', label: 'Terminale' },
-    { value: 'licence-1', label: 'Licence 1' },
-    { value: 'licence-2', label: 'Licence 2' },
-    { value: 'licence-3', label: 'Licence 3' }
   ];
 
-  const freeTests: Test[] = [
+  const testImages = {
+    mathematiques: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop",
+    physique: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=400&h=200&fit=crop",
+    francais: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=200&fit=crop"
+  };
+
+  const freeTests = [
     {
       id: 1,
       title: "Baccalauréat Mathématiques 2023",
@@ -118,24 +49,24 @@ const HomePage: React.FC = () => {
       downloads: 890,
       rating: 4.8,
       isFree: true,
-      image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop"
+      image: testImages.mathematiques
     },
     {
       id: 2,
-      title: "Concours ENSPD 2023",
+      title: "Physique ENSPD 2023",
       subject: "physique",
-      class: "licence-3",
+      class: "terminale",
       difficulty: "Très difficile",
       duration: "3h",
       views: 987,
       downloads: 654,
       rating: 4.9,
       isFree: true,
-      image: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=400&h=300&fit=crop"
+      image: testImages.physique
     },
     {
       id: 3,
-      title: "BEPC Camerounais 2023",
+      title: "Epreuve francais BAC Camerounais 2023",
       subject: "francais",
       class: "terminale",
       difficulty: "Moyen",
@@ -144,41 +75,42 @@ const HomePage: React.FC = () => {
       downloads: 1500,
       rating: 4.6,
       isFree: true,
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop"
+      image: testImages.francais
     },
-    {
-      id: 4,
-      title: "Informatique - Concours ENSPD",
-      subject: "informatique",
-      class: "licence-1",
-      difficulty: "Moyen",
-      duration: "3h",
-      views: 1890,
-      downloads: 1200,
-      rating: 4.7,
-      isFree: true,
-      image: "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400&h=300&fit=crop"
-    }
   ];
 
   const testimonials = [
     {
       name: "Marie Kouakou",
       role: "Étudiante en Licence 3",
-      content: "Grâce à Réussir, j'ai pu me préparer efficacement pour mes concours.",
+      content: "Grâce à Win+, j'ai pu me préparer efficacement pour mes concours. Les ressources sont de qualité et l'interface est très intuitive.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face"
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
     },
     {
       name: "Jean-Baptiste Assi",
       role: "Élève de Terminale",
-      content: "L'interface est intuitive et les sujets variés. J'ai réussi mon bac avec mention !",
+      content: "L'interface est intuitive et les sujets variés. J'ai réussi mon bac avec mention grâce aux annales disponibles sur Win+!",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face"
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
+    },
+    {
+      name: "Aminata Diallo",
+      role: "Étudiante en Médecine",
+      content: "Le chatbot IA m'a beaucoup aidée à comprendre des concepts difficiles. C'est comme avoir un professeur disponible 24h/24!",
+      rating: 5,
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
+    },
+    {
+      name: "Paul Mbarga",
+      role: "Élève de Première",
+      content: "Les corrections personnalisées et le suivi des progrès m'ont vraiment motivé. J'ai amélioré mes notes de façon spectaculaire!",
+      rating: 5,
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
     }
   ];
 
-  const plans: Plan[] = [
+  const plans = [
     {
       name: "Standard",
       price: "0",
@@ -190,12 +122,24 @@ const HomePage: React.FC = () => {
         "Accès au forum communautaire"
       ],
       popular: false,
-      ctaText: "Commencer",
-      color: "standard"
+      icon: Users,
+    },
+    {
+      name: "2 Semaines",
+      price: "1750",
+      period: "/2 semaines",
+      features: [
+        "Accès à toutes les épreuves",
+        "Chatbot IA avancé",
+        "Corrections de base",
+        "Support standard"
+      ],
+      popular: false,
+      icon: Clock,
     },
     {
       name: "Premium",
-      price: "2500",
+      price: "3500",
       period: "/mois",
       features: [
         "Accès à toutes les épreuves",
@@ -205,12 +149,11 @@ const HomePage: React.FC = () => {
         "Téléchargements illimités"
       ],
       popular: true,
-      ctaText: "Essayer Premium",
-      color: "premium"
+      icon: Star,
     },
     {
       name: "Étudiant+",
-      price: "5000",
+      price: "6000",
       period: "/trimestre",
       features: [
         "Tous les avantages Premium",
@@ -220,586 +163,526 @@ const HomePage: React.FC = () => {
         "Certificat de réussite"
       ],
       popular: false,
-      ctaText: "Choisir Étudiant+",
-      color: "student-plus"
+      icon: Trophy,
     },
     {
-      name: "Premium 2 semaines",
-      price: "1500",
-      period: "/2 semaines",
-      features: [
-        "Tous les avantages Premium",
-        "Période d'essai courte",
-        "Sans engagement"
-      ],
-      popular: false,
-      ctaText: "Essayer",
-      color: "premium-trial"
-    },
-    {
-      name: "Étudiant+ 2 semaines",
-      price: "2000",
-      period: "/2 semaines",
+      name: "Annuel",
+      price: "20000",
+      period: "/an",
       features: [
         "Tous les avantages Étudiant+",
-        "Coaching intensif",
-        "Garantie satisfaction"
+        "3 mois gratuits",
+        "Séances de groupe",
+        "Accès à vie aux ressources",
+        "Badge premium"
       ],
       popular: false,
-      ctaText: "Essayer",
-      color: "student-plus-trial"
-    }
+      icon: Award,
+    },
   ];
 
-  // Effects
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [testimonials.length]);
-
-  useEffect(() => {
-    document.documentElement.className = isDarkMode ? 'dark' : '';
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handlers
   const filteredTests = freeTests.filter(test => {
     const subjectMatch = selectedSubject === 'tous' || test.subject === selectedSubject;
     const classMatch = selectedClass === 'tous' || test.class === selectedClass;
     return subjectMatch && classMatch;
   });
 
-  const getDifficultyClass = (difficulty: string): string => {
-    const map: Record<string, string> = {
-      'Facile': styles.difficultyEasy,
-      'Moyen': styles.difficultyMedium,
-      'Difficile': styles.difficultyHard,
-      'Très difficile': styles.difficultyVeryHard
-    };
-    return map[difficulty] || styles.difficultyDefault;
-  };
-
-  const handleSmoothScroll = (id: string) => {
+  const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setIsMobileMenuOpen(false);
   };
 
-  const handlePlanNext = () => {
-    setCurrentPlanSlide((prev) => (prev + 1) % 2);
+  const visiblePlans = plans.slice(currentPlanSlide, currentPlanSlide + 3);
+  const canGoNext = currentPlanSlide < plans.length - 3;
+  const canGoPrev = currentPlanSlide > 0;
+
+  const nextPlans = () => {
+    if (canGoNext) {
+      setCurrentPlanSlide(prev => prev + 1);
+    }
   };
 
-  const handlePlanPrev = () => {
-    setCurrentPlanSlide((prev) => (prev - 1 + 2) % 2);
-  };
-
-  const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setContactForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleContactSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      if (contactForm.contactMethod === 'whatsapp') {
-        const phone = "+237123456789";
-        const msg = `Bonjour, je suis ${contactForm.name}. ${contactForm.message}`;
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-      } else {
-        window.location.href = `mailto:contact@reussir.com?subject=${encodeURIComponent(contactForm.subject)}&body=${encodeURIComponent(`Nom: ${contactForm.name}\nEmail: ${contactForm.email}\n\n${contactForm.message}`)}`;
-      }
-      
-      setContactForm({
-        name: '', email: '', phone: '', subject: '', message: '', contactMethod: 'email'
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+  const prevPlans = () => {
+    if (canGoPrev) {
+      setCurrentPlanSlide(prev => prev - 1);
     }
   };
 
   return (
-    <div className={`${styles.rp} ${isDarkMode ? styles.dark : ''}`}>
+    <div className={styles.wrapper}>
       {/* Header */}
-      <header className={`${styles.rpHeader} ${isScrolled ? styles.scrolled : ''}`}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpHeaderContent}>
-            <div className={styles.rpLogo} onClick={() => handleSmoothScroll('hero')}>
-              <img src="/ReussirLogo1.png" alt="Réussir" className={styles.rpLogoImage} />
-              <span className={styles.rpLogoText}>Réussir</span>
+      <header className={styles.header}>
+        <div className={styles.container}>
+          <div className={styles.headerContent}>
+            <div className={styles.logo} onClick={() => scrollToSection('hero')}>
+              <div className={styles.logoIcon}>  
+                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+              </div>
+              <span className={styles.logoText}>Win+</span>
             </div>
 
-            <nav className={styles.rpNav}>
-              <a href="#catalog" onClick={(e) => { e.preventDefault(); handleSmoothScroll('catalog'); }}>Catalogue</a>
-              <a href="#pricing" onClick={(e) => { e.preventDefault(); handleSmoothScroll('pricing'); }}>Plans</a>
-              <a href="#contact" onClick={(e) => { e.preventDefault(); handleSmoothScroll('contact'); }}>Contact</a>
-              <a href="#about" onClick={(e) => { e.preventDefault(); handleSmoothScroll('about'); }}>À propos</a>
+            <nav className={styles.nav}>
+              <a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('hero'); }}>Accueil</a>
+              <a href="#catalog" onClick={(e) => { e.preventDefault(); scrollToSection('catalog'); }}>Catalogue</a>
+              <a href="#pricing" onClick={(e) => { e.preventDefault(); scrollToSection('pricing'); }}>Plans</a>
+              <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>À propos</a>
+              <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
             </nav>
 
-            <div className={styles.rpHeaderActions}>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className={styles.rpThemeToggle} aria-label="Toggle theme">
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
+            <div className={styles.headerActions}>
+              <div className={styles.searchContainer}>
+                <Search size={20} className={styles.searchIcon} />
+                <input 
+                  type="text" 
+                  placeholder="Rechercher..." 
+                  className={styles.searchInput}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-              {isAuthenticated && user ? (
-                <>
-                  <button onClick={() => navigate('/dashboard')} className={styles.rpBtnSecondary}>
-                    Tableau de bord
-                  </button>
-                  <button onClick={logout} className={styles.rpBtnPrimary}>Déconnexion</button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => navigate('/login')} className={styles.rpBtnSecondary}>Connexion</button>
-                  <button onClick={() => navigate('/signup')} className={styles.rpBtnPrimary}>Inscription</button>
-                </>
-              )}
+              <button className={styles.btnPrimary}>Connexion</button>
+              <button className={styles.btnSecondary}>Inscription</button>
 
-              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={styles.rpMobileToggle}>
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              <button 
+                className={styles.mobileToggle}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           </div>
         </div>
 
         {isMobileMenuOpen && (
-          <div className={styles.rpMobileMenu}>
-            <a href="#catalog" onClick={(e) => { e.preventDefault(); handleSmoothScroll('catalog'); setIsMobileMenuOpen(false); }}>Catalogue</a>
-            <a href="#pricing" onClick={(e) => { e.preventDefault(); handleSmoothScroll('pricing'); setIsMobileMenuOpen(false); }}>Plans</a>
-            <a href="#contact" onClick={(e) => { e.preventDefault(); handleSmoothScroll('contact'); setIsMobileMenuOpen(false); }}>Contact</a>
-            <a href="#about" onClick={(e) => { e.preventDefault(); handleSmoothScroll('about'); setIsMobileMenuOpen(false); }}>À propos</a>
-            
-            <div className={styles.rpMobileActions}>
-              {isAuthenticated ? (
-                <>
-                  <button onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} className={styles.rpBtnSecondary}>Tableau de bord</button>
-                  <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className={styles.rpBtnPrimary}>Déconnexion</button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }} className={styles.rpBtnSecondary}>Connexion</button>
-                  <button onClick={() => { navigate('/signup'); setIsMobileMenuOpen(false); }} className={styles.rpBtnPrimary}>Inscription</button>
-                </>
-              )}
+          <div className={styles.mobileMenu}>
+            <a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('hero'); }}>Accueil</a>
+            <a href="#catalog" onClick={(e) => { e.preventDefault(); scrollToSection('catalog'); }}>Catalogue</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); scrollToSection('pricing'); }}>Plans</a>
+            <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>À propos</a>
+            <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
+            <div className={styles.mobileActions}>
+              <button className={styles.btnPrimary}>Connexion</button>
+              <button className={styles.btnSecondary}>Inscription</button>
             </div>
           </div>
         )}
       </header>
 
-      {/* Hero */}
-      <section id="hero" className={styles.rpHero}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpHeroContent}>
-            <div className={styles.rpHeroText}>
-              <h1 className={styles.rpHeroTitle}>
-                <span className={styles.accent}>Réussissez</span> vos concours avec <span className={styles.accent}>confiance</span>
+      {/* Hero Section */}
+      <section id="hero" className={styles.hero}>
+        <div className={styles.container}>
+          <div className={styles.heroContent}>
+            <div className={styles.heroLeft}>
+              <h1 className={styles.heroTitle}>
+                Bienvenue dans la communauté <span className={styles.accent}>Win+</span>
               </h1>
-              <p className={styles.rpHeroSubtitle}>
-                Accédez à des milliers d'annales corrigées avec une assistance pédagogique intelligente pour maximiser vos chances de réussite.
+              <p className={styles.heroSubtitle}>
+                Le site pour obtenir de l'aide, poser des questions et contribuer à la plateforme d'épreuves en ligne Win+.
               </p>
 
-              <div className={styles.rpHeroStats}>
-                <div className={styles.rpHeroStat}>
-                  <span className={styles.number}>2000+</span>
-                  <span className={styles.label}>Étudiants</span>
+              <div className={styles.heroStats}>
+                <div className={styles.stat}>
+                  <BookOpen size={32} className={styles.statIcon} />
+                  <div>
+                    <div className={styles.statNumber}>1,000+</div>
+                    <div className={styles.statLabel}>Épreuves</div>
+                  </div>
                 </div>
-                <div className={styles.rpHeroStat}>
-                  <span className={styles.number}>1000+</span>
-                  <span className={styles.label}>Épreuves</span>
+                <div className={styles.stat}>
+                  <Users size={32} className={styles.statIcon} />
+                  <div>
+                    <div className={styles.statNumber}>2,000+</div>
+                    <div className={styles.statLabel}>Étudiants</div>
+                  </div>
                 </div>
-                <div className={styles.rpHeroStat}>
-                  <span className={styles.number}>95%</span>
-                  <span className={styles.label}>Réussite</span>
+                <div className={styles.stat}>
+                  <Trophy size={32} className={styles.statIcon} />
+                  <div>
+                    <div className={styles.statNumber}>95%</div>
+                    <div className={styles.statLabel}>Réussite</div>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.rpHeroActions}>
-                {isAuthenticated ? (
-                  <button onClick={() => navigate('/dashboard')} className={styles.rpBtnPrimary}>
-                    Tableau de bord <ArrowRight size={20} />
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => handleSmoothScroll('catalog')} className={styles.rpBtnPrimary}>
-                      Découvrir <ArrowRight size={20} />
-                    </button>
-                    <button onClick={() => navigate('/signup')} className={styles.rpBtnSecondary}>
-                      <Users size={20} /> S'inscrire
-                    </button>
-                  </>
-                )}
-              </div>
+              <button className={styles.btnLarge} onClick={() => scrollToSection('catalog')}>
+                Participer <ChevronRight size={20} />
+              </button>
             </div>
 
-            <div className={styles.rpHeroImage}>
-              <img 
-                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop" 
-                alt="Étudiants camerounais en train d'étudier"
-                className={styles.heroImg}
-              />
-              <div className={styles.rpHeroBadge}>
-                <Trophy size={24} />
-                <span>Plateforme #1 au Cameroun</span>
+            <div className={styles.heroRight}>
+              <div className={styles.heroImageWrapper}>
+                <img 
+                  src="\felipe-gregate-Ph2KD5qr7VQ-unsplash.jpg"
+                  alt="Étudiants africains"
+                  className={styles.heroImage}
+                />
+                <div className={styles.heroImageOverlay}></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className={styles.rpFeatures}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpSectionHeader}>
-            <span className={styles.rpBadge}><Zap size={16} /> Fonctionnalités</span>
-            <h2 className={styles.rpSectionTitle}>Pourquoi choisir Réussir ?</h2>
-            <p className={styles.rpSectionSubtitle}>Des outils puissants propulsés par l'IA</p>
+      {/* Features Section */}
+      <section className={styles.features}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.badge}>
+              <Zap size={16} /> Fonctionnalités
+            </div>
+            <h2 className={styles.sectionTitle}>Pourquoi choisir Win+ ?</h2>
+            <p className={styles.sectionSubtitle}>Des outils puissants pour votre réussite</p>
           </div>
 
-          <div className={styles.rpFeaturesGrid}>
+          <div className={styles.featuresGrid}>
             {[
-              { icon: Rocket, title: "Accès instantané", desc: "Téléchargez immédiatement vos annales corrigées" },
               { icon: Cpu, title: "IA Pédagogique", desc: "Assistant intelligent qui s'adapte à votre niveau" },
               { icon: Target, title: "Suivi Intelligent", desc: "Analysez vos progrès en temps réel" },
+              { icon: BookOpen, title: "Accès instantané", desc: "Téléchargez immédiatement vos annales corrigées" },
               { icon: Users, title: "Communauté", desc: "Rejoignez une communauté d'étudiants brillants" }
             ].map((feature, i) => (
-              <div key={i} className={styles.rpFeatureCard}>
-                <div className={styles.rpFeatureIcon}><feature.icon size={28} /></div>
-                <h3>{feature.title}</h3>
-                <p>{feature.desc}</p>
+              <div key={i} className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <feature.icon size={32} />
+                </div>
+                <h3 className={styles.featureTitle}>{feature.title}</h3>
+                <p className={styles.featureDesc}>{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Catalog */}
-      <section id="catalog" className={styles.rpCatalog}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpSectionHeader}>
-            <span className={styles.rpBadge}><BookOpen size={16} /> Catalogue</span>
-            <h2 className={styles.rpSectionTitle}>Épreuves gratuites</h2>
-            <p className={styles.rpSectionSubtitle}>Commencez votre préparation dès maintenant</p>
+      {/* Catalog Section */}
+      <section id="catalog" className={styles.catalog}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.badge}>
+              <BookOpen size={16} /> Catalogue
+            </div>
+            <h2 className={styles.sectionTitle}>Épreuves gratuites</h2>
+            <p className={styles.sectionSubtitle}>Commencez votre préparation dès maintenant</p>
           </div>
 
-          <div className={styles.rpFilters}>
-            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} className={styles.rpSelect}>
+          <div className={styles.filters}>
+            <select 
+              value={selectedSubject} 
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className={styles.select}
+            >
               {subjects.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className={styles.rpSelect}>
+            <select 
+              value={selectedClass} 
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className={styles.select}
+            >
               {classes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
 
-          <div className={styles.rpTestsGrid}>
+          <div className={styles.testsGrid}>
             {filteredTests.map(test => (
-              <article key={test.id} className={styles.rpTestCard}>
-                <div className={styles.rpTestImage}>
-                  <img src={test.image} alt={test.title} loading="lazy" />
-                  <span className={getDifficultyClass(test.difficulty)}>{test.difficulty}</span>
-                  <button className={styles.rpFavorite} aria-label="Favori"><Heart size={16} /></button>
+              <article key={test.id} className={styles.testCard}>
+                <div className={styles.testImageContainer}>
+                  <img 
+                    src={test.image}
+                    alt={test.title}
+                    className={styles.testImage}
+                  />
+                  <span className={styles.difficulty}>{test.difficulty}</span>
                 </div>
-                <div className={styles.rpTestContent}>
-                  <h3>{test.title}</h3>
-                  <div className={styles.rpTestMeta}>
+                <div className={styles.testContent}>
+                  <h3 className={styles.testTitle}>{test.title}</h3>
+                  <div className={styles.testMeta}>
                     <span><Clock size={14} /> {test.duration}</span>
                     <span><Eye size={14} /> {test.views}</span>
                     <span><Download size={14} /> {test.downloads}</span>
                   </div>
-                  <div className={styles.rpTestFooter}>
-                    <div className={styles.rpRating}>
+                  <div className={styles.testFooter}>
+                    <div className={styles.rating}>
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className={i < Math.floor(test.rating) ? styles.filled : styles.empty} />
+                        <Star 
+                          key={i} 
+                          size={14} 
+                          fill={i < Math.floor(test.rating) ? '#FF8C00' : 'none'}
+                          color="#FF8C00"
+                        />
                       ))}
                       <span>({test.rating})</span>
                     </div>
-                    <span className={styles.rpFree}>GRATUIT</span>
+                    <span className={styles.freeTag}>GRATUIT</span>
                   </div>
-                  <button className={styles.rpBtnPrimary}><Download size={16} /> Télécharger</button>
+                  <button className={styles.btnCardPrimary}>
+                    <Download size={16} /> Télécharger
+                  </button>
                 </div>
               </article>
             ))}
           </div>
 
-          {filteredTests.length === 0 && (
-            <div className={styles.rpNoResults}>
-              <Search size={48} />
-              <h3>Aucune épreuve trouvée</h3>
-              <p>Modifiez vos filtres</p>
-            </div>
-          )}
+          <div className={styles.catalogCTA}>
+            <button className={styles.btnLarge}>
+              Voir tout le catalogue <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className={styles.rpTestimonials}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpSectionHeader}>
-            <span className={styles.rpBadge}><MessageSquare size={16} /> Témoignages</span>
-            <h2 className={styles.rpSectionTitle}>Ce que disent nos utilisateurs</h2>
-          </div>
-
-          <div className={styles.rpTestimonialCard}>
-            <img src={testimonials[currentTestimonial].avatar} alt={testimonials[currentTestimonial].name} />
-            <div className={styles.rpStars}>
-              {[...Array(5)].map((_, i) => <Star key={i} size={18} className={styles.filled} />)}
+      <section className={styles.testimonials}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.badge}>
+              <MessageSquare size={16} /> Témoignages
             </div>
-            <p className={styles.rpTestimonialText}>"{testimonials[currentTestimonial].content}"</p>
-            <h4>{testimonials[currentTestimonial].name}</h4>
-            <p className={styles.rpTestimonialRole}>{testimonials[currentTestimonial].role}</p>
+            <h2 className={styles.sectionTitle}>Ce que disent nos utilisateurs</h2>
           </div>
 
-          <div className={styles.rpDots}>
-            {testimonials.map((_, i) => (
-              <button key={i} onClick={() => setCurrentTestimonial(i)} className={i === currentTestimonial ? styles.active : ''} />
-            ))}
+          <div className={styles.testimonialCard}>
+            <img 
+              src={testimonials[currentTestimonial].image}
+              alt={testimonials[currentTestimonial].name}
+              className={styles.testimonialImage}
+            />
+            <div className={styles.stars}>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={20} fill="#FF8C00" color="#FF8C00" />
+              ))}
+            </div>
+            <p className={styles.testimonialText}>"{testimonials[currentTestimonial].content}"</p>
+            <h4 className={styles.testimonialName}>{testimonials[currentTestimonial].name}</h4>
+            <p className={styles.testimonialRole}>{testimonials[currentTestimonial].role}</p>
+
+            <div className={styles.dots}>
+              {testimonials.map((_, i) => (
+                <button 
+                  key={i}
+                  onClick={() => setCurrentTestimonial(i)}
+                  className={`${styles.dot} ${i === currentTestimonial ? styles.dotActive : ''}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className={styles.rpPricing}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpSectionHeader}>
-            <span className={styles.rpBadge}><BadgeDollarSign size={16} /> Plans</span>
-            <h2 className={styles.rpSectionTitle}>Choisissez votre <span className={styles.accent}>formule</span></h2>
-            <p className={styles.rpSectionSubtitle}>Des plans adaptés à tous les besoins</p>
+      <section id="pricing" className={styles.pricing}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.badge}>
+              <Award size={16} /> Plans
+            </div>
+            <h2 className={styles.sectionTitle}>Choisissez votre <span className={styles.accent}>formule</span></h2>
+            <p className={styles.sectionSubtitle}>Des plans adaptés à tous les besoins</p>
           </div>
 
-          {/* 3 plans principaux */}
-          <div className={styles.rpPricingGrid}>
-            {plans.slice(0, 3).map((plan, i) => (
-              <div key={i} className={`${styles.rpPlanCard} ${plan.popular ? styles.popular : ''}`}>
-                {plan.popular && <span className={styles.rpPopularBadge}>★ Le plus populaire</span>}
-                <div className={styles.rpPlanIcon}>
-                  {plan.color === 'standard' && <Users size={24} />}
-                  {plan.color === 'premium' && <Star size={24} />}
-                  {plan.color === 'student-plus' && <Crown size={24} />}
-                </div>
-                <h3>{plan.name}</h3>
-                <div className={styles.rpPlanPrice}>
-                  <span className={styles.amount}>{plan.price}</span>
-                  {plan.period !== 'Gratuit' && <span className={styles.period}>FCFA{plan.period}</span>}
-                </div>
-                {plan.period === 'Gratuit' && <span className={styles.period}>{plan.period}</span>}
-                <ul className={styles.rpPlanFeatures}>
-                  {plan.features.map((f, j) => (
-                    <li key={j}><Check size={16} /> {f}</li>
-                  ))}
-                </ul>
-                <button className={styles.rpBtnPrimary}>{plan.ctaText}</button>
-              </div>
-            ))}
-          </div>
-
-          {/* Carousel pour 2 autres plans */}
-          <div className={styles.rpPlanCarousel}>
-            <button onClick={handlePlanPrev} className={styles.rpCarouselBtn} aria-label="Précédent">
+          <div className={styles.pricingContainer}>
+            <button 
+              onClick={prevPlans}
+              className={`${styles.carouselBtn} ${styles.carouselBtnPrev}`}
+              disabled={!canGoPrev}
+            >
               <ChevronLeft size={24} />
             </button>
 
-            <div className={styles.rpCarouselTrack} style={{ transform: `translateX(-${currentPlanSlide * 100}%)` }}>
-              {plans.slice(3).map((plan, i) => (
-                <div key={i} className={styles.rpCarouselSlide}>
-                  <div className={styles.rpPlanCard}>
-                    <div className={styles.rpPlanIcon}>
-                      {plan.color === 'premium-trial' && <Zap size={24} />}
-                      {plan.color === 'student-plus-trial' && <Zap size={24} />}
+            <div className={styles.pricingGrid}>
+              {visiblePlans.map((plan, i) => (
+                <div 
+                  key={currentPlanSlide + i} 
+                  className={`${styles.planCard} ${plan.popular ? styles.planCardPopular : ''}`}
+                >
+                  {plan.popular && (
+                    <div className={styles.popularBadge}>
+                      ★ Le plus populaire
                     </div>
-                    <h3>{plan.name}</h3>
-                    <div className={styles.rpPlanPrice}>
-                      <span className={styles.amount}>{plan.price}</span>
-                      <span className={styles.period}>FCFA{plan.period}</span>
-                    </div>
-                    <ul className={styles.rpPlanFeatures}>
-                      {plan.features.map((f, j) => (
-                        <li key={j}><Check size={16} /> {f}</li>
-                      ))}
-                    </ul>
-                    <button className={styles.rpBtnPrimary}>{plan.ctaText}</button>
+                  )}
+                  <div className={styles.planIcon}>
+                    <plan.icon size={32} />
                   </div>
+                  <h3 className={styles.planName}>{plan.name}</h3>
+                  <div className={styles.planPrice}>
+                    <span className={styles.priceAmount}>{plan.price}</span>
+                    {plan.period !== 'Gratuit' && <span className={styles.pricePeriod}>FCFA{plan.period}</span>}
+                  </div>
+                  {plan.period === 'Gratuit' && <span className={styles.pricePeriod}>{plan.period}</span>}
+                  <ul className={styles.planFeatures}>
+                    {plan.features.map((f, j) => (
+                      <li key={j} className={styles.planFeature}>
+                        <Check size={16} color="#1A4D5E" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className={plan.popular ? styles.btnCardPrimary : styles.btnCardSecondary}>
+                    Choisir ce plan
+                  </button>
                 </div>
               ))}
             </div>
 
-            <button onClick={handlePlanNext} className={styles.rpCarouselBtn} aria-label="Suivant">
+            <button 
+              onClick={nextPlans}
+              className={`${styles.carouselBtn} ${styles.carouselBtnNext}`}
+              disabled={!canGoNext}
+            >
               <ChevronRight size={24} />
             </button>
           </div>
 
-          <div className={styles.rpCarouselDots}>
-            {[0, 1].map(i => (
-              <button key={i} onClick={() => setCurrentPlanSlide(i)} className={i === currentPlanSlide ? styles.active : ''} />
+          <div className={styles.pricingDots}>
+            {Array.from({ length: plans.length - 2 }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPlanSlide(i)}
+                className={`${styles.pricingDot} ${i === currentPlanSlide ? styles.pricingDotActive : ''}`}
+              />
             ))}
           </div>
         </div>
       </section>
 
       {/* About */}
-      <section id="about" className={styles.rpAbout}>
-        <div className={styles.rpContainer}>
-          <div className={styles.rpSectionHeader}>
-            <span className={styles.rpBadge}><Users size={16} /> À propos</span>
-            <h2 className={styles.rpSectionTitle}>Notre mission</h2>
-            <p className={styles.rpSectionSubtitle}>Démocratiser l'accès à une éducation de qualité</p>
+      <section id="about" className={styles.about}>
+        <div className={styles.container}>
+          <div className={styles.aboutContent}>
+            <div className={styles.aboutLeft}>
+              <div className={styles.badge}>
+                <Users size={16} /> À propos
+              </div>
+              <h2 className={styles.aboutTitle}>Notre vision produit</h2>
+              <p className={styles.aboutText}>
+                Plongez dans notre vision et découvrez comment notre processus transforme les idées en solutions d'apprentissage percutantes.
+              </p>
+              <p className={styles.aboutText}>
+                Win+ est née du constat que de nombreux étudiants talentueux au Cameroun manquent d'accès à des ressources de qualité pour préparer leurs concours.
+              </p>
+              <button className={styles.btnLarge}>
+                Suivre notre vision <ChevronRight size={20} />
+              </button>
+            </div>
+            <div className={styles.aboutRight}>
+              <img 
+                src="\desola-lanre-ologun-IgUR1iX0mqM-unsplash.jpg"
+                alt="Équipe Win+"
+                className={styles.aboutImage}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className={styles.contact}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.badge}>
+              <MessageSquare size={16} /> Contact
+            </div>
+            <h2 className={styles.sectionTitle}>Besoin d'aide avec Win+ ?</h2>
+            <p className={styles.sectionSubtitle}>Contactez notre équipe de support</p>
           </div>
 
-          <div className={styles.rpAboutContent}>
-            <div className={styles.rpAboutText}>
-              <h3>Une plateforme née de la passion pour l'éducation</h3>
-              <p>
-                Réussir est née du constat que de nombreux étudiants talentueux au Cameroun manquent d'accès 
-                à des ressources de qualité pour préparer leurs concours. Notre mission est de démocratiser 
-                l'accès à une préparation d'excellence.
+          <div className={styles.contactGrid}>
+            <div className={styles.contactCard}>
+              <Mail size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Par Email</h3>
+              <p className={styles.contactCardText}>Réponse sous 24h</p>
+              <a href="mailto:contact@winplus.cm" className={styles.contactLink}>contact@winplus.cm</a>
+            </div>
+            <div className={styles.contactCard}>
+              <Phone size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Par Téléphone</h3>
+              <p className={styles.contactCardText}>Support direct</p>
+              <a href="tel:+237123456789" className={styles.contactLink}>+237 123 456 789</a>
+            </div>
+            <div className={styles.contactCard}>
+              <MapPin size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Localisation</h3>
+              <p className={styles.contactCardText}>Yaoundé, Cameroun</p>
+              <span className={styles.contactLink}>Centre-ville</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <div className={styles.footerContent}>
+            <div className={styles.footerSection}>
+              <div className={styles.footerLogo}>
+                <div className={styles.logoIcon}>  
+                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+                </div>
+                <span className={styles.logoText}>Win+</span>
+              </div>
+              <p className={styles.footerText}>
+                Autonomiser les éducateurs pour améliorer notre monde
               </p>
+              <div className={styles.socialIcons}>
+                <a href="#" className={styles.socialIcon} aria-label="Facebook">
+                  <Facebook size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="Twitter">
+                  <Twitter size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="LinkedIn">
+                  <Linkedin size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="Instagram">
+                  <Instagram size={20} />
+                </a>
+              </div>
             </div>
 
-            <div className={styles.rpAboutStats}>
-              <div className={styles.rpAboutStat}>
-                <BookOpen size={32} />
-                <span className={styles.number}>1000+</span><span className={styles.label}>Épreuves</span>
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>Win+</h4>
+              <a href="#" className={styles.footerLink}>À propos de Win+</a>
+              <a href="#" className={styles.footerLink}>Statistiques</a>
+              <a href="#" className={styles.footerLink}>Contact</a>
+            </div>
+
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>Support</h4>
+              <a href="#" className={styles.footerLink}>Documentation</a>
+              <a href="#" className={styles.footerLink}>Forums</a>
+              <a href="#" className={styles.footerLink}>Service Providers</a>
+            </div>
+
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>S'impliquer</h4>
+              <a href="#" className={styles.footerLink}>Développement</a>
+              <a href="#" className={styles.footerLink}>Traduction</a>
+              <a href="#" className={styles.footerLink}>Expérience utilisateur</a>
+            </div>
           </div>
-          <div className={styles.rpAboutStat}>
-            <Users size={32} />
-            <span className={styles.number}>2000+</span>
-            <span className={styles.label}>Étudiants</span>
-          </div>
-          <div className={styles.rpAboutStat}>
-            <Trophy size={32} />
-            <span className={styles.number}>95%</span>
-            <span className={styles.label}>Réussite</span>
+
+          <div className={styles.footerBottom}>
+            <p className={styles.footerCopyright}>
+              © 2024 Win+. Tous droits réservés.
+            </p>
+            <div className={styles.footerBadges}>
+              <span className={styles.footerBadge}>
+                <Shield size={16} /> Sécurisé
+              </span>
+              <span className={styles.footerBadge}>
+                <Award size={16} /> Certifié
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
-  </section>
-
-  {/* Contact */}
-  <section id="contact" className={styles.rpContact}>
-    <div className={styles.rpContainer}>
-      <div className={styles.rpSectionHeader}>
-        <span className={styles.rpBadge}><MessageSquare size={16} /> Contact</span>
-        <h2 className={styles.rpSectionTitle}>Contactez-nous</h2>
-        <p className={styles.rpSectionSubtitle}>Notre équipe est là pour vous</p>
-      </div>
-
-      <div className={styles.rpContactContent}>
-        <div className={styles.rpContactInfo}>
-          <div className={styles.rpContactCard}>
-            <Mail size={32} />
-            <h3>Par Email</h3>
-            <p>Réponse sous 24h</p>
-            <a href="mailto:contact@reussir.com">contact@reussir.com</a>
-          </div>
-
-          <div className={styles.rpContactCard}>
-            <FaWhatsapp size={32} />
-            <h3>Par WhatsApp</h3>
-            <p>Réponse rapide</p>
-            <a href="https://wa.me/237123456789" target="_blank" rel="noopener noreferrer">+237 123 456 789</a>
-          </div>
-
-          <div className={styles.rpContactCard}>
-            <MapPin size={32} />
-            <h3>Localisation</h3>
-            <p>Yaoundé, Cameroun</p>
-          </div>
-        </div>
-
-        <form className={styles.rpContactForm} onSubmit={handleContactSubmit}>
-          <h3>Envoyez un message</h3>
-          
-          <div className={styles.rpMethodSelector}>
-            <label className={contactForm.contactMethod === 'email' ? styles.active : ''}>
-              <input type="radio" name="contactMethod" value="email" checked={contactForm.contactMethod === 'email'} onChange={() => setContactForm(prev => ({ ...prev, contactMethod: 'email' }))} />
-              <Mail size={20} /> Email
-            </label>
-            <label className={contactForm.contactMethod === 'whatsapp' ? styles.active : ''}>
-              <input type="radio" name="contactMethod" value="whatsapp" checked={contactForm.contactMethod === 'whatsapp'} onChange={() => setContactForm(prev => ({ ...prev, contactMethod: 'whatsapp' }))} />
-              <FaWhatsapp size={20} /> WhatsApp
-            </label>
-          </div>
-
-          <input type="text" name="name" value={contactForm.name} onChange={handleContactChange} placeholder="Nom complet *" required />
-          
-          {contactForm.contactMethod === 'email' ? (
-            <input type="email" name="email" value={contactForm.email} onChange={handleContactChange} placeholder="Email *" required />
-          ) : (
-            <input type="tel" name="phone" value={contactForm.phone} onChange={handleContactChange} placeholder="Téléphone WhatsApp *" required />
-          )}
-
-          <select name="subject" value={contactForm.subject} onChange={handleContactChange} required>
-            <option value="">Choisissez un sujet</option>
-            <option value="support">Support technique</option>
-            <option value="general">Question générale</option>
-            <option value="payment">Paiement</option>
-            <option value="other">Autre</option>
-          </select>
-
-          <textarea name="message" value={contactForm.message} onChange={handleContactChange} rows={5} placeholder="Votre message *" required />
-
-          <button type="submit" disabled={isSubmitting} className={styles.rpBtnPrimary}>
-            {isSubmitting ? 'Envoi...' : <><Send size={20} /> Envoyer</>}
-          </button>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  {/* Footer */}
-  <footer className={styles.rpFooter}>
-    <div className={styles.rpContainer}>
-      <div className={styles.rpFooterContent}>
-        <div className={styles.rpFooterSection}>
-          <div className={styles.rpLogo}>
-            <img src="/ReussirLogo1.png" alt="Réussir" />
-            <span>Réussir</span>
-          </div>
-          <p>La plateforme de référence pour les concours au Cameroun</p>
-          <div className={styles.rpSocial}>
-            <button aria-label="Email"><Mail size={20} /></button>
-            <button aria-label="Chat"><MessageSquare size={20} /></button>
-            <button aria-label="Phone"><Phone size={20} /></button>
-          </div>
-        </div>
-
-        <div className={styles.rpFooterSection}>
-          <h4>Plateforme</h4>
-          <a href="#catalog">Catalogue</a>
-          <a href="#pricing">Plans</a>
-          <a href="#chatbot">Chatbot IA</a>
-        </div>
-
-        <div className={styles.rpFooterSection}>
-          <h4>Support</h4>
-          <a href="#help">Aide</a>
-          <a href="#contact">Contact</a>
-          <a href="#faq">FAQ</a>
-        </div>
-
-        <div className={styles.rpFooterSection}>
-          <h4>Légal</h4>
-          <a href="#terms">CGU</a>
-          <a href="#privacy">Confidentialité</a>
-          <a href="#legal">Mentions légales</a>
-        </div>
-      </div>
-
-      <div className={styles.rpFooterBottom}>
-        <p>&copy; 2024 Réussir. Tous droits réservés.</p>
-        <div className={styles.rpBadges}>
-          <span><Shield size={16} /> Sécurisé</span>
-          <span><Award size={16} /> Certifié</span>
-        </div>
-      </div>
-    </div>
-  </footer>
-</div>);
+  );
 };
+
 export default HomePage;
