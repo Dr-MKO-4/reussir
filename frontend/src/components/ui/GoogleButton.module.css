@@ -1,0 +1,203 @@
+.googleButton {
+  width: 100%;
+  background: var(--color-white);
+  color: var(--color-neutral-dark);
+  border: 2px solid var(--color-neutral-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  min-height: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.googleButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.05), transparent);
+  transition: left var(--duration-slow) var(--easing-ease-out);
+}
+
+.googleButton:hover:not(:disabled) {
+  border-color: #4285F4;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(66, 133, 244, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(66, 133, 244, 0.02);
+}
+
+.googleButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.googleButton:focus-visible {
+  outline: none;
+  border-color: #4285F4;
+  box-shadow: 
+    0 0 0 3px rgba(66, 133, 244, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.googleButton:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+}
+
+.googleButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+  transition: transform var(--duration-normal) var(--easing-ease-out);
+}
+
+.googleButton:hover:not(:disabled) .googleIcon {
+  transform: scale(1.1);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(66, 133, 244, 0.2);
+  border-top: 2px solid #4285F4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+.buttonText {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.2px;
+  transition: color var(--duration-normal) var(--easing-ease-out);
+}
+
+.googleButton:hover:not(:disabled) .buttonText {
+  color: #4285F4;
+}
+
+/* Effet de press */
+.googleButton:active:not(:disabled) .iconContainer {
+  transform: scale(0.95);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .googleButton {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 15px;
+  }
+
+  .googleIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Dark mode */
+[data-theme="dark"] .googleButton {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-primary-dark);
+}
+
+[data-theme="dark"] .googleButton::before {
+  background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.1), transparent);
+}
+
+[data-theme="dark"] .googleButton:hover:not(:disabled) {
+  background: rgba(66, 133, 244, 0.05);
+  border-color: #4285F4;
+}
+
+[data-theme="dark"] .googleButton:hover:not(:disabled) .buttonText {
+  color: #4285F4;
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .googleButton,
+  .googleButton::before {
+    transition: none;
+  }
+  
+  .googleButton:hover,
+  .googleButton:active {
+    transform: none;
+  }
+  
+  .spinner {
+    animation: none;
+  }
+  
+  .googleIcon {
+    transition: none;
+  }
+}
+
+/* Focus states améliorés */
+.googleButton:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Animation de succès (optionnel) */
+.googleButton.success {
+  background: var(--color-accent-green);
+  color: var(--color-white);
+  border-color: var(--color-accent-green);
+}
+
+.googleButton.success .buttonText {
+  color: var(--color-white);
+}
+
+/* States supplémentaires */
+.googleButton.error {
+  border-color: var(--color-secondary-orange);
+  color: var(--color-secondary-orange);
+  animation: shake var(--duration-normal) var(--easing-ease-out);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}

@@ -1,0 +1,548 @@
+/* src/components/ui/ThemeToggle.module.css */
+
+.themeToggleContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.fixed {
+  position: fixed;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: var(--z-index-dropdown);
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  position: relative;
+}
+
+.themeLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.systemBadge {
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+}
+
+.toggleButton {
+  position: relative;
+  width: 64px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+.toggleButton:hover {
+  transform: scale(1.05);
+}
+
+.toggleButton:active {
+  transform: scale(0.95);
+}
+
+.toggleButton:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-70);
+}
+
+.toggleTrack {
+  width: 100%;
+  height: 100%;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: background-color var(--duration-normal) var(--easing-ease-out);
+}
+
+.toggleTrack::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 100%);
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--easing-ease-out);
+}
+
+.toggleButton:hover .toggleTrack::before {
+  opacity: 1;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  width: 28px;
+  height: 28px;
+  background: var(--color-white);
+  border-radius: 50%;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.toggleThumb.light {
+  left: 2px;
+  background: linear-gradient(135deg, #FEF3C7, #FCD34D);
+  box-shadow: 0 2px 12px rgba(252, 211, 77, 0.4);
+}
+
+.toggleThumb.dark {
+  left: 34px;
+  background: linear-gradient(135deg, #374151, #1F2937);
+  box-shadow: 0 2px 12px rgba(31, 41, 55, 0.4);
+}
+
+.toggleThumb.system {
+  left: 18px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.4);
+}
+
+.thumbIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-primary);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+.toggleThumb.light .thumbIcon {
+  color: #92400E;
+}
+
+.toggleThumb.dark .thumbIcon {
+  color: #F9FAFB;
+}
+
+.toggleThumb.system .thumbIcon {
+  color: var(--color-white);
+}
+
+.trackIcons {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+}
+
+.lightIcon,
+.darkIcon {
+  width: 16px;
+  height: 16px;
+  opacity: var(--opacity-50);
+  transition: opacity var(--duration-normal) var(--easing-ease-out);
+}
+
+.lightIcon {
+  color: #F59E0B;
+}
+
+.darkIcon {
+  color: #6B7280;
+}
+
+.toggleButton:hover .lightIcon,
+.toggleButton:hover .darkIcon {
+  opacity: var(--opacity-70);
+}
+
+.ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.3);
+  transform: translate(-50%, -50%);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  pointer-events: none;
+}
+
+.toggleButton:active .ripple {
+  width: 80px;
+  height: 80px;
+}
+
+.animating .toggleThumb {
+  transition-duration: var(--duration-slow);
+}
+
+.animating .ripple {
+  width: 60px;
+  height: 60px;
+  opacity: 0;
+}
+
+/* Compact and Icon-only variants */
+.themeToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.themeToggle:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.themeToggle:active {
+  transform: translateY(0);
+}
+
+.themeToggle:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-60);
+  transform: none;
+}
+
+.compact {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.iconOnly {
+  padding: var(--spacing-xs);
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+.iconContainer {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeIcon {
+  width: 100%;
+  height: 100%;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+}
+
+.themeToggle.animating .themeIcon {
+  transform: rotate(180deg);
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* Theme options dropdown */
+.themeOptions {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--spacing-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xs);
+  display: flex;
+  gap: var(--spacing-xs);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-index-dropdown);
+}
+
+.toggleWrapper:hover .themeOptions {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.optionButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  color: var(--color-text-secondary);
+}
+
+.optionButton:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.optionButton.active {
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+}
+
+.optionButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .toggleTrack {
+  background: var(--color-border-dark);
+}
+
+[data-theme="dark"] .themeToggle {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .themeToggle:hover {
+  background: var(--color-surface-hover-dark);
+}
+
+[data-theme="dark"] .themeOptions {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .optionButton:hover {
+  background: var(--color-surface-hover-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fixed {
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+  }
+
+  .toggleButton {
+    width: 56px;
+    height: 28px;
+  }
+
+  .toggleThumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .toggleThumb.light {
+    left: 2px;
+  }
+
+  .toggleThumb.dark {
+    left: 30px;
+  }
+
+  .toggleThumb.system {
+    left: 16px;
+  }
+
+  .thumbIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .themeOptions {
+    right: -10px;
+  }
+}
+
+/* Focus styles */
+.toggleButton:focus,
+.themeToggle:focus,
+.optionButton:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .toggleThumb,
+  .thumbIcon,
+  .themeIcon,
+  .ripple,
+  .themeOptions,
+  .toggleTrack::before {
+    transition: none;
+  }
+
+  .themeToggle:hover,
+  .toggleButton:hover {
+    transform: none;
+  }
+
+  .toggleButton:active {
+    transform: none;
+  }
+
+  .animating .themeIcon {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .toggleTrack {
+    border: 2px solid var(--color-text-primary);
+  }
+
+  .toggleThumb {
+    border: 2px solid var(--color-text-primary);
+  }
+
+  .themeToggle {
+    border-width: 2px;
+  }
+}
+
+/* Custom scrollbar for theme options if needed */
+.themeOptions::-webkit-scrollbar {
+  display: none;
+}
+
+.themeOptions {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Loading state */
+.loading {
+  pointer-events: none;
+  opacity: var(--opacity-70);
+}
+
+.loading .toggleThumb::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility improvements */
+.toggleButton[aria-pressed="true"] .toggleThumb {
+  box-shadow: 0 0 0 2px var(--color-primary-blue);
+}
+
+.themeToggle[aria-pressed="true"] {
+  background: var(--color-primary-blue-light);
+  border-color: var(--color-primary-blue);
+}
+
+/* Tooltip styles */
+.toggleButton::after,
+.themeToggle::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text-primary);
+  color: var(--color-background);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  pointer-events: none;
+  z-index: var(--z-index-tooltip);
+  margin-bottom: var(--spacing-xs);
+}
+
+.toggleButton:hover::after,
+.themeToggle:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Animation variants */
+.slideToggle .toggleThumb {
+  transition-timing-function: var(--easing-bounce);
+}
+
+.fadeToggle .thumbIcon {
+  transition: opacity var(--duration-fast) var(--easing-ease-out);
+}
+
+.fadeToggle.animating .thumbIcon {
+  opacity: 0;
+}
+
+/* Error state */
+.error {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.error:hover {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+/* Success state */
+.success {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.success:hover {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}

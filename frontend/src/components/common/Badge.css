@@ -1,0 +1,218 @@
+/* Badge Base */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--badge-padding-y) var(--badge-padding-x);
+  border-radius: var(--badge-border-radius);
+  font-size: var(--badge-font-size);
+  font-weight: var(--badge-font-weight);
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: baseline;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+/* Badge Sizes */
+.badge-sm {
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+}
+
+.badge-md {
+  padding: var(--badge-padding-y) var(--badge-padding-x);
+  font-size: var(--badge-font-size);
+}
+
+.badge-lg {
+  padding: 6px 12px;
+  font-size: var(--font-size-sm);
+}
+
+/* Badge Variants */
+.badge-primary {
+  background: var(--color-primary-blue-light);
+  color: var(--color-primary-blue);
+  border: 1px solid var(--color-primary-blue);
+}
+
+.badge-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.badge-success {
+  background: var(--color-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.badge-error {
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.badge-warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
+.badge-info {
+  background: var(--color-info-light);
+  color: var(--color-info);
+  border: 1px solid var(--color-info);
+}
+
+.badge-neutral {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* Badge Rounded */
+.badge-rounded {
+  border-radius: var(--radius-full);
+}
+
+/* Badge Clickable */
+.badge-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.badge-clickable:hover {
+  opacity: var(--opacity-80);
+  transform: translateY(-1px);
+}
+
+.badge-clickable:active {
+  transform: translateY(0);
+}
+
+.badge-clickable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Badge Dot */
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.badge-sm .badge-dot {
+  width: 4px;
+  height: 4px;
+}
+
+.badge-lg .badge-dot {
+  width: 8px;
+  height: 8px;
+}
+
+/* Badge Icon */
+.badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badge-icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* Badge Content */
+.badge-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Badge Group */
+.badge-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .badge-primary {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--color-primary-blue);
+}
+
+[data-theme="dark"] .badge-secondary {
+  background: var(--color-surface-dark);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .badge-success {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: var(--color-success);
+}
+
+[data-theme="dark"] .badge-error {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--color-error);
+}
+
+[data-theme="dark"] .badge-warning {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: var(--color-warning);
+}
+
+[data-theme="dark"] .badge-info {
+  background: rgba(96, 165, 250, 0.15);
+  border-color: var(--color-info);
+}
+
+[data-theme="dark"] .badge-neutral {
+  background: var(--color-surface-hover-dark);
+  color: var(--color-text-secondary-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .badge-lg {
+    padding: var(--badge-padding-y) var(--badge-padding-x);
+    font-size: var(--badge-font-size);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .badge,
+  .badge-clickable:hover,
+  .badge-clickable:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* High Contrast */
+@media (prefers-contrast: high) {
+  .badge {
+    border-width: 2px;
+  }
+}
+
+/* Print */
+@media print {
+  .badge {
+    border: 1px solid currentColor;
+  }
+  
+  .badge-clickable {
+    cursor: default;
+  }
+}

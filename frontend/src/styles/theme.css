@@ -1,0 +1,197 @@
+/* Variables pour le thème clair */
+:root[data-theme="light"], 
+:root {
+  /* Colors - Light Theme */
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-surface-hover: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-text-primary: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-error: #EF4444;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+}
+
+/* Variables pour le thème sombre */
+:root[data-theme="dark"] {
+  /* Colors - Dark Theme */
+  --color-background: #0F172A;
+  --color-background-dark: #0F172A;
+  --color-surface: #1E293B;
+  --color-surface-dark: #1E293B;
+  --color-surface-hover: #334155;
+  --color-surface-hover-dark: #334155;
+  --color-border: #334155;
+  --color-border-dark: #334155;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-secondary-dark: #94A3B8;
+  --color-error: #F87171;
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-info: #60A5FA;
+
+  /* Ajustements des couleurs principales pour le dark mode */
+  --color-primary-blue-light: rgba(59, 130, 246, 0.1);
+  --color-secondary-orange-light: rgba(251, 191, 36, 0.1);
+  --color-accent-green-light: rgba(52, 211, 153, 0.1);
+  --color-neutral-light: #1E293B;
+  --color-neutral-border: #475569;
+  --color-neutral-disabled: #64748B;
+
+  /* Shadows pour le dark mode */
+  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 8px 20px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  --shadow-button: rgba(59, 130, 246, 0.3);
+}
+
+/* Transition pour le changement de thème */
+* {
+  transition: 
+    background-color var(--duration-normal) var(--easing-ease-out),
+    border-color var(--duration-normal) var(--easing-ease-out),
+    color var(--duration-normal) var(--easing-ease-out),
+    box-shadow var(--duration-normal) var(--easing-ease-out);
+}
+
+/* Exception pour les éléments qui ne doivent pas avoir de transition */
+*:where(
+  .no-transition,
+  input[type="range"]::-webkit-slider-thumb,
+  input[type="range"]::-moz-range-thumb,
+  *[class*="animation"],
+  *[class*="spinner"],
+  *[class*="loading"]
+) {
+  transition: none !important;
+}
+
+/* Amélioration du contraste en mode sombre */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+/* Styles spécifiques pour les éléments de formulaire en mode sombre */
+[data-theme="dark"] button:not(.no-theme) {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] button:not(.no-theme):hover {
+  background: var(--color-surface-hover);
+}
+
+/* Scrollbars en mode sombre */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-surface);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Selection en mode sombre */
+[data-theme="dark"] ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--color-text-primary);
+}
+
+/* Focus visible amélioré pour le mode sombre */
+[data-theme="dark"] *:focus-visible {
+  outline-color: var(--color-info);
+}
+
+/* Améliorations pour les éléments interactifs */
+[data-theme="dark"] a:not(.no-theme) {
+  color: var(--color-info);
+}
+
+[data-theme="dark"] a:not(.no-theme):hover {
+  color: var(--color-warning);
+}
+
+/* Media queries pour respecter les préférences système */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* Appliquer le thème sombre par défaut si aucun thème n'est défini */
+    --color-background: #0F172A;
+    --color-surface: #1E293B;
+    --color-surface-hover: #334155;
+    --color-border: #334155;
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #94A3B8;
+  }
+}
+
+/* Transitions fluides pour le changement de thème */
+.theme-transition * {
+  transition: 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition *,
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --color-text-primary: #000000;
+    --color-text-secondary: #333333;
+  }
+  
+  [data-theme="dark"] {
+    --color-border: #FFFFFF;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #CCCCCC;
+  }
+}
+
+/* Amélioration pour les écrans avec faible luminosité */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  [data-theme="dark"] {
+    --color-background: #000000;
+    --color-surface: #1a1a1a;
+  }
+}

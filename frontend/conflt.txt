@@ -1,0 +1,10 @@
+vite.config.js
+vite.config.ts
+src/App.jsx
+src/App.tsx
+src/components/common/ProtectedRoute.jsx
+src/components/common/ProtectedRoute.tsx
+src/contexts/AuthContext.jsx
+src/contexts/AuthContext.tsx
+src/contexts/ThemeContext.jsx
+src/contexts/ThemeContext.tsx

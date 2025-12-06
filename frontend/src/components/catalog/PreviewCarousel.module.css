@@ -1,0 +1,400 @@
+/* src/components/catalog/PreviewCarousel.module.css */
+
+/* Container principal */
+.carouselContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Wrapper de l'image principale */
+.mainImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+/* Image principale */
+.mainImage {
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+  transition: transform var(--duration-normal) var(--easing-ease-out);
+}
+
+.mainImage.zoomed {
+  cursor: zoom-out;
+}
+
+.mainImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform var(--duration-normal) var(--easing-ease-out);
+}
+
+.mainImage:hover img {
+  transform: scale(1.05);
+}
+
+/* Badge de zoom */
+.zoomBadge {
+  position: absolute;
+  bottom: var(--spacing-md);
+  right: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--easing-ease-out);
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.mainImageWrapper:hover .zoomBadge {
+  opacity: 1;
+}
+
+/* Boutons de navigation */
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-3xl);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.navButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.navButton:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+.prevButton {
+  left: var(--spacing-md);
+}
+
+.nextButton {
+  right: var(--spacing-md);
+}
+
+/* Indicateurs de pagination */
+.indicators {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--spacing-xs);
+  z-index: 2;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  padding: 0;
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.indicator.active {
+  background: var(--color-white);
+  width: 24px;
+  border-radius: var(--radius-full);
+}
+
+/* Compteur */
+.counter {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+/* Thumbnails */
+.thumbnailsWrapper {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.thumbnails {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+}
+
+.thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  padding: 0;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail:hover {
+  border-color: var(--color-primary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.thumbnail:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+.thumbnail.activeThumbnail {
+  border-color: var(--color-primary-blue);
+  border-width: 3px;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Modal zoom */
+.zoomModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-index-modal);
+  padding: var(--spacing-xl);
+  animation: fadeIn var(--duration-normal) var(--easing-ease-out);
+  cursor: zoom-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.zoomedImage {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  animation: zoomIn var(--duration-normal) var(--easing-ease-out);
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--spacing-xl);
+  right: var(--spacing-xl);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  backdrop-filter: blur(4px);
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* Responsive - Tablette */
+@media (max-width: 1024px) {
+  .mainImageWrapper {
+    aspect-ratio: 16 / 10;
+  }
+
+  .navButton {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-2xl);
+  }
+
+  .thumbnail {
+    width: 70px;
+    height: 52px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .mainImageWrapper {
+    aspect-ratio: 1;
+  }
+
+  .navButton {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-xl);
+  }
+
+  .prevButton {
+    left: var(--spacing-sm);
+  }
+
+  .nextButton {
+    right: var(--spacing-sm);
+  }
+
+  .indicators {
+    bottom: var(--spacing-sm);
+  }
+
+  .indicator {
+    width: 8px;
+    height: 8px;
+  }
+
+  .indicator.active {
+    width: 20px;
+  }
+
+  .counter {
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+  }
+
+  .thumbnail {
+    width: 60px;
+    height: 45px;
+  }
+
+  .zoomModal {
+    padding: var(--spacing-md);
+  }
+
+  .closeButton {
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .mainImageWrapper {
+  background: var(--color-surface-dark);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="dark"] .thumbnail {
+  background: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .thumbnail:hover {
+  border-color: var(--color-primary-blue);
+}
+
+/* Accessibilité - Réduire mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .mainImage img,
+  .navButton,
+  .thumbnail,
+  .zoomedImage,
+  .zoomModal {
+    transition: none;
+    animation: none;
+  }
+
+  .navButton:hover,
+  .thumbnail:hover {
+    transform: none;
+  }
+
+  .mainImage:hover img {
+    transform: none;
+  }
+}
+
+/* Scrollbar personnalisée pour thumbnails */
+.thumbnailsWrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnailsWrapper::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.thumbnailsWrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.thumbnailsWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
