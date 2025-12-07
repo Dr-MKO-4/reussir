@@ -223,7 +223,7 @@ const HomePage = () => {
           <div className={styles.headerContent}>
             <div className={styles.logo} onClick={() => scrollToSection('hero')}>
               <div className={styles.logoIcon}>  
-                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+                <img src="\logo1.png" alt="Win+" />
               </div>
               <span className={styles.logoText}>Win+</span>
             </div>
@@ -621,7 +621,7 @@ const HomePage = () => {
             <div className={styles.footerSection}>
               <div className={styles.footerLogo}>
                 <div className={styles.logoIcon}>  
-                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+                <img src="\logo1.png" alt="Win+" />
                 </div>
                  <span className={styles.logoText}>Win+</span>
               </div>
