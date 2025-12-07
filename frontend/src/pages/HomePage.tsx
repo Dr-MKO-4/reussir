@@ -6,6 +6,7 @@ import {
   Facebook, Twitter, Linkedin, Instagram, ChevronLeft
 } from 'lucide-react';
 import styles from './HomePage.module.css';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,7 +15,19 @@ const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentPlanSlide, setCurrentPlanSlide] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+const navigate = useNavigate();
+  
+  // ... autres états existants ...
 
+  // Fonction pour gérer la connexion
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
+  // Fonction pour gérer l'inscription
+  const handleSignupClick = () => {
+    navigate('/signup');
+  };
   const subjects = [
     { value: 'tous', label: 'Toutes les matières' },
     { value: 'mathematiques', label: 'Mathématiques' },
@@ -223,7 +236,7 @@ const HomePage = () => {
           <div className={styles.headerContent}>
             <div className={styles.logo} onClick={() => scrollToSection('hero')}>
               <div className={styles.logoIcon}>  
-                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+                <img src="\logo1.png" alt="Win+" />
               </div>
               <span className={styles.logoText}>Win+</span>
             </div>
@@ -248,8 +261,12 @@ const HomePage = () => {
                 />
               </div>
 
-              <button className={styles.btnPrimary}>Connexion</button>
-              <button className={styles.btnSecondary}>Inscription</button>
+              <button className={styles.btnPrimary} onClick={handleLoginClick}>
+                Connexion
+              </button>
+              <button className={styles.btnSecondary} onClick={handleSignupClick}>
+                Inscription
+              </button>
 
               <button 
                 className={styles.mobileToggle}
@@ -621,7 +638,7 @@ const HomePage = () => {
             <div className={styles.footerSection}>
               <div className={styles.footerLogo}>
                 <div className={styles.logoIcon}>  
-                <img src="\WhatsApp Image 2025-12-06 à 18.05.03_606bc515.JPG" alt="Win+" />
+                <img src="\logo1.png" alt="Win+" />
                 </div>
                  <span className={styles.logoText}>Win+</span>
               </div>
