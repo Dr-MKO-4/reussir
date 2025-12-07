@@ -3,7 +3,7 @@ import {
   Search, BookOpen, Trophy, Users, Star, Download, Clock, 
   Eye, ChevronRight, Mail, Phone, MessageSquare, MapPin,
   Check, Menu, X, Award, Shield, Zap, Target, Cpu,
-  Facebook, Twitter, Linkedin, Instagram, ChevronLeft
+  Facebook, Twitter, Linkedin, Instagram, ChevronLeft, ShoppingCart
 } from 'lucide-react';
 import styles from './HomePage.module.css';
 import { useNavigate } from 'react-router-dom';
@@ -15,9 +15,29 @@ const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentPlanSlide, setCurrentPlanSlide] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-const navigate = useNavigate();
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [cartItemsCount, setCartItemsCount] = useState(); // Nombre d'articles dans le panier
   
-  // ... autres états existants ...
+  const navigate = useNavigate();
+
+  // Gérer le redimensionnement de la fenêtre
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Déterminer le nombre de cartes visibles selon la largeur d'écran
+  const getVisibleCards = () => {
+    if (windowWidth < 900) return 1;
+    if (windowWidth < 1024) return 2;
+    return 3;
+  };
+
+  const visibleCardsCount = getVisibleCards();
 
   // Fonction pour gérer la connexion
   const handleLoginClick = () => {
@@ -28,6 +48,7 @@ const navigate = useNavigate();
   const handleSignupClick = () => {
     navigate('/signup');
   };
+
   const subjects = [
     { value: 'tous', label: 'Toutes les matières' },
     { value: 'mathematiques', label: 'Mathématiques' },
@@ -207,13 +228,13 @@ const navigate = useNavigate();
     return subjectMatch && classMatch;
   });
 
-  const scrollToSection = (id) => {
+  const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     setIsMobileMenuOpen(false);
   };
 
-  const visiblePlans = plans.slice(currentPlanSlide, currentPlanSlide + 3);
-  const canGoNext = currentPlanSlide < plans.length - 3;
+  const visiblePlans = plans.slice(currentPlanSlide, currentPlanSlide + visibleCardsCount);
+  const canGoNext = currentPlanSlide < plans.length - visibleCardsCount;
   const canGoPrev = currentPlanSlide > 0;
 
   const nextPlans = () => {
@@ -228,6 +249,9 @@ const navigate = useNavigate();
     }
   };
 
+  // Calculer le nombre total de dots pour le carousel
+  const totalDots = plans.length - visibleCardsCount + 1;
+
   return (
     <div className={styles.wrapper}>
       {/* Header */}
@@ -238,7 +262,6 @@ const navigate = useNavigate();
               <div className={styles.logoIcon}>  
                 <img src="\logo1.png" alt="Win+" />
               </div>
-              <span className={styles.logoText}>Win+</span>
             </div>
 
             <nav className={styles.nav}>
@@ -247,6 +270,13 @@ const navigate = useNavigate();
               <a href="#pricing" onClick={(e) => { e.preventDefault(); scrollToSection('pricing'); }}>Plans</a>
               <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>À propos</a>
               <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
+              
+              <button className={styles.cartBtn} aria-label="Panier">
+                <ShoppingCart size={20} />
+                {cartItemsCount > 0 && (
+                  <span className={styles.cartBadge}>{cartItemsCount}</span>
+                )}
+              </button>
             </nav>
 
             <div className={styles.headerActions}>
@@ -260,6 +290,13 @@ const navigate = useNavigate();
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+
+              <button className={styles.cartBtnMobile} aria-label="Panier">
+                <ShoppingCart size={22} />
+                {cartItemsCount > 0 && (
+                  <span className={styles.cartBadge}>{cartItemsCount}</span>
+                )}
+              </button>
 
               <button className={styles.btnPrimary} onClick={handleLoginClick}>
                 Connexion
@@ -286,8 +323,8 @@ const navigate = useNavigate();
             <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>À propos</a>
             <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
             <div className={styles.mobileActions}>
-              <button className={styles.btnPrimary}>Connexion</button>
-              <button className={styles.btnSecondary}>Inscription</button>
+              <button className={styles.btnPrimary} onClick={handleLoginClick}>Connexion</button>
+              <button className={styles.btnSecondary} onClick={handleSignupClick}>Inscription</button>
             </div>
           </div>
         )}
@@ -508,6 +545,7 @@ const navigate = useNavigate();
               onClick={prevPlans}
               className={`${styles.carouselBtn} ${styles.carouselBtnPrev}`}
               disabled={!canGoPrev}
+              aria-label="Plans précédents"
             >
               <ChevronLeft size={24} />
             </button>
@@ -550,20 +588,24 @@ const navigate = useNavigate();
               onClick={nextPlans}
               className={`${styles.carouselBtn} ${styles.carouselBtnNext}`}
               disabled={!canGoNext}
+              aria-label="Plans suivants"
             >
               <ChevronRight size={24} />
             </button>
           </div>
 
-          <div className={styles.pricingDots}>
-            {Array.from({ length: plans.length - 2 }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPlanSlide(i)}
-                className={`${styles.pricingDot} ${i === currentPlanSlide ? styles.pricingDotActive : ''}`}
-              />
-            ))}
-          </div>
+          {totalDots > 1 && (
+            <div className={styles.pricingDots}>
+              {Array.from({ length: totalDots }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPlanSlide(i)}
+                  className={`${styles.pricingDot} ${i === currentPlanSlide ? styles.pricingDotActive : ''}`}
+                  aria-label={`Aller à la page ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -638,9 +680,8 @@ const navigate = useNavigate();
             <div className={styles.footerSection}>
               <div className={styles.footerLogo}>
                 <div className={styles.logoIcon}>  
-                <img src="\logo1.png" alt="Win+" />
+                  <img src="\logo1.png" alt="Win+" />
                 </div>
-                 <span className={styles.logoText}>Win+</span>
               </div>
               <p className={styles.footerText}>
                 Autonomiser les éducateurs pour améliorer notre monde 

@@ -58,7 +58,8 @@ export interface PaymentError {
 // ==================== SERVICE ====================
 
 class PaymentService {
-  /**
+
+/**
    * Initialiser une intention de paiement
    * @param cartData - Données du panier
    * @param userId - ID utilisateur
@@ -85,7 +86,7 @@ class PaymentService {
       }
 
       // Appel API backend pour créer l'intention
-      const response = await api.post('/payments/intent', {
+      const response = await api.post('/api/payments', {
         amount: Math.round(cartData.total * 100), // Convertir en centimes
         currency: cartData.currency || 'EUR',
         items: cartData.items,
@@ -106,7 +107,6 @@ class PaymentService {
       } as PaymentError;
     }
   }
-
   /**
    * Valider les informations de paiement
    * @param method - Méthode de paiement

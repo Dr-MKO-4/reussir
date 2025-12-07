@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Check, User, Phone } from 'lucide-react';
 import styles from './Signup.module.css';
+import authService, { SignupData } from '../services/auth';
+import AnalyticsService from '../services/analyticsService';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -17,27 +19,62 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [validation, setValidation] = useState({
-    firstName: null,
-    lastName: null,
-    email: null,
-    phone: null,
-    password: null,
-    confirmPassword: null
+    firstName: null as boolean | null,
+    lastName: null as boolean | null,
+    email: null as boolean | null,
+    phone: null as boolean | null,
+    password: null as boolean | null,
+    confirmPassword: null as boolean | null
   });
+  const [passwordStrength, setPasswordStrength] = useState({ level: 0, label: '', color: '' });
 
   // Validation functions
-  const validateName = (name) => name.length >= 2;
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone) => /^[0-9]{9,}$/.test(phone.replace(/\s/g, ''));
-  const validatePassword = (password) => password.length >= 8;
-  const validateConfirmPassword = (password, confirmPassword) => 
+  const validateName = (name: string) => name.length >= 2;
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone: string) => /^[0-9]{9,}$/.test(phone.replace(/\s/g, ''));
+  
+  const validatePassword = (password: string) => {
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return hasMinLength && hasUpperCase && hasNumber && hasSpecialChar;
+  };
+
+  const getPasswordStrength = (password: string) => {
+    if (!password) return { level: 0, label: '', color: '' };
+    
+    let strength = 0;
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+    
+    if (checks.length) strength++;
+    if (checks.uppercase) strength++;
+    if (checks.number) strength++;
+    if (checks.special) strength++;
+    
+    if (strength === 4) return { level: 100, label: 'Très fort', color: '#10B981' };
+    if (strength === 3) return { level: 75, label: 'Fort', color: '#3FD5B8' };
+    if (strength === 2) return { level: 50, label: 'Moyen', color: '#F59E0B' };
+    if (strength === 1) return { level: 25, label: 'Faible', color: '#EF4444' };
+    return { level: 0, label: 'Très faible', color: '#DC2626' };
+  };
+
+  const validateConfirmPassword = (password: string, confirmPassword: string) => 
     password === confirmPassword && password.length >= 8;
 
   // Handle input change
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
 
     // Validate on change
     if (value.length > 0) {
@@ -55,6 +92,7 @@ const Signup = () => {
           break;
         case 'password':
           isValid = validatePassword(value);
+          setPasswordStrength(getPasswordStrength(value));
           // Re-validate confirm password if it exists
           if (formData.confirmPassword) {
             setValidation(prev => ({
@@ -72,11 +110,14 @@ const Signup = () => {
       setValidation(prev => ({ ...prev, [name]: isValid }));
     } else {
       setValidation(prev => ({ ...prev, [name]: null }));
+      if (name === 'password') {
+        setPasswordStrength({ level: 0, label: '', color: '' });
+      }
     }
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const allValid = 
@@ -88,21 +129,100 @@ const Signup = () => {
       validateConfirmPassword(formData.password, formData.confirmPassword) &&
       acceptTerms;
 
-    if (allValid) {
-      setLoading(true);
+    if (!allValid) {
+      setError('Veuillez remplir correctement tous les champs');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Track signup attempt
+      AnalyticsService.trackEvent('signup_attempt', {
+        method: 'email',
+        timestamp: Date.now()
+      });
+
+      const signupData: SignupData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        role: 'student',
+        termsAccepted: acceptTerms
+      };
+
+      const response = await authService.signup(signupData);
+
+      // Track successful signup
+      AnalyticsService.trackEvent('signup_success', {
+        userId: response.user.id,
+        method: 'email'
+      });
+
+      // Redirect to dashboard or email verification page
+      if (!response.user.isEmailVerified) {
+        navigate('/verify-email', { 
+          state: { email: formData.email } 
+        });
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      console.error('Erreur inscription:', err);
       
-      // Simulation d'inscription
-      setTimeout(() => {
-        console.log('Inscription avec:', formData);
-        setLoading(false);
-        // navigate('/dashboard');
-      }, 2000);
+      // Track failed signup
+      AnalyticsService.trackEvent('signup_failed', {
+        error: err.message || 'Unknown error',
+        method: 'email'
+      });
+
+      if (err.status === 409) {
+        setError('Cette adresse email est déjà utilisée');
+      } else if (err.status === 400) {
+        setError(err.message || 'Données invalides. Veuillez vérifier vos informations');
+      } else if (err.status === 422) {
+        setError('Validation échouée. Veuillez vérifier tous les champs');
+      } else {
+        setError('Une erreur est survenue. Veuillez réessayer plus tard');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle Google signup
-  const handleGoogleSignup = () => {
-    console.log('Inscription avec Google');
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Track Google signup attempt
+      AnalyticsService.trackEvent('signup_attempt', {
+        method: 'google',
+        timestamp: Date.now()
+      });
+
+      // TODO: Implement Google OAuth flow
+      // This would typically open a popup or redirect to Google OAuth
+      console.log('Google signup - À implémenter avec OAuth');
+      
+      // For now, show a message
+      setError('L\'inscription via Google sera bientôt disponible');
+    } catch (err: any) {
+      console.error('Erreur Google signup:', err);
+      setError('Impossible de se connecter avec Google');
+      
+      AnalyticsService.trackEvent('signup_failed', {
+        error: err.message,
+        method: 'google'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Navigate back
@@ -116,7 +236,7 @@ const Signup = () => {
   };
 
   // Get input class based on validation
-  const getInputClass = (fieldName) => {
+  const getInputClass = (fieldName: keyof typeof validation) => {
     const isValid = validation[fieldName];
     if (isValid === null) return styles.formInput;
     return `${styles.formInput} ${isValid ? styles.inputValid : styles.inputError}`;
@@ -183,6 +303,7 @@ const Signup = () => {
             className={styles.backButton}
             onClick={handleBackToHome}
             type="button"
+            disabled={loading}
           >
             <ArrowLeft size={18} />
             Retour
@@ -194,6 +315,20 @@ const Signup = () => {
               Créez votre compte gratuitement en quelques secondes
             </p>
           </div>
+
+          {error && (
+            <div style={{
+              backgroundColor: '#FEE2E2',
+              border: '1px solid #EF4444',
+              color: '#DC2626',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
 
           <form className={styles.signupForm} onSubmit={handleSubmit}>
             {/* Nom et Prénom */}
@@ -326,6 +461,45 @@ const Signup = () => {
                     <Check size={18} className={styles.validationIcon} />
                   )}
                 </div>
+                
+                {/* Indicateur de force du mot de passe */}
+                {formData.password && (
+                  <div className={styles.passwordStrengthContainer}>
+                    <div className={styles.passwordStrengthBar}>
+                      <div 
+                        className={styles.passwordStrengthFill}
+                        style={{ 
+                          width: `${passwordStrength.level}%`,
+                          backgroundColor: passwordStrength.color
+                        }}
+                      />
+                    </div>
+                    <span 
+                      className={styles.passwordStrengthLabel}
+                      style={{ color: passwordStrength.color }}
+                    >
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Exigences du mot de passe */}
+                {formData.password && (
+                  <div className={styles.passwordRequirements}>
+                    <div className={formData.password.length >= 8 ? styles.requirementMet : styles.requirementUnmet}>
+                      {formData.password.length >= 8 ? '✓' : '○'} Au moins 8 caractères
+                    </div>
+                    <div className={/[A-Z]/.test(formData.password) ? styles.requirementMet : styles.requirementUnmet}>
+                      {/[A-Z]/.test(formData.password) ? '✓' : '○'} Une lettre majuscule
+                    </div>
+                    <div className={/[0-9]/.test(formData.password) ? styles.requirementMet : styles.requirementUnmet}>
+                      {/[0-9]/.test(formData.password) ? '✓' : '○'} Un chiffre
+                    </div>
+                    <div className={/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? styles.requirementMet : styles.requirementUnmet}>
+                      {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? '✓' : '○'} Un caractère spécial
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -373,9 +547,13 @@ const Signup = () => {
               />
               <label htmlFor="terms" className={styles.termsText}>
                 J'accepte les{' '}
-                <a href="#" className={styles.termsLink}>conditions d'utilisation</a>
+                <a href="/terms" className={styles.termsLink} target="_blank" rel="noopener noreferrer">
+                  conditions d'utilisation
+                </a>
                 {' '}et la{' '}
-                <a href="#" className={styles.termsLink}>politique de confidentialité</a>
+                <a href="/privacy" className={styles.termsLink} target="_blank" rel="noopener noreferrer">
+                  politique de confidentialité
+                </a>
               </label>
             </div>
 

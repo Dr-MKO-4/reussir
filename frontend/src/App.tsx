@@ -54,9 +54,7 @@ import SubscriptionCard from './pages/SubscriptionCard';
 import QuickActionsExample from './pages/QuickActions';
 import HomeCatalog from './pages/HomeCatalog';
 // Styles globaux
-import './styles/globals.css';
-import './styles/theme.css';
-import './styles/variables.css';
+
 
 // Route de protection pour rediriger les utilisateurs connectés
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
