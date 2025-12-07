@@ -4,7 +4,8 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
  * Configuration de base de l'API
  */
 const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  // CORRIGÉ : Pointer vers le backend .NET au lieu de Flask
+  baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7023/api',
   timeout: 30000, // 30 secondes
   headers: {
     'Content-Type': 'application/json',
@@ -21,8 +22,8 @@ const apiClient: AxiosInstance = axios.create(API_CONFIG);
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Récupérer le token depuis localStorage
-    const token = localStorage.getItem('authToken');
+    // Récupérer le token depuis localStorage (Cognito ou autre)
+    const token = localStorage.getItem('authToken') || localStorage.getItem('cognitoToken');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -64,6 +65,7 @@ apiClient.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         
         if (refreshToken) {
+          // OPTION 1 : Si vous avez un endpoint /auth/refresh dans votre backend .NET
           const response = await axios.post(`${API_CONFIG.baseURL}/auth/refresh`, {
             refreshToken,
           });
@@ -85,6 +87,9 @@ apiClient.interceptors.response.use(
         // Si le refresh échoue, déconnecter l'utilisateur
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('cognitoToken');
+        localStorage.removeItem('cognitoAccessToken');
+        localStorage.removeItem('cognitoRefreshToken');
         localStorage.removeItem('user');
         
         // Rediriger vers la page de connexion
@@ -116,7 +121,8 @@ function getErrorMessage(error: AxiosError): string {
   if (error.response) {
     // Erreur de réponse du serveur
     const data = error.response.data as any;
-    return data?.message || data?.error || `Erreur ${error.response.status}`;
+    // .NET retourne souvent { title, status, errors } ou { message }
+    return data?.title || data?.message || data?.error || `Erreur ${error.response.status}`;
   } else if (error.request) {
     // Pas de réponse reçue
     return 'Aucune réponse du serveur. Vérifiez votre connexion.';
@@ -164,11 +170,19 @@ export interface ApiError {
 class ApiService {
   /**
    * GET Request
+   * Supporte à la fois les réponses enveloppées ({ data }) et directes
    */
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.get<ApiResponse<T>>(url, config);
-      return response.data.data;
+      const response = await apiClient.get<T | ApiResponse<T>>(url, config);
+      
+      // Si la réponse a une structure { success, data }, extraire data
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      // Sinon retourner directement la réponse
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
@@ -179,8 +193,13 @@ class ApiService {
    */
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.post<ApiResponse<T>>(url, data, config);
-      return response.data.data;
+      const response = await apiClient.post<T | ApiResponse<T>>(url, data, config);
+      
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
@@ -191,8 +210,13 @@ class ApiService {
    */
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.put<ApiResponse<T>>(url, data, config);
-      return response.data.data;
+      const response = await apiClient.put<T | ApiResponse<T>>(url, data, config);
+      
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
@@ -203,8 +227,13 @@ class ApiService {
    */
   async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.patch<ApiResponse<T>>(url, data, config);
-      return response.data.data;
+      const response = await apiClient.patch<T | ApiResponse<T>>(url, data, config);
+      
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
@@ -215,8 +244,13 @@ class ApiService {
    */
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.delete<ApiResponse<T>>(url, config);
-      return response.data.data;
+      const response = await apiClient.delete<T | ApiResponse<T>>(url, config);
+      
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
@@ -234,14 +268,18 @@ class ApiService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await apiClient.post<ApiResponse<T>>(url, formData, {
+      const response = await apiClient.post<T | ApiResponse<T>>(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         onUploadProgress,
       });
 
-      return response.data.data;
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<T>).data;
+      }
+      
+      return response.data as T;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
