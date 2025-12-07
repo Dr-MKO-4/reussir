@@ -1,124 +1,212 @@
+import { api } from './api';
+
 /**
- * Service de gestion du panier
- * Logique métier pour les opérations sur le panier
+ * Service de gestion du panier avec backend
  */
 
-import { Subject, CartItem, Cart, PromoCode } from '@/types';
-
 // ==================== TYPES ====================
+
+export interface CartItem {
+  id: string;
+  subjectId: string;
+  title: string;
+  description?: string;
+  price: number;
+  image?: string;
+  quantity: number;
+  subtotal: number;
+  addedAt: Date;
+}
+
+export interface Cart {
+  items: CartItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  promoCode: string | null;
+}
 
 export interface CartServiceError {
   code: 'INVALID_QTY' | 'ITEM_NOT_FOUND' | 'INVALID_PROMO' | 'PROMO_EXPIRED' | 'UNKNOWN';
   message: string;
 }
 
-// ==================== ÉTAT INITIAL ====================
-
-const INITIAL_STATE: Cart = {
-  items: [],
-  subtotal: 0,
-  tax: 0,
-  discount: 0,
-  total: 0,
-  promoCode: null,
-};
-
 // ==================== SERVICE ====================
 
 class CartService {
   /**
-   * Ajouter un sujet au panier
-   * @param subject - Sujet à ajouter
-   * @param quantity - Quantité (défaut: 1)
+   * Obtenir le panier actuel
    */
-  addToCart(subject: Subject, quantity: number = 1): CartItem {
-    // Validation
-    if (quantity < 1 || !Number.isInteger(quantity)) {
-      throw {
-        code: 'INVALID_QTY',
-        message: 'La quantité doit être un entier positif',
-      } as CartServiceError;
+  async getCart(): Promise<Cart> {
+    try {
+      const response = await api.get<Cart>('/api/cart');
+      return response;
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      return this.getEmptyCart();
     }
+  }
 
-    return {
-      id: subject.id,
-      subjectId: subject.id,
-      title: subject.title,
-      description: subject.description,
-      price: subject.price,
-      image: subject.image,
-      quantity,
-      subtotal: subject.price * quantity,
-      addedAt: new Date(),
-    };
+  /**
+   * Ajouter un sujet au panier
+   */
+  async addToCart(subjectId: string, quantity: number = 1): Promise<Cart> {
+    try {
+      if (quantity < 1 || !Number.isInteger(quantity)) {
+        throw {
+          code: 'INVALID_QTY',
+          message: 'La quantité doit être un entier positif',
+        } as CartServiceError;
+      }
+
+      const response = await api.post<Cart>('/api/cart/add', {
+        subjectId,
+        quantity,
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
   }
 
   /**
    * Retirer un article du panier
-   * @param cartItemId - ID de l'article du panier
    */
-  removeFromCart(cartItemId: string): boolean {
-    if (!cartItemId) {
-      throw {
-        code: 'ITEM_NOT_FOUND',
-        message: 'ID article invalide',
-      } as CartServiceError;
+  async removeFromCart(cartItemId: string): Promise<Cart> {
+    try {
+      if (!cartItemId) {
+        throw {
+          code: 'ITEM_NOT_FOUND',
+          message: 'ID article invalide',
+        } as CartServiceError;
+      }
+
+      const response = await api.delete<Cart>(`/api/cart/remove/${cartItemId}`);
+      return response;
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
     }
-    return true; // Logique de suppression gérée par le context
   }
 
   /**
    * Mettre à jour la quantité d'un article
-   * @param cartItemId - ID de l'article
-   * @param quantity - Nouvelle quantité
    */
-  updateQuantity(cartItemId: string, quantity: number): void {
-    if (!cartItemId) {
-      throw {
-        code: 'ITEM_NOT_FOUND',
-        message: 'Article non trouvé',
-      } as CartServiceError;
-    }
+  async updateQuantity(cartItemId: string, quantity: number): Promise<Cart> {
+    try {
+      if (!cartItemId) {
+        throw {
+          code: 'ITEM_NOT_FOUND',
+          message: 'Article non trouvé',
+        } as CartServiceError;
+      }
 
-    if (quantity < 0 || !Number.isInteger(quantity)) {
-      throw {
-        code: 'INVALID_QTY',
-        message: 'La quantité doit être un entier positif ou zéro',
-      } as CartServiceError;
+      if (quantity < 0 || !Number.isInteger(quantity)) {
+        throw {
+          code: 'INVALID_QTY',
+          message: 'La quantité doit être un entier positif ou zéro',
+        } as CartServiceError;
+      }
+
+      if (quantity === 0) {
+        return await this.removeFromCart(cartItemId);
+      }
+
+      const response = await api.put<Cart>(`/api/cart/update/${cartItemId}`, {
+        quantity,
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      throw error;
     }
   }
 
   /**
    * Vider complètement le panier
    */
-  clearCart(): void {
-    // Logique de suppression complète
+  async clearCart(): Promise<void> {
+    try {
+      await api.post('/api/cart/clear');
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    }
   }
 
   /**
-   * Calculer le total du panier
-   * @param items - Articles du panier
-   * @param taxRate - Taux de TVA (défaut: 0.20 = 20%)
-   * @param discountAmount - Réduction appliquée
+   * Appliquer un code promo
+   */
+  async applyPromoCode(code: string): Promise<{
+    success: boolean;
+    discount: number;
+    message: string;
+    cart: Cart;
+  }> {
+    try {
+      if (!code || code.trim().length === 0) {
+        return {
+          success: false,
+          discount: 0,
+          message: 'Code promo invalide',
+          cart: await this.getCart(),
+        };
+      }
+
+      const response = await api.post<{
+        success: boolean;
+        discount: number;
+        message: string;
+        cart: Cart;
+      }>('/api/cart/promo', {
+        promoCode: code,
+      });
+
+      return response;
+    } catch (error: any) {
+      console.error('Error applying promo code:', error);
+      return {
+        success: false,
+        discount: 0,
+        message: error.message || 'Erreur lors de l\'application du code promo',
+        cart: await this.getCart(),
+      };
+    }
+  }
+
+  /**
+   * Retirer le code promo
+   */
+  async removePromoCode(): Promise<Cart> {
+    try {
+      const response = await api.delete<Cart>('/api/cart/promo');
+      return response;
+    } catch (error) {
+      console.error('Error removing promo code:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculer le total du panier (côté client pour affichage)
    */
   calculateTotal(
     items: CartItem[],
     taxRate: number = 0.2,
-    discountAmount: number = 0,
+    discountAmount: number = 0
   ): {
     subtotal: number;
     tax: number;
     discount: number;
     total: number;
   } {
-    // Calculer sous-total
     const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-
-    // Calculer TVA
     const taxableAmount = Math.max(0, subtotal - discountAmount);
     const tax = Math.round(taxableAmount * taxRate * 100) / 100;
-
-    // Total final
     const total = subtotal - discountAmount + tax;
 
     return {
@@ -130,97 +218,7 @@ class CartService {
   }
 
   /**
-   * Valider et appliquer un code promo
-   * @param code - Code promo saisi
-   * @param subtotal - Sous-total du panier
-   */
-  applyPromoCode(
-    code: string,
-    subtotal: number,
-  ): { success: boolean; discount: number; message: string } {
-    // Validation format
-    if (!code || code.trim().length === 0) {
-      return {
-        success: false,
-        discount: 0,
-        message: 'Code promo invalide',
-      };
-    }
-
-    // Liste des codes promo valides (en production: appel API)
-    const VALID_PROMO_CODES: Record<string, { discount: number; type: 'percentage' | 'fixed' }> =
-      {
-        WELCOME10: { discount: 10, type: 'percentage' },
-        WELCOME20: { discount: 20, type: 'percentage' },
-        SUMMER50: { discount: 50, type: 'fixed' },
-        FIRST_BUY: { discount: 15, type: 'percentage' },
-        TEACHER15: { discount: 15, type: 'percentage' },
-      };
-
-    const promoData = VALID_PROMO_CODES[code.toUpperCase()];
-
-    if (!promoData) {
-      return {
-        success: false,
-        discount: 0,
-        message: 'Code promo non valide',
-      };
-    }
-
-    // Calculer la réduction
-    let discountAmount = 0;
-    if (promoData.type === 'percentage') {
-      discountAmount = (subtotal * promoData.discount) / 100;
-    } else {
-      discountAmount = Math.min(promoData.discount, subtotal);
-    }
-
-    return {
-      success: true,
-      discount: Math.round(discountAmount * 100) / 100,
-      message: `Code promo "${code}" appliqué avec succès`,
-    };
-  }
-
-  /**
-   * Vérifier si un code promo est valide
-   * @param code - Code promo à vérifier
-   */
-  validatePromoCode(code: string): boolean {
-    const VALID_CODES = ['WELCOME10', 'WELCOME20', 'SUMMER50', 'FIRST_BUY', 'TEACHER15'];
-    return VALID_CODES.includes(code.toUpperCase());
-  }
-
-  /**
-   * Obtenir les articles du panier
-   * (Logique de récupération depuis le context)
-   */
-  getCart(): Cart {
-    return INITIAL_STATE;
-  }
-
-  /**
-   * Calculer les frais d'expédition
-   * @param subtotal - Sous-total
-   * @param region - Région de livraison
-   */
-  calculateShippingCost(subtotal: number, region: string = 'FR'): number {
-    // Expédition gratuite à partir de 50€
-    if (subtotal >= 50) return 0;
-
-    // Tarifs par région
-    const shippingRates: Record<string, number> = {
-      FR: 4.99,
-      EU: 9.99,
-      WORLD: 19.99,
-    };
-
-    return shippingRates[region] || shippingRates.FR;
-  }
-
-  /**
    * Valider avant checkout
-   * @param items - Articles du panier
    */
   validateCheckout(items: CartItem[]): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -245,21 +243,56 @@ class CartService {
   }
 
   /**
-   * Obtenir les suggestions de bundle
-   * @param currentItems - Articles actuels du panier
+   * Synchroniser le panier local avec le serveur
    */
-  getBundleSuggestions(currentItems: CartItem[]): Subject[] {
-    // En production: appel API pour suggestions personnalisées
-    // Pour MVP: retourner des suggestions basiques
-    return [];
+  async syncCart(localItems: CartItem[]): Promise<Cart> {
+    try {
+      const response = await api.post<Cart>('/api/cart/sync', {
+        items: localItems,
+      });
+      return response;
+    } catch (error) {
+      console.error('Error syncing cart:', error);
+      return this.getEmptyCart();
+    }
+  }
+
+  /**
+   * Obtenir un panier vide
+   */
+  private getEmptyCart(): Cart {
+    return {
+      items: [],
+      subtotal: 0,
+      tax: 0,
+      discount: 0,
+      total: 0,
+      promoCode: null,
+    };
+  }
+
+  /**
+   * Calculer les frais d'expédition
+   */
+  calculateShippingCost(subtotal: number, region: string = 'FR'): number {
+    if (subtotal >= 50) return 0;
+
+    const shippingRates: Record<string, number> = {
+      FR: 4.99,
+      EU: 9.99,
+      WORLD: 19.99,
+    };
+
+    return shippingRates[region] || shippingRates.FR;
   }
 
   /**
    * Calculer les économies si achat d'un bundle
-   * @param bundlePrice - Prix du bundle
-   * @param individualTotal - Somme des prix individuels
    */
-  calculateBundleSavings(bundlePrice: number, individualTotal: number): {
+  calculateBundleSavings(
+    bundlePrice: number,
+    individualTotal: number
+  ): {
     savings: number;
     percentage: number;
   } {
@@ -272,7 +305,5 @@ class CartService {
     };
   }
 }
-
-// ==================== EXPORT ====================
 
 export default new CartService();

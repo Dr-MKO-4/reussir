@@ -859,3 +859,103 @@
     gap: 16px;
   }
 }
+/* Ajouter ces styles à la fin du fichier */
+
+/* Indicateur de force du mot de passe */
+.passwordStrengthContainer {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.passwordStrengthBar {
+  flex: 1;
+  height: 6px;
+  background: var(--rp-gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.passwordStrengthFill {
+  height: 100%;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 10px;
+}
+
+.passwordStrengthLabel {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 80px;
+  text-align: right;
+  transition: color 0.3s ease;
+}
+
+/* Exigences du mot de passe */
+.passwordRequirements {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--rp-gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--rp-gray-200);
+}
+
+.requirementMet,
+.requirementUnmet {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.requirementMet {
+  color: var(--rp-secondary);
+  font-weight: 500;
+}
+
+.requirementUnmet {
+  color: var(--rp-gray-500);
+}
+
+/* Animation pour les exigences */
+.passwordRequirements > div {
+  animation: slideInRequirement 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.passwordRequirements > div:nth-child(1) { animation-delay: 0.05s; }
+.passwordRequirements > div:nth-child(2) { animation-delay: 0.1s; }
+.passwordRequirements > div:nth-child(3) { animation-delay: 0.15s; }
+.passwordRequirements > div:nth-child(4) { animation-delay: 0.2s; }
+
+@keyframes slideInRequirement {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Ajustements responsive */
+@media (max-width: 768px) {
+  .passwordStrengthLabel {
+    min-width: 70px;
+    font-size: 12px;
+  }
+  
+  .passwordRequirements {
+    padding: 10px;
+  }
+  
+  .requirementMet,
+  .requirementUnmet {
+    font-size: 12px;
+  }
+}

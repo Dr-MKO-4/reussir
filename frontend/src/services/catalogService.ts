@@ -1,60 +1,234 @@
-import api from './api';
+import { api } from './api';
 
 /**
  * Service pour gérer le catalogue de sujets/contenus éducatifs
  */
 const catalogService = {
   // ==================== RECHERCHE & DÉCOUVERTE ====================
+  
+  /**
+   * Rechercher des sujets avec filtres
+   */
   searchSubjects: async (params: Record<string, any> = {}) => {
     const {
       query = '',
-      concours = null,
-      matiere = null,
-      annee = null,
-      difficulte = null,
-      prix = null,
-      duree = null,
-      gratuit = null,
+      category = null,
+      difficulty = null,
+      price = null,
+      isFree = null,
       page = 1,
       limit = 20,
-      sort = 'pertinence',
+      sort = 'relevance',
     } = params;
+
+    const queryParams = new URLSearchParams();
+    if (query) queryParams.append('q', query);
+    if (category) queryParams.append('category', category);
+    if (difficulty) queryParams.append('difficulty', difficulty);
+    if (price) queryParams.append('price', price);
+    if (isFree !== null) queryParams.append('isFree', String(isFree));
+    queryParams.append('page', String(page));
+    queryParams.append('limit', String(limit));
+    queryParams.append('sort', sort);
+
+    return api.get(`/api/subjects/search?${queryParams}`);
+  },
+
+  /**
+   * Obtenir tous les sujets
+   */
+  getAllSubjects: async (page = 1, limit = 20) => {
+    return api.get(`/api/subjects?page=${page}&limit=${limit}`);
+  },
+
+  /**
+   * Obtenir les détails d'un sujet
+   */
+  getSubjectDetails: async (subjectId: string) => {
+    return api.get(`/api/subjects/${subjectId}`);
+  },
+
+  /**
+   * Obtenir les sujets par catégorie
+   */
+  getSubjectsByCategory: async (categoryName: string, page = 1, limit = 20) => {
+    return api.get(`/api/subjects/category/${categoryName}?page=${page}&limit=${limit}`);
+  },
+
+  /**
+   * Obtenir les sujets populaires
+   */
+  getPopularSubjects: async (limit = 10) => {
+    return api.get(`/api/subjects?sort=popular&limit=${limit}`);
+  },
+
+  /**
+   * Obtenir les sujets récents
+   */
+  getRecentSubjects: async (limit = 10) => {
+    return api.get(`/api/subjects?sort=recent&limit=${limit}`);
+  },
+
+  /**
+   * Obtenir les catégories disponibles
+   */
+  getCategories: async () => {
+    return api.get('/api/subjects/categories');
+  },
+
+  /**
+   * Obtenir les filtres disponibles
+   */
+  getFilters: async () => {
+    return api.get('/api/subjects/filters');
+  },
+
+  /**
+   * Obtenir les sujets similaires
+   */
+  getSimilarSubjects: async (subjectId: string, limit = 5) => {
+    return api.get(`/api/subjects/${subjectId}/similar?limit=${limit}`);
+  },
+
+  // ==================== ADMIN - GESTION DES SUJETS ====================
+
+  /**
+   * Créer un nouveau sujet (Admin)
+   */
+  createSubject: async (subjectData: Record<string, any>) => {
+    return api.post('/api/subjects', subjectData);
+  },
+
+  /**
+   * Modifier un sujet (Admin)
+   */
+  updateSubject: async (subjectId: string, subjectData: Record<string, any>) => {
+    return api.put(`/api/subjects/${subjectId}`, subjectData);
+  },
+
+  /**
+   * Supprimer un sujet (Admin)
+   */
+  deleteSubject: async (subjectId: string) => {
+    return api.delete(`/api/subjects/${subjectId}`);
+  },
+
+  // ==================== FAVORIS ====================
+
+  /**
+   * Obtenir les favoris de l'utilisateur
+   */
+  getFavorites: async () => {
+    return api.get('/api/favorites');
+  },
+
+  /**
+   * Ajouter un sujet aux favoris
+   */
+  addToFavorites: async (subjectId: string) => {
+    return api.post(`/api/favorites/${subjectId}`);
+  },
+
+  /**
+   * Retirer un sujet des favoris
+   */
+  removeFromFavorites: async (subjectId: string) => {
+    return api.delete(`/api/favorites/${subjectId}`);
+  },
+
+  // ==================== HISTORIQUE ====================
+
+  /**
+   * Obtenir l'historique de l'utilisateur
+   */
+  getHistory: async (params: { page?: number; limit?: number; type?: string } = {}) => {
+    const { page = 1, limit = 20, type } = params;
     const queryParams = new URLSearchParams({
-      q: query,
       page: String(page),
       limit: String(limit),
-      sort,
     });
-    if (concours) queryParams.append('concours', concours);
-    if (matiere) queryParams.append('matiere', matiere);
-    if (annee) queryParams.append('annee', annee);
-    if (difficulte) queryParams.append('difficulte', difficulte);
-    if (prix) queryParams.append('prix', prix);
-    if (duree) queryParams.append('duree', duree);
-    if (gratuit !== null) queryParams.append('gratuit', gratuit);
-    return api.get(`/api/catalog/search?${queryParams}`);
+    if (type) queryParams.append('type', type);
+    
+    return api.get(`/api/history?${queryParams}`);
   },
-  getPopularSubjects: async (limit = 10) => api.get(`/api/catalog/popular?limit=${limit}`),
-  getRecentSubjects: async (limit = 10) => api.get(`/api/catalog/recent?limit=${limit}`),
-  getCategories: async () => api.get('/api/catalog/categories'),
-  getFilters: async () => api.get('/api/catalog/filters'),
-  getSubjectDetails: async (subjectId: number) => api.get(`/api/catalog/subjects/${subjectId}`),
-  getSimilarSubjects: async (subjectId: number, limit = 5) => api.get(`/api/catalog/subjects/${subjectId}/similar?limit=${limit}`),
-  getAIRecommendations: async (subjectId: number) => api.get(`/api/ai/recommendations/${subjectId}`),
-  analyzeSubject: async (subjectId: number) => api.post(`/api/ai/analyze/${subjectId}`),
-  predictSuccess: async (subjectId: number, userId: number) => api.get(`/api/ai/predict/${subjectId}/${userId}`),
-  getFavorites: async (userId: number) => api.get(`/api/users/${userId}/favorites`),
-  addToFavorites: async (userId: number, subjectId: number) => api.post(`/api/users/${userId}/favorites`, { subjectId }),
-  removeFromFavorites: async (userId: number, subjectId: number) => api.delete(`/api/users/${userId}/favorites/${subjectId}`),
-  getHistory: async (userId: number, params: { page?: number; limit?: number } = {}) => {
-    const { page = 1, limit = 20 } = params;
-    return api.get(`/api/users/${userId}/history?page=${page}&limit=${limit}`);
+
+  /**
+   * Obtenir l'historique par type
+   */
+  getHistoryByType: async (type: string) => {
+    return api.get(`/api/history/${type}`);
   },
-  addToHistory: async (userId: number, subjectId: number, data: Record<string, any> = {}) => api.post(`/api/users/${userId}/history`, { subjectId, ...data }),
-  clearHistory: async (userId: number) => api.delete(`/api/users/${userId}/history`),
-  getUserStats: async (userId: number) => api.get(`/api/users/${userId}/stats`),
-  getStudyHabits: async (userId: number) => api.get(`/api/ai/study-habits/${userId}`),
-  getStudyPlan: async (userId: number) => api.get(`/api/ai/study-plan/${userId}`),
+
+  /**
+   * Ajouter une entrée à l'historique
+   */
+  addToHistory: async (historyData: Record<string, any>) => {
+    return api.post('/api/history', historyData);
+  },
+
+  /**
+   * Effacer l'historique
+   */
+  clearHistory: async () => {
+    return api.delete('/api/history');
+  },
+
+  // ==================== STATISTIQUES UTILISATEUR ====================
+
+  /**
+   * Obtenir les statistiques de l'utilisateur
+   */
+  getUserStats: async (userId?: string) => {
+    const url = userId ? `/api/users/${userId}/statistics` : '/api/users/profile/statistics';
+    return api.get(url);
+  },
+
+  // ==================== IA & RECOMMANDATIONS ====================
+
+  /**
+   * Obtenir les recommandations IA
+   */
+  getAIRecommendations: async (subjectId?: string) => {
+    const url = subjectId 
+      ? `/api/ai/recommendations/${subjectId}` 
+      : '/api/ai/recommendations';
+    return api.get(url);
+  },
+
+  /**
+   * Analyser un sujet avec l'IA
+   */
+  analyzeSubject: async (subjectId: string) => {
+    return api.post(`/api/ai/analyze/${subjectId}`);
+  },
+
+  /**
+   * Prédire le succès pour un sujet
+   */
+  predictSuccess: async (subjectId: string) => {
+    return api.post('/api/ai/predict-success', { subjectId });
+  },
+
+  /**
+   * Générer un plan d'étude
+   */
+  generateStudyPlan: async (planData: Record<string, any>) => {
+    return api.post('/api/ai/study-plan', planData);
+  },
+
+  /**
+   * Chat avec l'IA
+   */
+  chatWithAI: async (message: string, context?: Record<string, any>) => {
+    return api.post('/api/ai/chat', { message, context });
+  },
+
+  /**
+   * Obtenir les habitudes d'étude
+   */
+  getStudyHabits: async () => {
+    return api.get('/api/ai/study-habits');
+  },
 };
 
 export default catalogService;

@@ -13,10 +13,11 @@ export interface SignupData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   password: string;
-  passwordConfirmation: string;
-  role: 'student' | 'parent' | 'teacher';
-  termsAccepted: boolean;
+  confirmPassword: string;
+  role?: 'student' | 'parent' | 'teacher';
+  termsAccepted?: boolean;
 }
 
 export interface AuthTokens {
@@ -26,7 +27,8 @@ export interface AuthTokens {
 
 export interface AuthResponse {
   user: User;
-  tokens: AuthTokens;
+  token: string;
+  refreshToken: string;
 }
 
 export interface User {
@@ -34,6 +36,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   role: 'student' | 'parent' | 'teacher' | 'admin';
   avatar?: string;
   isEmailVerified: boolean;
@@ -48,13 +51,13 @@ export interface ForgotPasswordData {
 export interface ResetPasswordData {
   token: string;
   password: string;
-  passwordConfirmation: string;
+  confirmPassword: string;
 }
 
 export interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
-  newPasswordConfirmation: string;
+  confirmPassword: string;
 }
 
 export interface VerifyEmailData {
@@ -80,9 +83,11 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
+      const response = await api.post<AuthResponse>('/api/auth/signin', {
+        email: credentials.email,
+        password: credentials.password,
+      });
       
-      // Sauvegarder les tokens et l'utilisateur
       this.saveAuthData(response);
       
       return response;
@@ -97,9 +102,16 @@ class AuthService {
    */
   async signup(data: SignupData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/auth/signup', data);
+      const response = await api.post<AuthResponse>('/api/auth/signup', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        role: data.role || 'student',
+      });
       
-      // Sauvegarder les tokens et l'utilisateur
       this.saveAuthData(response);
       
       return response;
@@ -114,9 +126,8 @@ class AuthService {
    */
   async googleLogin(data: GoogleAuthData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/auth/google', data);
+      const response = await api.post<AuthResponse>('/api/auth/google', data);
       
-      // Sauvegarder les tokens et l'utilisateur
       this.saveAuthData(response);
       
       return response;
@@ -131,15 +142,12 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // Appeler l'API pour invalider le refresh token
-      await api.post('/auth/logout', {
+      await api.post('/api/auth/logout', {
         refreshToken: this.getRefreshToken(),
       });
     } catch (error) {
       console.error('[Auth Service] Logout error:', error);
-      // Continuer même si l'API échoue
     } finally {
-      // Nettoyer le storage local
       this.clearAuthData();
     }
   }
@@ -155,17 +163,15 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await api.post<AuthTokens>('/auth/refresh', {
+      const response = await api.post<AuthTokens>('/api/auth/refresh', {
         refreshToken,
       });
 
-      // Sauvegarder les nouveaux tokens
       this.saveTokens(response);
 
       return response;
     } catch (error) {
       console.error('[Auth Service] Refresh token error:', error);
-      // Si le refresh échoue, déconnecter
       this.clearAuthData();
       throw error;
     }
@@ -176,7 +182,7 @@ class AuthService {
    */
   async forgotPassword(data: ForgotPasswordData): Promise<void> {
     try {
-      await api.post('/auth/forgot-password', data);
+      await api.post('/api/auth/forgot-password', data);
     } catch (error) {
       console.error('[Auth Service] Forgot password error:', error);
       throw error;
@@ -188,7 +194,11 @@ class AuthService {
    */
   async resetPassword(data: ResetPasswordData): Promise<void> {
     try {
-      await api.post('/auth/reset-password', data);
+      await api.post('/api/auth/reset-password', {
+        token: data.token,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      });
     } catch (error) {
       console.error('[Auth Service] Reset password error:', error);
       throw error;
@@ -200,7 +210,11 @@ class AuthService {
    */
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await api.post('/auth/change-password', data);
+      await api.post('/api/auth/change-password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      });
     } catch (error) {
       console.error('[Auth Service] Change password error:', error);
       throw error;
@@ -212,9 +226,8 @@ class AuthService {
    */
   async verifyEmail(data: VerifyEmailData): Promise<void> {
     try {
-      await api.post('/auth/verify-email', data);
+      await api.post('/api/auth/verify-email', data);
       
-      // Mettre à jour le statut de vérification dans le user stocké
       const user = this.getCurrentUser();
       if (user) {
         user.isEmailVerified = true;
@@ -231,7 +244,7 @@ class AuthService {
    */
   async resendVerificationEmail(): Promise<void> {
     try {
-      await api.post('/auth/resend-verification');
+      await api.post('/api/auth/resend-verification');
     } catch (error) {
       console.error('[Auth Service] Resend verification error:', error);
       throw error;
@@ -243,9 +256,8 @@ class AuthService {
    */
   async getCurrentUserProfile(): Promise<User> {
     try {
-      const user = await api.get<User>('/auth/me');
+      const user = await api.get<User>('/api/users/profile');
       
-      // Mettre à jour le user stocké
       this.saveUser(user);
       
       return user;
@@ -317,7 +329,8 @@ class AuthService {
    * Sauvegarder les données d'authentification
    */
   private saveAuthData(authResponse: AuthResponse): void {
-    this.saveTokens(authResponse.tokens);
+    localStorage.setItem(this.STORAGE_KEYS.TOKEN, authResponse.token);
+    localStorage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
     this.saveUser(authResponse.user);
   }
 
@@ -350,23 +363,18 @@ class AuthService {
    */
   async initialize(): Promise<User | null> {
     try {
-      // Vérifier si on a un token
       if (!this.isAuthenticated()) {
         return null;
       }
 
-      // Récupérer le profil utilisateur pour vérifier que le token est valide
       const user = await this.getCurrentUserProfile();
       return user;
     } catch (error) {
-      // Si l'initialisation échoue, nettoyer le storage
       this.clearAuthData();
       return null;
     }
   }
 }
 
-// Exporter l'instance singleton
 export const authService = new AuthService();
-
 export default authService;

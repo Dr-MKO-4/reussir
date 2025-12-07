@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react';
 import styles from './Login.module.css';
+import authService, { LoginCredentials } from '../services/auth';
+import AnalyticsService from '../services/analyticsService';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,24 +12,26 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [emailValid, setEmailValid] = useState(null);
-  const [passwordValid, setPasswordValid] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [emailValid, setEmailValid] = useState<boolean | null>(null);
+  const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
 
   // Validation de l'email
-  const validateEmail = (email) => {
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
   // Validation du mot de passe
-  const validatePassword = (password) => {
+  const validatePassword = (password: string) => {
     return password.length >= 8;
   };
 
   // Gestion du changement d'email
-  const handleEmailChange = (e) => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
+    setError(null);
     
     if (value.length > 0) {
       setEmailValid(validateEmail(value));
@@ -37,9 +41,10 @@ const Login = () => {
   };
 
   // Gestion du changement de mot de passe
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
+    setError(null);
     
     if (value.length > 0) {
       setPasswordValid(validatePassword(value));
@@ -49,31 +54,125 @@ const Login = () => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateEmail(email) && validatePassword(password)) {
-      setLoading(true);
+    if (!validateEmail(email) || !validatePassword(password)) {
+      setError('Veuillez remplir correctement tous les champs');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Track login attempt
+      AnalyticsService.trackEvent('login_attempt', {
+        method: 'email',
+        timestamp: Date.now()
+      });
+
+      const credentials: LoginCredentials = {
+        email,
+        password,
+        rememberMe
+      };
+
+      const response = await authService.login(credentials);
+
+      // Track successful login
+      AnalyticsService.trackEvent('login_success', {
+        userId: response.user.id,
+        method: 'email'
+      });
+
+      // Check if email is verified
+      if (!response.user.isEmailVerified) {
+        navigate('/verify-email', { 
+          state: { email: email } 
+        });
+        return;
+      }
+
+      // Redirect based on user role
+      switch (response.user.role) {
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'teacher':
+          navigate('/teacher/dashboard');
+          break;
+        case 'parent':
+          navigate('/parent/dashboard');
+          break;
+        case 'student':
+        default:
+          navigate('/dashboard');
+          break;
+      }
+    } catch (err: any) {
+      console.error('Erreur connexion:', err);
       
-      // Simulation d'une connexion (remplacer par votre logique d'authentification)
-      setTimeout(() => {
-        console.log('Connexion avec:', { email, password, rememberMe });
-        setLoading(false);
-        // navigate('/dashboard'); // Rediriger après connexion
-      }, 2000);
+      // Track failed login
+      AnalyticsService.trackEvent('login_failed', {
+        error: err.message || 'Unknown error',
+        method: 'email'
+      });
+
+      if (err.status === 401) {
+        setError('Email ou mot de passe incorrect');
+      } else if (err.status === 403) {
+        setError('Votre compte a été désactivé. Contactez le support');
+      } else if (err.status === 429) {
+        setError('Trop de tentatives. Veuillez réessayer plus tard');
+      } else if (err.status === 404) {
+        setError('Aucun compte trouvé avec cet email');
+      } else {
+        setError('Une erreur est survenue. Veuillez réessayer plus tard');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   // Connexion avec Google
-  const handleGoogleLogin = () => {
-    console.log('Connexion avec Google');
-    // Implémenter la logique de connexion Google
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Track Google login attempt
+      AnalyticsService.trackEvent('login_attempt', {
+        method: 'google',
+        timestamp: Date.now()
+      });
+
+      // TODO: Implement Google OAuth flow
+      // This would typically open a popup or redirect to Google OAuth
+      console.log('Google login - À implémenter avec OAuth');
+      
+      // For now, show a message
+      setError('La connexion via Google sera bientôt disponible');
+    } catch (err: any) {
+      console.error('Erreur Google login:', err);
+      setError('Impossible de se connecter avec Google');
+      
+      AnalyticsService.trackEvent('login_failed', {
+        error: err.message,
+        method: 'google'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Mot de passe oublié
   const handleForgotPassword = () => {
-    console.log('Mot de passe oublié');
-    // navigate('/forgot-password');
+    if (email && validateEmail(email)) {
+      navigate('/forgot-password', { state: { email } });
+    } else {
+      navigate('/forgot-password');
+    }
   };
 
   // Retour à l'accueil
@@ -87,7 +186,7 @@ const Login = () => {
   };
 
   // Classe de validation des inputs
-  const getInputClass = (isValid) => {
+  const getInputClass = (isValid: boolean | null) => {
     if (isValid === null) return styles.formInput;
     return `${styles.formInput} ${isValid ? styles.inputValid : styles.inputError}`;
   };
@@ -153,6 +252,7 @@ const Login = () => {
             className={styles.backButton}
             onClick={handleBackToHome}
             type="button"
+            disabled={loading}
           >
             <ArrowLeft size={18} />
             Retour
@@ -164,6 +264,21 @@ const Login = () => {
               Saisissez vos identifiants pour accéder à votre compte
             </p>
           </div>
+
+          {error && (
+            <div style={{
+              backgroundColor: '#FEE2E2',
+              border: '1px solid #EF4444',
+              color: '#DC2626',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              fontSize: '14px',
+              animation: 'slideInRight 0.3s ease-out'
+            }}>
+              {error}
+            </div>
+          )}
 
           <form className={styles.loginForm} onSubmit={handleSubmit}>
             {/* Champ Email */}

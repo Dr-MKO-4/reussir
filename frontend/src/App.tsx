@@ -61,9 +61,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import SubjectList from './pages/SubjectList';
 // Styles globaux
-import './styles/globals.css';
-import './styles/theme.css';
-import './styles/variables.css';
+
 
 // Route de protection pour rediriger les utilisateurs connectés
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
