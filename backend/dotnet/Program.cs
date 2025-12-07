@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Amazon.CognitoIdentityProvider;
 using EducationalAI.Services;
 using Backend.Data;
+using Backend.Repositories;
+using Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +129,20 @@ builder.Services.AddHttpClient<IAIServiceClient, AIServiceClient>(client =>
 });
 
 builder.Services.AddScoped<ICognitoAuthService, CognitoAuthService>();
+
+// Register Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+
+// Register Services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
