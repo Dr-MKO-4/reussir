@@ -1,214 +1,436 @@
-// src/pages/Signup.tsx - Version corrigée avec redirection appropriée
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
-import { useToast } from '../contexts/ToastContext';
-import BackgroundAnimation from '../components/ui/BackgroundAnimation';
-import HeroSection from '../components/auth/HeroSection';
-import SignupForm from '../components/auth/SignupForm';
-import SuccessModal from '../components/ui/SuccessModal';
-import Modal from '../components/ui/Modal';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Check, User, Phone } from 'lucide-react';
 import styles from './Signup.module.css';
 
-interface SignupData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  acceptTerms: boolean;
-}
-
-const Signup: React.FC = () => {
+const Signup = () => {
   const navigate = useNavigate();
-  const { signup, loginWithGoogle, isLoading, error, clearError, user, isAuthenticated } = useAuth();
-  const { error: showError, info: showInfo, success: showSuccess } = useToast();
-  
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successModalData, setSuccessModalData] = useState({
-    title: '',
-    message: '',
-    type: 'success' as 'success' | 'info' | 'warning'
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
   });
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [localLoading, setLocalLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [validation, setValidation] = useState({
+    firstName: null,
+    lastName: null,
+    email: null,
+    phone: null,
+    password: null,
+    confirmPassword: null
+  });
 
-  // Sync with global dark mode
-  useEffect(() => {
-    const checkDarkMode = () => {
-      const isDark = document.documentElement.classList.contains('dark') || 
-                    document.documentElement.className.includes('dark');
-      setIsDarkMode(isDark);
-    };
+  // Validation functions
+  const validateName = (name) => name.length >= 2;
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^[0-9]{9,}$/.test(phone.replace(/\s/g, ''));
+  const validatePassword = (password) => password.length >= 8;
+  const validateConfirmPassword = (password, confirmPassword) => 
+    password === confirmPassword && password.length >= 8;
 
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
+  // Handle input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
 
-    return () => observer.disconnect();
-  }, []);
+    // Validate on change
+    if (value.length > 0) {
+      let isValid = false;
+      switch(name) {
+        case 'firstName':
+        case 'lastName':
+          isValid = validateName(value);
+          break;
+        case 'email':
+          isValid = validateEmail(value);
+          break;
+        case 'phone':
+          isValid = validatePhone(value);
+          break;
+        case 'password':
+          isValid = validatePassword(value);
+          // Re-validate confirm password if it exists
+          if (formData.confirmPassword) {
+            setValidation(prev => ({
+              ...prev,
+              confirmPassword: validateConfirmPassword(value, formData.confirmPassword)
+            }));
+          }
+          break;
+        case 'confirmPassword':
+          isValid = validateConfirmPassword(formData.password, value);
+          break;
+        default:
+          break;
+      }
+      setValidation(prev => ({ ...prev, [name]: isValid }));
+    } else {
+      setValidation(prev => ({ ...prev, [name]: null }));
+    }
+  };
 
-  // SUPPRESSION : Suppression de la redirection automatique après inscription
-  // L'utilisateur doit d'abord vérifier son email avant d'être connecté
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const allValid = 
+      validateName(formData.firstName) &&
+      validateName(formData.lastName) &&
+      validateEmail(formData.email) &&
+      validatePhone(formData.phone) &&
+      validatePassword(formData.password) &&
+      validateConfirmPassword(formData.password, formData.confirmPassword) &&
+      acceptTerms;
 
-  // CORRECTION : Gestion améliorée de l'inscription sans connexion automatique
-  const handleSignup = async (data: SignupData) => {
-    try {
-      setLocalLoading(true);
-      clearError();
+    if (allValid) {
+      setLoading(true);
       
-      const username = generateUsername(data.firstName, data.lastName);
-      const signupData = { ...data, username };
-
-      await signup(signupData);
-      
-      // CORRECTION : Toujours rediriger vers la vérification d'email après inscription réussie
-      setSuccessModalData({
-        title: `Bienvenue ${data.firstName}!`,
-        message: 'Votre compte a été créé avec succès. Un email de vérification a été envoyé à votre adresse. Veuillez vérifier votre email pour activer votre compte.',
-        type: 'success'
-      });
-      
-      setShowSuccessModal(true);
-      
-      showSuccess(
-        'Compte créé!',
-        'Vérifiez votre email pour l\'activer'
-      );
-      
-      // MODIFICATION CRITIQUE : Toujours rediriger vers verify-email après inscription
+      // Simulation d'inscription
       setTimeout(() => {
-        navigate('/verify-email', { replace: true });
-      }, 3000);
-      
-    } catch (error: unknown) {
-      console.error('Signup error:', error);
-      
-      let errorMessage = 'Erreur lors de la création du compte';
-      
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorObj = error as { message: string };
-        errorMessage = errorObj.message;
-        
-        // Messages courts pour les toasts
-        if (errorMessage.includes('existe déjà')) {
-          errorMessage = 'Cette adresse email est déjà utilisée';
-        } else if (errorMessage.includes('mot de passe')) {
-          errorMessage = 'Mot de passe non conforme';
-        } else if (errorMessage.includes('email invalide')) {
-          errorMessage = 'Adresse email invalide';
-        }
-      }
-      
-      showError('Erreur d\'inscription', errorMessage);
-    } finally {
-      setLocalLoading(false);
+        console.log('Inscription avec:', formData);
+        setLoading(false);
+        // navigate('/dashboard');
+      }, 2000);
     }
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      setLocalLoading(true);
-      clearError();
-      showInfo('Redirection Google', 'Veuillez patienter...');
-      
-      await loginWithGoogle();
-      
-      // CORRECTION : Après Google signup, vérifier si le profil doit être complété
-      // Cette logique sera gérée dans le AuthContext après la connexion Google
-      
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorObj = error as { message: string };
-        if (errorObj.message !== 'Authentification annulée') {
-          showError('Erreur Google', errorObj.message || 'Erreur d\'authentification');
-        }
-      }
-    } finally {
-      setLocalLoading(false);
-    }
+  // Handle Google signup
+  const handleGoogleSignup = () => {
+    console.log('Inscription avec Google');
   };
 
-  const handleLogin = () => navigate('/login', { replace: true });
-  const handleSuccessModalClose = () => setShowSuccessModal(false);
-
-  const generateUsername = (firstName: string, lastName: string): string => {
-    const baseUsername = `${firstName.toLowerCase()}${lastName.toLowerCase()}`;
-    const randomSuffix = Math.floor(Math.random() * 1000);
-    return `${baseUsername}${randomSuffix}`;
+  // Navigate back
+  const handleBackToHome = () => {
+    navigate('/');
   };
 
-  // Utiliser le loading combiné (contexte + local)
-  const isFormLoading = isLoading || localLoading;
+  // Navigate to login
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  // Get input class based on validation
+  const getInputClass = (fieldName) => {
+    const isValid = validation[fieldName];
+    if (isValid === null) return styles.formInput;
+    return `${styles.formInput} ${isValid ? styles.inputValid : styles.inputError}`;
+  };
 
   return (
-    <div className={`${styles.signupPage} ${isDarkMode ? 'dark' : ''}`}>
-      <BackgroundAnimation />
-
+    <div className={styles.signupPage}>
       <div className={styles.signupContainer}>
-        <HeroSection
-          title="Rejoignez-nous!"
-          subtitle="Créez votre compte Réussir et commencez votre parcours vers le succès ensemble"
-        />
-
-        <SignupForm
-          onSubmit={handleSignup}
-          onGoogleSignup={handleGoogleSignup}
-          onLogin={handleLogin}
-          loading={isFormLoading}
-        />
-      </div>
-
-      <SuccessModal
-        isOpen={showSuccessModal}
-        onClose={handleSuccessModalClose}
-        title={successModalData.title}
-        message={successModalData.message}
-        type={successModalData.type}
-        autoClose={4000}
-      />
-
-      {error && (
-        <Modal
-          isOpen={!!error}
-          onClose={clearError}
-          title="Erreur d'inscription"
-          size="small"
-        >
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '20px',
-            color: isDarkMode ? '#F1F5F9' : '#1A202C'
-          }}>
-            <p style={{ 
-              color: 'var(--color-secondary-orange)', 
-              marginBottom: '20px',
-              lineHeight: '1.5'
-            }}>
-              {error}
-            </p>
-            <button
-              onClick={clearError}
-              style={{
-                background: 'var(--color-primary-blue)',
-                color: isDarkMode ? '#000000' : '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 24px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontWeight: '500'
-              }}
-            >
-              Compris
-            </button>
+        {/* Section Hero (Gauche) */}
+        <div className={styles.heroSection}>
+          {/* Formes géométriques flottantes */}
+          <div className={styles.decorations}>
+            <div className={styles.floatingElement} style={{ top: '10%', left: '10%', animationDelay: '0s' }}>
+              <div className={styles.circle}></div>
+            </div>
+            <div className={styles.floatingElement} style={{ top: '70%', right: '15%', animationDelay: '2s' }}>
+              <div className={styles.triangle}></div>
+            </div>
+            <div className={styles.floatingElement} style={{ bottom: '20%', left: '20%', animationDelay: '4s' }}>
+              <div className={styles.square}></div>
+            </div>
+            <div className={styles.floatingElement} style={{ top: '30%', right: '25%', animationDelay: '1s' }}>
+              <div className={styles.hexagon}></div>
+            </div>
           </div>
-        </Modal>
-      )}
+
+          <div className={styles.brandLogo}>
+            <img src="/logo1.png" alt="Win+ Logo" />
+          </div>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>Rejoignez Win+</h1>
+            <p className={styles.heroSubtitle}>
+              Créez votre compte et commencez votre parcours vers la réussite. Accédez à des milliers d'épreuves et ressources éducatives.
+            </p>
+          </div>
+
+          {/* Animation des vagues en bas */}
+          <div className={styles.waveEffect}>
+            <svg
+              className={styles.wave}
+              viewBox="0 24 150 28"
+              preserveAspectRatio="none"
+              shapeRendering="auto"
+            >
+              <defs>
+                <path
+                  id="gentle-wave"
+                  d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"
+                />
+              </defs>
+              <g className={styles.waves}>
+                <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7)" />
+                <use href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+                <use href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+                <use href="#gentle-wave" x="48" y="7" fill="white" />
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {/* Section Formulaire (Droite) */}
+        <div className={styles.formSection}>
+          <button 
+            className={styles.backButton}
+            onClick={handleBackToHome}
+            type="button"
+          >
+            <ArrowLeft size={18} />
+            Retour
+          </button>
+
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>Inscription</h2>
+            <p className={styles.formSubtitle}>
+              Créez votre compte gratuitement en quelques secondes
+            </p>
+          </div>
+
+          <form className={styles.signupForm} onSubmit={handleSubmit}>
+            {/* Nom et Prénom */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="firstName">
+                  Prénom
+                </label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    className={getInputClass('firstName')}
+                    placeholder="Votre prénom"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                  <User size={20} className={styles.inputIcon} />
+                  {validation.firstName === true && (
+                    <Check size={18} className={styles.validationIcon} />
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="lastName">
+                  Nom
+                </label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    className={getInputClass('lastName')}
+                    placeholder="Votre nom"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                  <User size={20} className={styles.inputIcon} />
+                  {validation.lastName === true && (
+                    <Check size={18} className={styles.validationIcon} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel} htmlFor="email">
+                Adresse e-mail
+              </label>
+              <div className={styles.inputWrapper}>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  className={getInputClass('email')}
+                  placeholder="exemple@domaine.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  autoComplete="email"
+                  disabled={loading}
+                />
+                <Mail size={20} className={styles.inputIcon} />
+                {validation.email === true && (
+                  <Check size={18} className={styles.validationIcon} />
+                )}
+              </div>
+            </div>
+
+            {/* Téléphone */}
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel} htmlFor="phone">
+                Numéro de téléphone
+              </label>
+              <div className={styles.inputWrapper}>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  className={getInputClass('phone')}
+                  placeholder="+237 6XX XX XX XX"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                />
+                <Phone size={20} className={styles.inputIcon} />
+                {validation.phone === true && (
+                  <Check size={18} className={styles.validationIcon} />
+                )}
+              </div>
+            </div>
+
+            {/* Mot de passe et confirmation */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="password">
+                  Mot de passe
+                </label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    className={getInputClass('password')}
+                    placeholder="Min. 8 caractères"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    autoComplete="new-password"
+                    disabled={loading}
+                  />
+                  <Lock size={20} className={styles.inputIcon} />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {validation.password === true && (
+                    <Check size={18} className={styles.validationIcon} />
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="confirmPassword">
+                  Confirmer
+                </label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    className={getInputClass('confirmPassword')}
+                    placeholder="Confirmez"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    autoComplete="new-password"
+                    disabled={loading}
+                  />
+                  <Lock size={20} className={styles.inputIcon} />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {validation.confirmPassword === true && (
+                    <Check size={18} className={styles.validationIcon} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Checkbox conditions */}
+            <div className={styles.termsCheckbox}>
+              <input
+                type="checkbox"
+                id="terms"
+                className={styles.checkbox}
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                disabled={loading}
+              />
+              <label htmlFor="terms" className={styles.termsText}>
+                J'accepte les{' '}
+                <a href="#" className={styles.termsLink}>conditions d'utilisation</a>
+                {' '}et la{' '}
+                <a href="#" className={styles.termsLink}>politique de confidentialité</a>
+              </label>
+            </div>
+
+            {/* Bouton d'inscription */}
+            <button
+              type="submit"
+              className={`${styles.primaryButton} ${loading ? styles.loading : ''}`}
+              disabled={loading || !acceptTerms}
+            >
+              {loading ? (
+                <>
+                  <div className={styles.spinner} />
+                  <span>Création en cours...</span>
+                </>
+              ) : (
+                'Créer mon compte'
+              )}
+            </button>
+
+            {/* Séparateur */}
+            <div className={styles.divider}>
+              <span>ou s'inscrire avec</span>
+            </div>
+
+            {/* Bouton Google */}
+            <button
+              type="button"
+              className={styles.googleButton}
+              onClick={handleGoogleSignup}
+              disabled={loading}
+            >
+              <svg className={styles.googleIcon} viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google
+            </button>
+
+            {/* Lien de connexion */}
+            <div className={styles.loginLink}>
+              Vous avez déjà un compte ?{' '}
+              <button
+                type="button"
+                className={styles.loginButton}
+                onClick={handleLogin}
+                disabled={loading}
+              >
+                Connectez-vous
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
