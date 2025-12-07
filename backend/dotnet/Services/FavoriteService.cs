@@ -7,12 +7,14 @@ public class FavoriteService : IFavoriteService
 {
     private readonly IFavoriteRepository _favoriteRepository;
     private readonly ISubjectRepository _subjectRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<FavoriteService> _logger;
 
-    public FavoriteService(IFavoriteRepository favoriteRepository, ISubjectRepository subjectRepository, ILogger<FavoriteService> logger)
+    public FavoriteService(IFavoriteRepository favoriteRepository, ISubjectRepository subjectRepository, IUserRepository userRepository, ILogger<FavoriteService> logger)
     {
         _favoriteRepository = favoriteRepository;
         _subjectRepository = subjectRepository;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -37,10 +39,16 @@ public class FavoriteService : IFavoriteService
             if (subject == null)
                 throw new InvalidOperationException($"Cours {subjectId} introuvable");
 
+            // Get user (for navigation property)
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new InvalidOperationException($"User {userId} not found");
+
             var favorite = new Favorite
             {
                 UserId = userId,
                 SubjectId = subjectId,
+                User = user,
                 Subject = subject
             };
             return await _favoriteRepository.AddAsync(favorite);

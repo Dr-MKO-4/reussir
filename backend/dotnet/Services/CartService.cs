@@ -19,15 +19,18 @@ public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly ISubjectRepository _subjectRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<CartService> _logger;
 
     public CartService(
         ICartRepository cartRepository,
         ISubjectRepository subjectRepository,
+        IUserRepository userRepository,
         ILogger<CartService> logger)
     {
         _cartRepository = cartRepository;
         _subjectRepository = subjectRepository;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -60,6 +63,11 @@ public class CartService : ICartService
                 _logger.LogInformation("Item already in cart for user {UserId}", userId);
                 return existing;
             }
+
+            // Get user (for navigation property)
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new InvalidOperationException($"User {userId} not found");
 
             var cartItem = new CartItem
             {
