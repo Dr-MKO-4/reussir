@@ -29,4 +29,6 @@ public class Order
     public required User User { get; set; }
     
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+    
+    public ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

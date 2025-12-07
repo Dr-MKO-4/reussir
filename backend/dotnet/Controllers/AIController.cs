@@ -1,242 +1,177 @@
+using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EducationalAI.Models;
-using EducationalAI.Services;
+using Microsoft.Extensions.Logging;
+using backend.Models.DTOs;
+using backend.Services;
 
-namespace EducationalAI.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AIController : ControllerBase
+namespace backend.Controllers
 {
-    private readonly IAIServiceClient _aiService;
-    private readonly ILogger<AIController> _logger;
-
-    public AIController(IAIServiceClient aiService, ILogger<AIController> logger)
+    [ApiController]
+    [Route("api/ai")]
+    [Authorize]
+    public class AIController : ControllerBase
     {
-        _aiService = aiService;
-        _logger = logger;
-    }
+        private readonly IAIService _aiService;
+        private readonly ILogger<AIController> _logger;
 
-    /// <summary>
-    /// Vérifie l'état du service Flask AI
-    /// </summary>
-    [HttpGet("health")]
-    [ProducesResponseType(typeof(ApiResponse<HealthCheckResponse>), 200)]
-    public async Task<IActionResult> CheckHealth()
-    {
-        try
+        public AIController(IAIService aiService, ILogger<AIController> logger)
         {
-            var health = await _aiService.CheckHealthAsync();
-            
-            if (health == null)
+            _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        [HttpPost("recommend")]
+        [ProducesResponseType(typeof(RecommendationResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRecommendations([FromBody] RecommendationRequest request)
+        {
+            try
             {
-                return StatusCode(503, new ApiResponse<object>
-                {
-                    Success = false,
-                    Error = "AI Service is unavailable"
-                });
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var response = await _aiService.GetRecommendationsAsync(
+                    request.UserId,
+                    request.NumberOfRecommendations,
+                    request.PreferenceLevel,
+                    request.SubjectCategory);
+
+                return Ok(response);
             }
-
-            return Ok(new ApiResponse<HealthCheckResponse>
+            catch (ArgumentException ex)
             {
-                Success = true,
-                Data = health
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Health check failed");
-            return StatusCode(500, new ApiResponse<object>
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
             {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Analyse un contenu éducatif avec NLP
-    /// </summary>
-    [HttpPost("analyze")]
-    [ProducesResponseType(typeof(ApiResponse<NLPAnalysisResult>), 200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> AnalyzeContent([FromBody] AnalyzeContentRequest request)
-    {
-        if (request.ContentId == null && string.IsNullOrWhiteSpace(request.Text))
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Error = "Either ContentId or Text must be provided"
-            });
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
         }
 
-        try
+        [HttpPost("analyze-progress")]
+        [ProducesResponseType(typeof(ProgressAnalysisResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> AnalyzeProgress([FromBody] ProgressAnalysisRequest request)
         {
-            var result = await _aiService.AnalyzeContentAsync(request);
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-            return Ok(new ApiResponse<NLPAnalysisResult>
-            {
-                Success = true,
-                Data = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Content analysis failed");
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-    }
+                var response = await _aiService.AnalyzeProgressAsync(
+                    request.UserId,
+                    request.SubjectId,
+                    request.AnalysisDepth);
 
-    /// <summary>
-    /// Obtient des recommandations pour un utilisateur
-    /// </summary>
-    [HttpGet("recommendations/{userId}")]
-    [ProducesResponseType(typeof(ApiResponse<RecommendationResponse>), 200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetRecommendations(int userId, [FromQuery] int limit = 10)
-    {
-        if (userId <= 0)
-        {
-            return BadRequest(new ApiResponse<object>
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
             {
-                Success = false,
-                Error = "Invalid user ID"
-            });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
         }
 
-        if (limit <= 0 || limit > 100)
+        [HttpPost("generate-quiz")]
+        [ProducesResponseType(typeof(QuizGenerationResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GenerateQuiz([FromBody] QuizGenerationRequest request)
         {
-            return BadRequest(new ApiResponse<object>
+            try
             {
-                Success = false,
-                Error = "Limit must be between 1 and 100"
-            });
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var response = await _aiService.GenerateQuizAsync(
+                    request.UserId,
+                    request.SubjectId,
+                    request.NumberOfQuestions,
+                    request.Difficulty);
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
         }
 
-        try
+        [HttpGet("performance")]
+        [ProducesResponseType(typeof(PerformanceMetricsResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPerformance(
+            [FromQuery] int userId,
+            [FromQuery] string timePeriod = "7days")
         {
-            var recommendations = await _aiService.GetRecommendationsAsync(userId, limit);
+            try
+            {
+                if (userId <= 0)
+                    return BadRequest(new { message = "User ID must be > 0" });
 
-            return Ok(new ApiResponse<RecommendationResponse>
-            {
-                Success = true,
-                Data = recommendations
-            });
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Error = $"User {userId} not found"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get recommendations for user {UserId}", userId);
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-    }
+                var response = await _aiService.GetPerformanceMetricsAsync(userId, timePeriod);
 
-    /// <summary>
-    /// Obtient des recommandations personnalisées avec filtres
-    /// </summary>
-    [HttpPost("recommendations/personalized")]
-    [ProducesResponseType(typeof(ApiResponse<RecommendationResponse>), 200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetPersonalizedRecommendations([FromBody] PersonalizedRecommendationRequest request)
-    {
-        if (request.UserId <= 0)
-        {
-            return BadRequest(new ApiResponse<object>
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
             {
-                Success = false,
-                Error = "Invalid user ID"
-            });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
         }
 
-        if (request.DifficultyRange != null && request.DifficultyRange.Length != 2)
+        [HttpPost("personalized-path")]
+        [ProducesResponseType(typeof(LearningPathResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GeneratePersonalizedPath([FromBody] LearningPathRequest request)
         {
-            return BadRequest(new ApiResponse<object>
+            try
             {
-                Success = false,
-                Error = "DifficultyRange must contain exactly 2 values [min, max]"
-            });
-        }
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-        try
-        {
-            var recommendations = await _aiService.GetPersonalizedRecommendationsAsync(request);
+                var response = await _aiService.GeneratePersonalizedPathAsync(
+                    request.UserId,
+                    request.GoalSubject,
+                    request.TimeframeWeeks,
+                    request.AvailableHoursPerWeek);
 
-            return Ok(new ApiResponse<RecommendationResponse>
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
             {
-                Success = true,
-                Data = recommendations
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get personalized recommendations");
-            return StatusCode(500, new ApiResponse<object>
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
             {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Récupère les statistiques d'un utilisateur
-    /// </summary>
-    [HttpGet("users/{userId}/stats")]
-    [ProducesResponseType(typeof(ApiResponse<UserStats>), 200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetUserStats(int userId)
-    {
-        if (userId <= 0)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Error = "Invalid user ID"
-            });
-        }
-
-        try
-        {
-            var stats = await _aiService.GetUserStatsAsync(userId);
-
-            return Ok(new ApiResponse<UserStats>
-            {
-                Success = true,
-                Data = stats
-            });
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Error = $"User {userId} not found"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get stats for user {UserId}", userId);
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Error = ex.Message
-            });
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
         }
     }
 }

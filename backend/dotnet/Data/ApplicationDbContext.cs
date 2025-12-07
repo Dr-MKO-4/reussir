@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<LearningHistory> LearningHistories => Set<LearningHistory>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
@@ -174,6 +175,27 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Payment entity
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OrderId).IsRequired();
+            entity.Property(e => e.Amount).HasPrecision(12, 2).IsRequired();
+            entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.PaymentMethod).HasMaxLength(100);
+            entity.Property(e => e.ExternalTransactionId).HasMaxLength(255);
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.Payments)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.ExternalTransactionId).IsUnique().IsUnique(false);
         });
 
         // Configure AnalyticsEvent entity

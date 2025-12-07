@@ -136,6 +136,9 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -143,6 +146,24 @@ builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IHistoryService, HistoryService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Add AI Services (Sprint 3)
+var flaskUrl = builder.Configuration["FlaskApiUrl"] ?? "http://localhost:5000";
+var flaskTimeout = TimeSpan.FromSeconds(
+    int.Parse(builder.Configuration["AITimeoutSeconds"] ?? "30"));
+
+builder.Services.AddHttpClient<IFlaskClient, FlaskClient>(client =>
+{
+    client.BaseAddress = new Uri(flaskUrl);
+    client.Timeout = flaskTimeout;
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddScoped<IAIService, AIService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()

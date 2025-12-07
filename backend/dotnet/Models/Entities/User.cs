@@ -32,6 +32,8 @@ public class User
     
     public ICollection<Order> Orders { get; set; } = new List<Order>();
     
+    public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
     
     public ICollection<LearningHistory> LearningHistories { get; set; } = new List<LearningHistory>();
