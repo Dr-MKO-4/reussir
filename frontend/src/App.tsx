@@ -53,6 +53,13 @@ import PreferencesForm from './pages/PreferencesForm';
 import SubscriptionCard from './pages/SubscriptionCard';
 import QuickActionsExample from './pages/QuickActions';
 import HomeCatalog from './pages/HomeCatalog';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import FAQ from './pages/FAQ';
+import Pricing from './pages/Pricing';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import SubjectList from './pages/SubjectList';
 // Styles globaux
 import './styles/globals.css';
 import './styles/theme.css';
@@ -79,8 +86,8 @@ const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ childre
     // Si l'utilisateur est connecté, vérifier où le rediriger
     const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                  !user.username || 
-                                 !user.institution || 
-                                 !user.currentLevel;
+                                 !user.profile?.institution || 
+                                 !user.profile?.currentLevel;
 
     if (shouldCompleteProfile) {
       return <Navigate to="/complete-profile" replace />;
@@ -116,8 +123,8 @@ const CompleteProfileRoute: React.FC<{ children: React.ReactNode }> = ({ childre
   // Vérifier si le profil doit vraiment être complété
   const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                !user?.username || 
-                               !user?.institution || 
-                               !user?.currentLevel;
+                               !user?.profile?.institution || 
+                               !user?.profile?.currentLevel;
 
   if (!shouldCompleteProfile) {
     // Le profil est déjà complet, rediriger vers le dashboard
@@ -152,8 +159,8 @@ const DashboardRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   // Vérifier si le profil doit être complété avant d'accéder au dashboard
   const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                !user?.username || 
-                               !user?.institution || 
-                               !user?.currentLevel;
+                               !user?.profile?.institution || 
+                               !user?.profile?.currentLevel;
 
   if (shouldCompleteProfile) {
     return <Navigate to="/complete-profile" replace />;
@@ -194,30 +201,40 @@ const AppRoutes: React.FC = () => {
                   <Route path="/discover" element={<Discover />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/subject/:id" element={<SubjectDetailsPage />} />
+                  <Route path="/subjects" element={<SubjectList />} />
                   <Route path="/home" element={<Home />} />
                   <Route path="/email-verified" element={<EmailVerified />} />
                   <Route path="/dashboard-page" element={<DashboardPage />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/privacy-policy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
 
                   {/* Routes de test - développement uniquement */}
                   {import.meta.env.DEV && (
                     <>
-                      <Route path="/dev/preview-carousel" element={<PreviewCarousel />} />
-                      <Route path="/dev/stats-card" element={<StatsCard />} />
-                      <Route path="/dev/recent-activity" element={<RecentActivity />} />
-                      <Route path="/dev/study-progress" element={<StudyProgress />} />
-                      <Route path="/dev/performance-chart" element={<PerformanceChart />} />
-                      <Route path="/dev/upcoming-exams" element={<UpcomingExams />} />
-                      <Route path="/dev/achievement-badges" element={<AchievementBadges />} />
-                      <Route path="/dev/recommendation-widget" element={<RecommendationWidget />} />
-                      <Route path="/dev/study-streak" element={<StudyStreak />} />
-                      <Route path="/dev/profile-header" element={<ProfileHeader />} />
-                      <Route path="/dev/profile-form" element={<ProfileForm />} />
-                      <Route path="/dev/password-change-form" element={<PasswordChangeForm />} />
-                      <Route path="/dev/notification-settings" element={<NotificationSettings />} />
-                      <Route path="/dev/privacy-settings" element={<PrivacySettings />} />
-                      <Route path="/dev/account-deletion" element={<AccountDeletion />} />
-                      <Route path="/dev/preferences-form" element={<PreferencesForm />} />
-                      <Route path="/dev/subscription-card" element={<SubscriptionCard />} />
+                      {/* Components de développement nécessitant des props - commentés */}
+                      {/* À utiliser avec des props appropriées:
+                      <Route path="/dev/preview-carousel" element={<PreviewCarousel images={[]} />} />
+                      <Route path="/dev/stats-card" element={<StatsCard icon="" label="" value="" />} />
+                      <Route path="/dev/recent-activity" element={<RecentActivity activities={[]} />} />
+                      <Route path="/dev/study-progress" element={<StudyProgress subjects={[]} completed={0} />} />
+                      <Route path="/dev/performance-chart" element={<PerformanceChart data={[]} />} />
+                      <Route path="/dev/upcoming-exams" element={<UpcomingExams exams={[]} />} />
+                      <Route path="/dev/achievement-badges" element={<AchievementBadges achievements={[]} />} />
+                      <Route path="/dev/recommendation-widget" element={<RecommendationWidget recommendations={[]} />} />
+                      <Route path="/dev/study-streak" element={<StudyStreak currentStreak={0} bestStreak={0} />} />
+                      <Route path="/dev/profile-header" element={<ProfileHeader user={{}} stats={{}} onEditProfile={() => {}} onUploadAvatar={() => {}} />} />
+                      <Route path="/dev/profile-form" element={<ProfileForm initialData={{}} onSubmit={() => {}} onCancel={() => {}} />} />
+                      <Route path="/dev/password-change-form" element={<PasswordChangeForm onSubmit={() => {}} />} />
+                      <Route path="/dev/notification-settings" element={<NotificationSettings initialPreferences={{}} onSubmit={() => {}} />} />
+                      <Route path="/dev/privacy-settings" element={<PrivacySettings initialPreferences={{}} onSubmit={() => {}} />} />
+                      <Route path="/dev/account-deletion" element={<AccountDeletion onDelete={() => {}} />} />
+                      <Route path="/dev/preferences-form" element={<PreferencesForm initialPreferences={{}} onSubmit={() => {}} />} />
+                      <Route path="/dev/subscription-card" element={<SubscriptionCard subscription={{}} onUpgrade={() => {}} onCancel={() => {}} onRenew={() => {}} />} />
+                      */}
                       <Route path="/dev/quick-actions-example" element={<QuickActionsExample />} />
                       <Route path="/dev/home-catalog" element={<HomeCatalog />} />
                     </>
@@ -294,63 +311,10 @@ const AppRoutes: React.FC = () => {
                     }
                   />
 
-                  {/* Route 404 avec style amélioré */}
+                  {/* Route 404 - Page non trouvée */}
                   <Route
                     path="*"
-                    element={
-                      <div className="error-page" style={{
-                        minHeight: '100vh',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'var(--color-neutral-light)',
-                        fontFamily: 'var(--font-primary)'
-                      }}>
-                        <div className="error-container" style={{
-                          textAlign: 'center',
-                          padding: '2rem',
-                          background: 'var(--color-white)',
-                          borderRadius: 'var(--radius-2xl)',
-                          boxShadow: 'var(--shadow-2xl)',
-                          maxWidth: '400px'
-                        }}>
-                          <h1 style={{
-                            fontSize: '4rem',
-                            fontWeight: '700',
-                            color: 'var(--color-primary)',
-                            margin: '0 0 1rem 0'
-                          }}>404</h1>
-                          <p style={{
-                            fontSize: '1.2rem',
-                            color: 'var(--color-neutral-dark)',
-                            margin: '0 0 2rem 0'
-                          }}>Page non trouvée</p>
-                          <a 
-                            href="/" 
-                            style={{
-                              display: 'inline-block',
-                              padding: '0.75rem 1.5rem',
-                              background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))',
-                              color: 'white',
-                              textDecoration: 'none',
-                              borderRadius: 'var(--radius-lg)',
-                              fontWeight: '600',
-                              transition: 'transform 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              const target = e.target as HTMLElement;
-                              target.style.transform = 'translateY(-2px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              const target = e.target as HTMLElement;
-                              target.style.transform = 'translateY(0)';
-                            }}
-                          >
-                            Retour à l'accueil
-                          </a>
-                        </div>
-                      </div>
-                    }
+                    element={<NotFound />}
                   />
                 </Routes>
               );
