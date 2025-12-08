@@ -10,6 +10,10 @@ const API_CONFIG = {
   headers: {
     'Content-Type': 'application/json',
   },
+  // En développement, ignorer les erreurs de certificat SSL auto-signés
+  ...(import.meta.env.DEV && {
+    validateStatus: () => true, // Accepter toutes les réponses (ne pas rejeter sur 4xx/5xx)
+  }),
 };
 
 /**
