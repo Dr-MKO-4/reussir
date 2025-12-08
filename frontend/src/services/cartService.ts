@@ -131,7 +131,7 @@ class CartService {
    */
   async clearCart(): Promise<void> {
     try {
-      await api.post('/api/cart/clear');
+      await api.post('/cart/clear');
     } catch (error) {
       console.error('Error clearing cart:', error);
       throw error;

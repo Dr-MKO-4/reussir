@@ -11,7 +11,7 @@ const enrollmentService = {
    * @param subjectId - ID du cours/sujet
    */
   enrollUser: async (userId: number, subjectId: number) => {
-    return api.post('/api/enrollments', {
+    return api.post('/enrollments', {
       userId,
       subjectId,
     });

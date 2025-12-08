@@ -142,7 +142,7 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      await api.post('/api/auth/logout', {
+      await api.post('/auth/logout', {
         refreshToken: this.getRefreshToken(),
       });
     } catch (error) {
@@ -163,7 +163,7 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await api.post<AuthTokens>('/api/auth/refresh', {
+      const response = await api.post<AuthTokens>('/auth/refresh', {
         refreshToken,
       });
 
@@ -182,7 +182,7 @@ class AuthService {
    */
   async forgotPassword(data: ForgotPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/forgot-password', data);
+      await api.post('/auth/forgot-password', data);
     } catch (error) {
       console.error('[Auth Service] Forgot password error:', error);
       throw error;
@@ -194,7 +194,7 @@ class AuthService {
    */
   async resetPassword(data: ResetPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/reset-password', {
+      await api.post('/auth/reset-password', {
         token: data.token,
         password: data.password,
         confirmPassword: data.confirmPassword,
@@ -210,7 +210,7 @@ class AuthService {
    */
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/change-password', {
+      await api.post('/auth/change-password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
@@ -226,7 +226,7 @@ class AuthService {
    */
   async verifyEmail(data: VerifyEmailData): Promise<void> {
     try {
-      await api.post('/api/auth/verify-email', data);
+      await api.post('/auth/verify-email', data);
       
       const user = this.getCurrentUser();
       if (user) {
@@ -244,7 +244,7 @@ class AuthService {
    */
   async resendVerificationEmail(): Promise<void> {
     try {
-      await api.post('/api/auth/resend-verification');
+      await api.post('/auth/resend-verification');
     } catch (error) {
       console.error('[Auth Service] Resend verification error:', error);
       throw error;
