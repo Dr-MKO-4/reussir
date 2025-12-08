@@ -143,6 +143,10 @@ builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
+// Add Authentication Services (Simple Auth + Email)
+builder.Services.AddScoped<ISimpleAuthService, SimpleAuthService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 // Add AI Services (Sprint 3)
 var flaskUrl = builder.Configuration["FlaskApiUrl"] ?? "http://localhost:5000";
 var flaskTimeout = TimeSpan.FromSeconds(

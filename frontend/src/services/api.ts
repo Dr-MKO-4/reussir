@@ -27,9 +27,10 @@ const apiClient: AxiosInstance = axios.create(API_CONFIG);
 apiClient.interceptors.request.use(
   (config) => {
     // Récupérer le token depuis localStorage (Cognito ou autre)
-    const token = localStorage.getItem('authToken') || localStorage.getItem('cognitoToken');
+    const token = localStorage.getItem('authToken');
     
-    if (token) {
+    // Seulement ajouter le header Authorization si le token est valide
+    if (token && token !== 'undefined' && token.length > 0) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 

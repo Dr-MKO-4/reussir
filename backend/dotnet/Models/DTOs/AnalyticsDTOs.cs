@@ -10,20 +10,29 @@ public class TrackEventRequest
 {
     [Required]
     [MaxLength(100)]
-    public string EventType { get; set; } = ""; // page_view, button_click, purchase, etc.
-
-    [Required]
-    [MaxLength(255)]
-    public string EventName { get; set; } = "";
+    public string? EventName { get; set; } // signup_attempt, login_success, etc.
 
     [MaxLength(100)]
+    public string? EventType { get; set; } // page_view, button_click, purchase, etc.
+
+    [MaxLength(255)]
     public string? EventCategory { get; set; }
 
     [MaxLength(45)]
     public string? IpAddress { get; set; }
 
-    [MaxLength(2000)]
+    // Le frontend envoie un objet JSON, on le reçoit comme string JSON
+    [MaxLength(5000)]
     public string? EventData { get; set; } // JSON data
+
+    // Champs supplémentaires envoyés par le frontend
+    public long? Timestamp { get; set; }
+
+    [MaxLength(500)]
+    public string? UserAgent { get; set; }
+
+    [MaxLength(500)]
+    public string? Url { get; set; }
 }
 
 /// <summary>

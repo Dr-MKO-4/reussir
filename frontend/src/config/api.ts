@@ -8,72 +8,72 @@ export const API_CONFIG = {
 export const ENDPOINTS = {
   // Authentication
   AUTH: {
-    SIGNIN: '/api/auth/signin',
-    SIGNUP: '/api/auth/signup',
-    REFRESH: '/api/auth/refresh',
-    LOGOUT: '/api/auth/logout',
+    SIGNIN: '/auth/signin',
+    SIGNUP: '/auth/signup',
+    REFRESH: '/auth/refresh',
+    LOGOUT: '/auth/logout',
   },
   
   // Subjects/Courses
   SUBJECTS: {
-    BASE: '/api/subjects',
-    BY_ID: (id: string) => `/api/subjects/${id}`,
-    SEARCH: '/api/subjects/search',
-    BY_CATEGORY: (category: string) => `/api/subjects/category/${category}`,
+    BASE: '/subjects',
+    BY_ID: (id: string) => `/subjects/${id}`,
+    SEARCH: '/subjects/search',
+    BY_CATEGORY: (category: string) => `/subjects/category/${category}`,
   },
   
   // Cart
   CART: {
-    BASE: '/api/cart',
-    ADD: '/api/cart/add',
-    REMOVE: (id: string) => `/api/cart/remove/${id}`,
-    CLEAR: '/api/cart/clear',
+    BASE: '/cart',
+    ADD: '/cart/add',
+    REMOVE: (id: string) => `/cart/remove/${id}`,
+    CLEAR: '/cart/clear',
   },
   
   // Orders
   ORDERS: {
-    BASE: '/api/orders',
-    BY_ID: (id: string) => `/api/orders/${id}`,
+    BASE: '/orders',
+    BY_ID: (id: string) => `/orders/${id}`,
   },
   
   // Payments
   PAYMENTS: {
-    BASE: '/api/payments',
+    BASE: '/payments',
   },
   
   // User Profile
   USERS: {
-    PROFILE: '/api/users/profile',
-    STATISTICS: (id: string) => `/api/users/${id}/statistics`,
-    BY_ID: (id: string) => `/api/users/${id}`,
+    PROFILE: '/users/profile',
+    STATISTICS: (id: string) => `/users/${id}/statistics`,
+    BY_ID: (id: string) => `/users/${id}`,
   },
   
   // Favorites
   FAVORITES: {
-    BASE: '/api/favorites',
-    BY_ID: (id: string) => `/api/favorites/${id}`,
+    BASE: '/favorites',
+    BY_ID: (id: string) => `/favorites/${id}`,
   },
   
   // History
   HISTORY: {
-    BASE: '/api/history',
-    BY_TYPE: (type: string) => `/api/history/${type}`,
+    BASE: '/history',
+    BY_TYPE: (type: string) => `/history/${type}`,
   },
   
   // AI (Flask)
   AI: {
-    STUDY_PLAN: '/api/ai/study-plan',
-    PREDICT_SUCCESS: '/api/ai/predict-success',
-    RECOMMENDATIONS: (id: string) => `/api/ai/recommendations/${id}`,
-    CHAT: '/api/ai/chat',
+    STUDY_PLAN: '/ai/study-plan',
+    PREDICT_SUCCESS: '/ai/predict-success',
+    RECOMMENDATIONS: (id: string) => `/ai/recommendations/${id}`,
+    CHAT: '/ai/chat',
   },
   
   // Admin
   ADMIN: {
-    USERS: '/api/admin/users',
-    SUBJECTS: '/api/admin/subjects',
-    ORDERS: '/api/admin/orders',
-    ANALYTICS: '/api/admin/analytics',
+    USERS: '/admin/users',
+    SUBJECTS: '/admin/subjects',
+    ORDERS: '/admin/orders',
+    ANALYTICS: '/admin/analytics',
   },
 };
 
