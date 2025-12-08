@@ -186,7 +186,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
             entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
             entity.Property(e => e.PaymentMethod).HasMaxLength(100);
-            entity.Property(e => e.ExternalTransactionId).HasMaxLength(255);
+            entity.Property(e => e.TransactionId).HasMaxLength(255);
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Payments)
                 .HasForeignKey(e => e.UserId)
@@ -195,7 +195,7 @@ public class ApplicationDbContext : DbContext
                 .WithMany(o => o.Payments)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(e => e.ExternalTransactionId).IsUnique().IsUnique(false);
+            entity.HasIndex(e => e.TransactionId).IsUnique().IsUnique(false);
         });
 
         // Configure AnalyticsEvent entity

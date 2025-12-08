@@ -1,5 +1,6 @@
 using Backend.Models.Entities;
 using Backend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories;
 

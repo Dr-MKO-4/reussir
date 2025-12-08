@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using backend.Models.DTOs;
+using Backend.Models.DTOs;
 
-namespace backend.Services
-{
-    /// <summary>
-    /// Interface for AI service operations
-    /// </summary>
+namespace Backend.Services;
+
+/// <summary>
+/// Interface for AI service operations
+/// </summary>
     public interface IAIService
     {
         Task<RecommendationResponse> GetRecommendationsAsync(int userId, int count, string preferenceLevel, string category);
@@ -74,4 +74,3 @@ namespace backend.Services
             return await _flaskClient.GenerateLearningPathAsync(userId, goalSubject, weeks, hoursPerWeek);
         }
     }
-}

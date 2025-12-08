@@ -2,11 +2,11 @@ using Backend.Models.Entities;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend.Repositories
-{
-    /// <summary>
-    /// Interface pour le repository d'analytics
-    /// </summary>
+namespace Backend.Repositories;
+
+/// <summary>
+/// Interface pour le repository d'analytics
+/// </summary>
     public interface IAnalyticsRepository
     {
         Task<List<AnalyticsEvent>> GetByUserIdAsync(int userId, int page = 1, int pageSize = 50);
@@ -235,4 +235,3 @@ namespace Backend.Repositories
             }
         }
     }
-}

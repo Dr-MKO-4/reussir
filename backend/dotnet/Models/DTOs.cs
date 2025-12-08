@@ -1,4 +1,4 @@
-namespace EducationalAI.Models;
+namespace Backend.Models;
 
 // ==================== USER MODELS ====================
 public class UserProfile

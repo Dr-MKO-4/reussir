@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace backend.Models.DTOs
+namespace Backend.Models.DTOs
 {
     // Request/Response DTOs for AI features
     

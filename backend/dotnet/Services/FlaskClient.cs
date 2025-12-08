@@ -6,13 +6,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using backend.Models.DTOs;
+using Backend.Models.DTOs;
 
-namespace backend.Services
-{
-    /// <summary>
-    /// Interface for Flask API communication
-    /// </summary>
+namespace Backend.Services;
+
+/// <summary>
+/// Interface for Flask API communication
+/// </summary>
     public interface IFlaskClient
     {
         Task<RecommendationResponse> GetRecommendationsAsync(int userId, string preferenceLevel, string category);
@@ -370,4 +370,3 @@ namespace backend.Services
 
         #endregion
     }
-}

@@ -2,12 +2,12 @@ using Amazon.CognitoIdentityProvider;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using EducationalAI.Models;
+using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Models.Entities;
 
-namespace EducationalAI.Services;
+namespace Backend.Services;
 
 /// <summary>
 /// Cognito Authentication Service - handles user authentication with AWS Cognito and PostgreSQL user management

@@ -58,3 +58,5 @@ obj/
 .vs/
 *.cache
 *.pdb
+
+venv/

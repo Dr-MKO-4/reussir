@@ -6,7 +6,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Amazon.CognitoIdentityProvider;
-using EducationalAI.Services;
 using Backend.Data;
 using Backend.Repositories;
 using Backend.Services;
@@ -121,13 +120,6 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Register services
-var flaskBaseUrl = builder.Configuration["AIService:BaseUrl"] ?? "http://localhost:5000";
-builder.Services.AddHttpClient<IAIServiceClient, AIServiceClient>(client =>
-{
-    client.BaseAddress = new Uri(flaskBaseUrl);
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
 builder.Services.AddScoped<ICognitoAuthService, CognitoAuthService>();
 
 // Register Repositories
@@ -137,7 +129,6 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
 // Register Services
@@ -147,9 +138,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Add AI Services (Sprint 3)
 var flaskUrl = builder.Configuration["FlaskApiUrl"] ?? "http://localhost:5000";
@@ -163,7 +152,11 @@ builder.Services.AddHttpClient<IFlaskClient, FlaskClient>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// Use AI service that calls Flask for recommendations
 builder.Services.AddScoped<IAIService, AIService>();
+
+// Flask client for AI recommendations
+builder.Services.AddScoped<IFlaskClient, FlaskClient>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
@@ -205,14 +198,16 @@ app.MapHealthChecks("/health/ready");
 
 app.Run();
 
-// Health check pour le service Flask
+// Health check pour Flask - Simple implementation
 public class FlaskHealthCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
 {
-    private readonly IAIServiceClient _aiService;
+    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _config;
     
-    public FlaskHealthCheck(IAIServiceClient aiService)
+    public FlaskHealthCheck(HttpClient httpClient, IConfiguration config)
     {
-        _aiService = aiService;
+        _httpClient = httpClient;
+        _config = config;
     }
     
     public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
@@ -221,14 +216,15 @@ public class FlaskHealthCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IH
     {
         try
         {
-            var health = await _aiService.CheckHealthAsync();
-            if (health != null)
+            var flaskUrl = _config["FlaskApiUrl"] ?? "http://localhost:5000";
+            var response = await _httpClient.GetAsync($"{flaskUrl}/health", cancellationToken);
+            if (response.IsSuccessStatusCode)
             {
                 return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(
                     "Flask service is healthy");
             }
             return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy(
-                "Flask service is not responding");
+                "Flask service returned non-success status");
         }
         catch (Exception ex)
         {

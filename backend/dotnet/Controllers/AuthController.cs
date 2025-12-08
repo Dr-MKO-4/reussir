@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EducationalAI.Services;
-using EducationalAI.Models;
+using Backend.Services;
+using Backend.Models;
 using Amazon.CognitoIdentityProvider.Model;
+using Microsoft.Extensions.Logging;
 
-namespace EducationalAI.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

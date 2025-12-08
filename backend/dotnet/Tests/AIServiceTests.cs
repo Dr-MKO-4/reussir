@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Moq;
+using Microsoft.Extensions.Logging;
+using Backend.Models.DTOs;
+using Backend.Services;
 
-namespace backend.Tests
+namespace Backend.Tests
 {
     /// <summary>
     /// Mock DTOs for testing
@@ -92,7 +95,7 @@ namespace backend.Tests
         private readonly Mock<ILogger<AIService>> _mockLogger;
         private readonly AIService _aiService;
 
-        public AIServiceTests()
+        public AIServiceRecommendationTests()
         {
             _mockFlaskClient = new Mock<IFlaskClient>();
             _mockLogger = new Mock<ILogger<AIService>>();

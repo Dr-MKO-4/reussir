@@ -195,7 +195,7 @@ public class PaymentService : IPaymentService
             payment.Status = "pending";
             payment.PaymentMethod = request.PaymentMethod ?? payment.PaymentMethod;
             payment.ErrorMessage = null;
-            payment.NextRetryAt = DateTime.UtcNow.AddMinutes(5 * payment.RetryCount); // Délai exponentiel
+            payment.NextRetryAt = DateTime.UtcNow.AddMinutes(5 * (payment.RetryCount ?? 0)); // Délai exponentiel
 
             var updated = await _repository.UpdateAsync(payment);
             _logger.LogInformation("Paiement réessayé: {PaymentId} tentative: {RetryCount}", id, payment.RetryCount);

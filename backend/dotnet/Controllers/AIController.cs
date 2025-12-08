@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using backend.Models.DTOs;
-using backend.Services;
+using Backend.Models.DTOs;
+using Backend.Services;
 
-namespace backend.Controllers
-{
-    [ApiController]
+namespace Backend.Controllers;
+
+[ApiController]
     [Route("api/ai")]
     [Authorize]
     public class AIController : ControllerBase
@@ -174,4 +174,3 @@ namespace backend.Controllers
             }
         }
     }
-}
