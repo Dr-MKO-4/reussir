@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from '@components/common/Button';
+import Button from '../components/common/Button';
 import { Home, Search } from 'lucide-react';
 import './NotFound.css';
 

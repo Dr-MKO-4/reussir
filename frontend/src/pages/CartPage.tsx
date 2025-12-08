@@ -12,7 +12,7 @@ import cartService from '../services/cartService';
 import paymentService from '../services/paymentService';
 import { CartItem } from '../types';
 import './CartPage.css';
-
+ 
 interface PromoCodeState {
   code: string;
   isValid: boolean;
