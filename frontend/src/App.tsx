@@ -60,6 +60,7 @@ import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import SubjectList from './pages/SubjectList';
+import Cookies from './pages/Cookies';
 // Styles globaux
 
 
@@ -207,7 +208,8 @@ const AppRoutes: React.FC = () => {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/privacy-policy" element={<Privacy />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/cookies" element={<Cookies />} />
                   <Route path="/terms" element={<Terms />} />
 
                   {/* Routes de test - développement uniquement */}

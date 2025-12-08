@@ -701,12 +701,11 @@ const HomePage = () => {
                 </a>
               </div>
             </div>
-
             <div className={styles.footerSection}>
-              <h4 className={styles.footerHeading}>Win+</h4>
-              <a href="#" className={styles.footerLink}>À propos de Win+</a>
-              <a href="#" className={styles.footerLink}>Statistiques</a>
-              <a href="#" className={styles.footerLink}>Contact</a>
+              <h4 className={styles.footerHeading}>Légal</h4>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} className={styles.footerLink}>Confidentialité</a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} className={styles.footerLink}>Conditions</a>
+              <a href="#" className={styles.footerLink}>Cookies</a>
             </div>
 
             <div className={styles.footerSection}>
@@ -725,18 +724,28 @@ const HomePage = () => {
           </div>
 
           <div className={styles.footerBottom}>
+          <div>
             <p className={styles.footerCopyright}>
               © 2024 Win+. Tous droits réservés.
             </p>
-            <div className={styles.footerBadges}>
-              <span className={styles.footerBadge}>
-                <Shield size={16} /> Sécurisé
-              </span>
-              <span className={styles.footerBadge}>
-                <Award size={16} /> Certifié
-              </span>
+            <div style={{ marginTop: '8px', fontSize: '13px' }}>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', marginRight: '16px', textDecoration: 'none' }}>
+                Politique de confidentialité
+              </a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', textDecoration: 'none' }}>
+                Conditions d'utilisation
+              </a>
             </div>
           </div>
+          <div className={styles.footerBadges}>
+            <span className={styles.footerBadge}>
+              <Shield size={16} /> Sécurisé
+            </span>
+            <span className={styles.footerBadge}>
+              <Award size={16} /> Certifié
+            </span>
+          </div>
+        </div>
         </div>
       </footer>
     </div>

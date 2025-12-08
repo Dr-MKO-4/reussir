@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FileText, UserCheck, AlertTriangle, Shield, CreditCard, 
-  XCircle, RefreshCw, Lock, Scale, Mail, MapPin, Menu, X,
-  Facebook, Twitter, Linkedin, Instagram, Award, CheckCircle
+  Cookie, Shield, Settings, Eye, BarChart, TrendingUp,
+  Clock, Trash2, Mail, MapPin, Menu, X,
+  Facebook, Twitter, Linkedin, Instagram, Award
 } from 'lucide-react';
 import styles from './Legal.module.css';
 
-const Terms = () => {
+const Cookies = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cookiePreferences, setCookiePreferences] = useState({
+    essential: true,
+    analytics: true,
+    marketing: false,
+    personalization: true
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,88 +25,118 @@ const Terms = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const toggleCookie = (type: string) => {
+    if (type === 'essential') return; // Essential cookies can't be disabled
+    setCookiePreferences(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+  };
+
+  const savePreferences = () => {
+    console.log('Preferences saved:', cookiePreferences);
+    alert('Vos préférences ont été enregistrées avec succès !');
+  };
+
+  const acceptAll = () => {
+    setCookiePreferences({
+      essential: true,
+      analytics: true,
+      marketing: true,
+      personalization: true
+    });
+    console.log('All cookies accepted');
+    alert('Tous les cookies ont été acceptés !');
+  };
+
   const sections = [
     {
-      icon: FileText,
-      title: "1. Acceptation des Conditions",
-      content: "En accédant à et en utilisant la plateforme Win+, vous acceptez de respecter ces conditions d'utilisation. Si vous n'êtes pas d'accord avec ces termes, veuillez ne pas utiliser notre plateforme.",
+      icon: Cookie,
+      title: "1. Qu'est-ce qu'un Cookie ?",
+      content: "Les cookies sont de petits fichiers texte stockés sur votre appareil lorsque vous visitez un site web. Ils permettent au site de mémoriser vos actions et préférences sur une période donnée.",
     },
     {
-      icon: UserCheck,
-      title: "2. Compte Utilisateur",
-      content: "Vous êtes responsable de maintenir la confidentialité de vos identifiants de connexion et du mot de passe. Vous acceptez d'être responsable de toutes les activités qui se produisent sur votre compte.",
+      icon: Eye,
+      title: "2. Comment Nous Utilisons les Cookies",
+      content: "Win+ utilise des cookies pour améliorer votre expérience utilisateur et optimiser nos services :",
       list: [
-        "Vous devez fournir des informations exactes et complètes lors de la création du compte",
-        "Vous êtes responsable de la sécurité de votre compte",
-        "Vous notifierez immédiatement Win+ de tout accès non autorisé"
+        "Mémoriser vos préférences de connexion",
+        "Comprendre comment vous utilisez notre plateforme",
+        "Personnaliser le contenu et les recommandations",
+        "Mesurer l'efficacité de nos campagnes marketing",
+        "Assurer la sécurité et prévenir la fraude"
       ]
     },
     {
-      icon: CheckCircle,
-      title: "3. Utilisation Acceptable",
-      content: "Vous acceptez de n'utiliser la plateforme que pour des fins légales et légitimes :",
+      icon: Settings,
+      title: "3. Types de Cookies que Nous Utilisons",
+      content: "Nous utilisons différents types de cookies sur notre plateforme :",
+    },
+    {
+      icon: Clock,
+      title: "4. Durée de Conservation",
+      content: "La durée de conservation des cookies varie selon leur type :",
       list: [
-        "Pas d'utilisation pour l'harassment ou les menaces",
-        "Pas de contenu illégal ou offensant",
-        "Pas de tentatives de piratage ou de fraude",
-        "Pas de téléchargement ou distribution de contenu protégé sans autorisation",
-        "Pas de spam ou de contenu malveillant"
+        "Cookies de session : supprimés automatiquement à la fermeture du navigateur",
+        "Cookies persistants : conservés jusqu'à 12 mois maximum",
+        "Cookies tiers : gérés selon les politiques des fournisseurs"
       ]
+    },
+    {
+      icon: Trash2,
+      title: "5. Gestion de Vos Cookies",
+      content: "Vous avez le contrôle total sur les cookies. Vous pouvez :",
+      list: [
+        "Modifier vos préférences à tout moment via les paramètres ci-dessous",
+        "Supprimer les cookies existants via votre navigateur",
+        "Bloquer tous les cookies (certaines fonctionnalités peuvent être limitées)",
+        "Configurer votre navigateur pour recevoir des notifications avant l'installation de cookies"
+      ]
+    },
+    {
+      icon: BarChart,
+      title: "6. Cookies Tiers",
+      content: "Nous utilisons des services tiers qui peuvent placer leurs propres cookies. Ces services incluent Google Analytics, Facebook Pixel, et d'autres outils d'analyse et de marketing. Chaque service a sa propre politique de confidentialité."
     },
     {
       icon: Shield,
-      title: "4. Propriété Intellectuelle",
-      content: "Tous les contenus, cours, matériaux et ressources disponibles sur Win+ sont protégés par les droits d'auteur et la propriété intellectuelle.",
-      list: [
-        "Vous pouvez accéder aux contenus pour votre apprentissage personnel",
-        "Vous ne pouvez pas reproduire ou distribuer les contenus sans permission",
-        "Les cours et matériaux demeurent la propriété de Win+ ou de ses créateurs"
-      ]
+      title: "7. Modifications de Cette Politique",
+      content: "Nous pouvons mettre à jour cette politique de cookies pour refléter les changements dans nos pratiques ou pour d'autres raisons opérationnelles, légales ou réglementaires."
+    }
+  ];
+
+  const cookieCategories = [
+    {
+      id: 'essential',
+      title: 'Cookies Essentiels',
+      icon: Shield,
+      description: 'Ces cookies sont nécessaires au fonctionnement de base de notre site. Ils ne peuvent pas être désactivés.',
+      enabled: cookiePreferences.essential,
+      required: true
     },
     {
-      icon: CreditCard,
-      title: "5. Abonnements et Paiements",
-      list: [
-        "Les abonnements se renouvellent automatiquement chaque mois",
-        "Vous devez disposer de moyens de paiement valides",
-        "Win+ se réserve le droit de modifier les prix avec notification préalable",
-        "Les remboursements sont soumis à notre politique de remboursement"
-      ]
+      id: 'analytics',
+      title: 'Cookies Analytiques',
+      icon: BarChart,
+      description: 'Ces cookies nous aident à comprendre comment les visiteurs utilisent notre site en collectant des informations de manière anonyme.',
+      enabled: cookiePreferences.analytics,
+      required: false
     },
     {
-      icon: AlertTriangle,
-      title: "6. Limitation de Responsabilité",
-      content: "Win+ est fourni \"tel quel\" sans garanties de quelque nature que ce soit. Nous ne sommes pas responsables des dommages indirects, spéciaux ou consécutifs.",
-      warning: {
-        title: "Important",
-        text: "L'utilisation de la plateforme est à vos propres risques. Win+ ne garantit pas l'exactitude ou l'exhaustivité des contenus."
-      }
+      id: 'marketing',
+      title: 'Cookies Marketing',
+      icon: TrendingUp,
+      description: 'Ces cookies sont utilisés pour afficher des publicités pertinentes et mesurer l\'efficacité de nos campagnes.',
+      enabled: cookiePreferences.marketing,
+      required: false
     },
     {
-      icon: RefreshCw,
-      title: "7. Modifications des Services",
-      content: "Win+ se réserve le droit de modifier, suspendre ou discontinuer tout service avec ou sans préavis. Nous nous efforçons de maintenir une continuité de service optimale."
-    },
-    {
-      icon: XCircle,
-      title: "8. Résiliation du Compte",
-      content: "Vous pouvez résilier votre compte à tout moment en contactant notre support. Win+ peut résilier les comptes en cas de violation des conditions d'utilisation.",
-      list: [
-        "Résiliation volontaire disponible à tout moment",
-        "Résiliation pour violation des conditions",
-        "Perte d'accès immédiate après résiliation",
-        "Données conservées selon la politique de confidentialité"
-      ]
-    },
-    {
-      icon: Lock,
-      title: "9. Confidentialité",
-      content: "Notre traitement des données personnelles est régi par notre Politique de Confidentialité. En utilisant Win+, vous consentez à notre collecte et utilisation des données conformément à cette politique."
-    },
-    {
-      icon: Scale,
-      title: "10. Droit Applicable",
-      content: "Ces conditions sont régies par les lois du Cameroun. Tout différend sera résolu selon la juridiction compétente de Yaoundé."
+      id: 'personalization',
+      title: 'Cookies de Personnalisation',
+      icon: Settings,
+      description: 'Ces cookies permettent au site de mémoriser vos choix et de personnaliser votre expérience.',
+      enabled: cookiePreferences.personalization,
+      required: false
     }
   ];
 
@@ -154,9 +190,9 @@ const Terms = () => {
         <div className={styles.container}>
           <div className={styles.heroContent}>
             <div className={styles.badge}>
-              <Scale size={16} /> Conditions légales
+              <Cookie size={16} /> Gestion des cookies
             </div>
-            <h1 className={styles.heroTitle}>Conditions d'Utilisation</h1>
+            <h1 className={styles.heroTitle}>Politique de Cookies</h1>
             <p className={styles.lastUpdated}>Dernière mise à jour : Décembre 2025</p>
           </div>
         </div>
@@ -189,15 +225,38 @@ const Terms = () => {
                   </ul>
                 )}
 
-                {section.warning && (
-                  <div className={styles.warningBox}>
-                    <div className={styles.warningTitle}>
-                      <AlertTriangle size={18} />
-                      {section.warning.title}
+                {/* Cookie Settings Section */}
+                {section.title.includes('Types de Cookies') && (
+                  <div className={styles.cookieSettings}>
+                    {cookieCategories.map((category) => (
+                      <div key={category.id} className={styles.cookieCategory}>
+                        <div className={styles.cookieCategoryHeader}>
+                          <div className={styles.cookieCategoryTitle}>
+                            <category.icon size={18} />
+                            {category.title}
+                          </div>
+                          <div 
+                            className={`${styles.toggle} ${category.enabled ? styles.active : ''} ${category.required ? styles.disabled : ''}`}
+                            onClick={() => !category.required && toggleCookie(category.id)}
+                          >
+                            <div className={styles.toggleKnob}></div>
+                          </div>
+                        </div>
+                        <p className={styles.cookieCategoryDesc}>
+                          {category.description}
+                          {category.required && ' (Obligatoire)'}
+                        </p>
+                      </div>
+                    ))}
+                    
+                    <div className={styles.cookieActions}>
+                      <button className={styles.btnSecondary} onClick={savePreferences}>
+                        Enregistrer mes préférences
+                      </button>
+                      <button className={styles.btnPrimary} onClick={acceptAll}>
+                        Tout accepter
+                      </button>
                     </div>
-                    <p className={styles.sectionText} style={{ marginBottom: 0 }}>
-                      {section.warning.text}
-                    </p>
                   </div>
                 )}
               </article>
@@ -206,13 +265,13 @@ const Terms = () => {
             {/* Contact Box */}
             <div className={styles.contactBox}>
               <h3 className={styles.contactTitle}>
-                <Mail size={24} /> Questions juridiques ?
+                <Mail size={24} /> Questions sur les cookies ?
               </h3>
               <p className={styles.contactText}>
-                Pour toute question concernant ces Conditions d'Utilisation :
+                Pour toute question concernant notre utilisation des cookies :
               </p>
               <p className={styles.contactText}>
-                Email: <a href="mailto:legal@winplus.cm" className={styles.contactLink}>legal@winplus.cm</a>
+                Email: <a href="mailto:privacy@winplus.cm" className={styles.contactLink}>privacy@winplus.cm</a>
               </p>
               <p className={styles.contactText}>
                 <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Adresse: Yaoundé, Cameroun
@@ -261,8 +320,8 @@ const Terms = () => {
             <div className={styles.footerSection}>
               <h4 className={styles.footerHeading}>Légal</h4>
               <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} className={styles.footerLink}>Confidentialité</a>
-              <a href="/terms" onClick={(e) => { e.preventDefault(); scrollToTop(); }} className={styles.footerLink}>Conditions</a>
-              <a href="/cookies" onClick={(e) => { e.preventDefault(); navigate('/cookies'); }} className={styles.footerLink}>Cookies</a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} className={styles.footerLink}>Conditions</a>
+              <a href="/cookies" onClick={(e) => { e.preventDefault(); scrollToTop(); }} className={styles.footerLink}>Cookies</a>
             </div>
 
             <div className={styles.footerSection}>
@@ -292,4 +351,4 @@ const Terms = () => {
   );
 };
 
-export default Terms;
+export default Cookies;
