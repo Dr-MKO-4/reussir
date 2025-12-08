@@ -14,6 +14,7 @@ import {
   PaymentResult,
 } from '../types/cart';
 import { localStore as storage } from '../services/storage';
+import paymentService from '../services/paymentService';
 
 /**
  * Configuration du panier
@@ -486,11 +487,50 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // TODO: Appeler l'API pour traiter le paiement
-      // const result = await api.post('/payments', data);
-      
-      // Simulation pour le moment
-      throw new Error('processPayment not implemented yet');
+      // Valider les données du paiement
+      if (!data.paymentMethodId) {
+        throw new Error('Méthode de paiement manquante');
+      }
+
+      if (!data.amount || data.amount <= 0) {
+        throw new Error('Montant invalide');
+      }
+
+      // Étape 1 : Initialiser l'intention de paiement avec les données du panier
+      console.log('[CartContext] Initializing payment with cart items...');
+      const cartData = {
+        items: cart.items.map(item => ({
+          id: item.subject.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: cart.total,
+        currency: cart.currency || 'EUR',
+      };
+
+      const paymentIntent = await paymentService.initializePayment(cartData);
+      console.log('[CartContext] Payment intent created:', paymentIntent);
+
+      // Étape 2 : Traiter le paiement avec la méthode fournie
+      console.log('[CartContext] Processing payment with method:', data.paymentMethodId);
+      const receipt = await paymentService.processPayment(
+        paymentIntent.id,
+        data.paymentMethodId,
+        data.amount
+      );
+      console.log('[CartContext] Payment processed successfully:', receipt);
+
+      // Étape 3 : Retourner le résultat du paiement
+      return {
+        success: true,
+        transactionId: receipt.id,
+        orderId: receipt.orderId,
+        amount: receipt.amount,
+        currency: receipt.currency,
+        status: receipt.status,
+        reference: receipt.reference,
+        paymentDate: receipt.paymentDate,
+      };
     } catch (err: any) {
       console.error('[CartContext] Process payment error:', err);
       const errorMessage = err.message || 'Erreur lors du traitement du paiement';
@@ -499,7 +539,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [cart.items, cart.total, cart.currency]);
 
   /**
    * Valeur du contexte

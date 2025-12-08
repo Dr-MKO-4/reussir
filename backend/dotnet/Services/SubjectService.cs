@@ -11,6 +11,9 @@ public interface ISubjectService
     Task<IEnumerable<Subject>> GetSubjectsByCategoryAsync(string category);
     Task<IEnumerable<Subject>> SearchSubjectsAsync(string searchTerm);
     Task<IEnumerable<Subject>> GetPopularSubjectsAsync(int limit = 10);
+    Task<IEnumerable<Subject>> GetSimilarSubjectsAsync(int subjectId, int limit = 5);
+    Task<IEnumerable<string>> GetCategoriesAsync();
+    Task<Dictionary<string, IEnumerable<string>>> GetFiltersAsync();
     Task<Subject> CreateSubjectAsync(Subject subject);
     Task<Subject> UpdateSubjectAsync(Subject subject);
     Task<bool> DeleteSubjectAsync(int id);
@@ -227,6 +230,78 @@ public class SubjectService : ISubjectService
         {
             _logger.LogError(ex, "Error updating rating for subject {SubjectId}", id);
             throw;
+        }
+    }
+
+    public async Task<IEnumerable<Subject>> GetSimilarSubjectsAsync(int subjectId, int limit = 5)
+    {
+        try
+        {
+            var subject = await _subjectRepository.GetByIdAsync(subjectId);
+            if (subject == null)
+                return Enumerable.Empty<Subject>();
+
+            // Récupérer les sujets de la même catégorie
+            var similar = await _subjectRepository.GetByCategoryAsync(subject.Category ?? "");
+            
+            // Exclure le sujet courant et limiter les résultats
+            return similar
+                .Where(s => s.Id != subjectId)
+                .OrderByDescending(s => s.AverageRating)
+                .Take(limit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting similar subjects for {SubjectId}", subjectId);
+            return Enumerable.Empty<Subject>();
+        }
+    }
+
+    public async Task<IEnumerable<string>> GetCategoriesAsync()
+    {
+        try
+        {
+            var subjects = await _subjectRepository.GetAllAsync();
+            return subjects
+                .Where(s => !string.IsNullOrEmpty(s.Category))
+                .Select(s => s.Category!)
+                .Distinct()
+                .OrderBy(c => c);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting categories");
+            return Enumerable.Empty<string>();
+        }
+    }
+
+    public async Task<Dictionary<string, IEnumerable<string>>> GetFiltersAsync()
+    {
+        try
+        {
+            var subjects = await _subjectRepository.GetAllAsync();
+            
+            var filters = new Dictionary<string, IEnumerable<string>>
+            {
+                ["categories"] = subjects
+                    .Where(s => !string.IsNullOrEmpty(s.Category))
+                    .Select(s => s.Category!)
+                    .Distinct()
+                    .OrderBy(c => c),
+                
+                ["difficulty"] = new[] { "Beginner", "Intermediate", "Advanced" },
+                
+                ["price_range"] = new[] { "Free", "Paid" },
+                
+                ["rating"] = new[] { "4+", "3+", "2+", "1+" }
+            };
+
+            return filters;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting filters");
+            return new Dictionary<string, IEnumerable<string>>();
         }
     }
 }

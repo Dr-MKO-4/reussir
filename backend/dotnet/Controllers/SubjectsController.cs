@@ -126,4 +126,58 @@ public class SubjectsController : ControllerBase
             return StatusCode(500, "Erreur serveur");
         }
     }
+
+    /// <summary>
+    /// Récupère toutes les catégories disponibles
+    /// </summary>
+    [HttpGet("categories")]
+    public async Task<IActionResult> GetCategories()
+    {
+        try
+        {
+            var categories = await _subjectService.GetCategoriesAsync();
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des catégories");
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
+
+    /// <summary>
+    /// Récupère les filtres disponibles pour la recherche
+    /// </summary>
+    [HttpGet("filters")]
+    public async Task<IActionResult> GetFilters()
+    {
+        try
+        {
+            var filters = await _subjectService.GetFiltersAsync();
+            return Ok(filters);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des filtres");
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
+
+    /// <summary>
+    /// Récupère les cours similaires à un cours donné
+    /// </summary>
+    [HttpGet("{id}/similar")]
+    public async Task<IActionResult> GetSimilar(int id, [FromQuery] int limit = 5)
+    {
+        try
+        {
+            var similar = await _subjectService.GetSimilarSubjectsAsync(id, limit);
+            return Ok(similar);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des cours similaires pour {SubjectId}", id);
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
 }

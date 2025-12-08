@@ -82,4 +82,40 @@ public class UsersController : ControllerBase
             return StatusCode(500, "Erreur serveur");
         }
     }
+
+    /// <summary>
+    /// Récupère les statistiques du profil utilisateur courant
+    /// </summary>
+    [HttpGet("profile/statistics")]
+    public async Task<IActionResult> GetProfileStatistics()
+    {
+        try
+        {
+            var statistics = await _userService.GetProfileStatisticsAsync();
+            return Ok(statistics);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des statistiques du profil");
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
+
+    /// <summary>
+    /// Récupère les statistiques d'un utilisateur spécifique
+    /// </summary>
+    [HttpGet("{id}/statistics")]
+    public async Task<IActionResult> GetUserStatistics(int id)
+    {
+        try
+        {
+            var statistics = await _userService.GetUserStatisticsAsync(id);
+            return Ok(statistics);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des statistiques de l'utilisateur {UserId}", id);
+            return StatusCode(500, "Erreur serveur");
+        }
+    }
 }

@@ -16,6 +16,8 @@ public interface IUserService
     Task<bool> IsCognitoIdAvailableAsync(string cognitoId);
     Task<int> GetTotalUsersCountAsync();
     Task<User> UpdateUserProfileAsync(int userId, string firstName, string lastName, string bio, string? profileImageUrl);
+    Task<Dictionary<string, object>> GetUserStatisticsAsync(int userId);
+    Task<Dictionary<string, object>> GetProfileStatisticsAsync();
 }
 
 public class UserService : IUserService
@@ -188,6 +190,70 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating user profile {UserId}", userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Récupère les statistiques d'un utilisateur spécifique
+    /// </summary>
+    public async Task<Dictionary<string, object>> GetUserStatisticsAsync(int userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new InvalidOperationException($"User {userId} not found");
+
+            var stats = new Dictionary<string, object>
+            {
+                { "userId", user.Id },
+                { "email", user.Email },
+                { "firstName", user.FirstName ?? string.Empty },
+                { "lastName", user.LastName ?? string.Empty },
+                { "totalEnrollments", 0 },
+                { "totalCoursesCompleted", 0 },
+                { "averageProgress", 0.0 },
+                { "joinDate", user.CreatedAt },
+                { "lastActive", user.UpdatedAt },
+                { "isActive", user.IsActive }
+            };
+
+            _logger.LogInformation("Retrieved statistics for user {UserId}", userId);
+            return stats;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user statistics for {UserId}", userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Récupère les statistiques de profil global (pour le profil utilisateur courant)
+    /// </summary>
+    public async Task<Dictionary<string, object>> GetProfileStatisticsAsync()
+    {
+        try
+        {
+            var totalUsers = await _userRepository.CountAsync();
+            var allUsers = await _userRepository.GetAllAsync();
+
+            var stats = new Dictionary<string, object>
+            {
+                { "totalUsers", totalUsers },
+                { "activeUsers", allUsers.Count(u => u.IsActive) },
+                { "registeredThisMonth", allUsers.Count(u => u.CreatedAt.Month == DateTime.UtcNow.Month && u.CreatedAt.Year == DateTime.UtcNow.Year) },
+                { "averageEnrollments", 0 },
+                { "platformActivity", new { lastUpdated = DateTime.UtcNow } }
+            };
+
+            _logger.LogInformation("Retrieved profile statistics");
+            return stats;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving profile statistics");
             throw;
         }
     }
