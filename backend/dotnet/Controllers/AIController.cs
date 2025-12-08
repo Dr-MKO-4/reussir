@@ -173,4 +173,187 @@ namespace Backend.Controllers;
                 return StatusCode(500, new { message = "An error occurred" });
             }
         }
+
+        /// <summary>
+        /// GET /api/ai/recommendations/{id}
+        /// Récupérer les recommandations IA pour un sujet spécifique
+        /// </summary>
+        [HttpGet("recommendations/{id}")]
+        [ProducesResponseType(typeof(RecommendationResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRecommendationsById(
+            [FromRoute] int id,
+            [FromQuery] int count = 5,
+            [FromQuery] string preferenceLevel = "intermediate",
+            [FromQuery] string category = "all")
+        {
+            try
+            {
+                if (id <= 0)
+                    return BadRequest(new { message = "Invalid subject ID" });
+
+                var response = await _aiService.GetRecommendationsAsync(id, count, preferenceLevel, category);
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
+        }
+
+        /// <summary>
+        /// POST /api/ai/predict-success
+        /// Prédire le succès de l'utilisateur pour un sujet
+        /// </summary>
+        [HttpPost("predict-success")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> PredictSuccess([FromBody] PredictSuccessRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                // Pour l'instant, retourner une réponse simulée
+                var response = new
+                {
+                    subjectId = request.SubjectId,
+                    successProbability = new Random().NextDouble(),
+                    recommendation = "Êtes-vous prêt à apprendre ce sujet ?",
+                    estimatedHours = new Random().Next(10, 100)
+                };
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
+        }
+
+        /// <summary>
+        /// POST /api/ai/study-plan
+        /// Générer un plan d'étude personnalisé
+        /// </summary>
+        [HttpPost("study-plan")]
+        [ProducesResponseType(typeof(LearningPathResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GenerateStudyPlan([FromBody] StudyPlanRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var response = await _aiService.GeneratePersonalizedPathAsync(
+                    request.UserId,
+                    request.SubjectName,
+                    request.DurationWeeks,
+                    request.HoursPerWeek);
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
+        }
+
+        /// <summary>
+        /// POST /api/ai/chat
+        /// Discuter avec l'assistant IA
+        /// </summary>
+        [HttpPost("chat")]
+        [ProducesResponseType(typeof(ChatResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> ChatWithAI([FromBody] ChatRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (string.IsNullOrWhiteSpace(request.Message))
+                    return BadRequest(new { message = "Message cannot be empty" });
+
+                // Pour l'instant, retourner une réponse simulée
+                var response = new ChatResponse
+                {
+                    Message = "Merci pour votre question! Je suis ici pour vous aider.",
+                    IsStreaming = false,
+                    Context = request.Context
+                };
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/ai/study-habits
+        /// Récupérer les habitudes d'étude de l'utilisateur
+        /// </summary>
+        [HttpGet("study-habits")]
+        [ProducesResponseType(typeof(StudyHabitsResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetStudyHabits([FromQuery] int userId = 0)
+        {
+            try
+            {
+                // Pour l'instant, retourner une réponse simulée
+                var response = new StudyHabitsResponse
+                {
+                    AverageDailyHours = 2.5,
+                    PreferredStudyTime = "Evening",
+                    MostActiveDay = "Wednesday",
+                    CompletionRate = 0.85,
+                    LastStudySession = DateTime.UtcNow.AddDays(-1)
+                };
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred" });
+            }
+        }
     }

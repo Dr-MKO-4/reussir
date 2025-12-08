@@ -221,4 +221,93 @@ namespace Backend.Models.DTOs
     }
 
     #endregion
+
+    #region Predict Success
+
+    /// <summary>
+    /// Request to predict user success probability for a subject
+    /// </summary>
+    public class PredictSuccessRequest
+    {
+        [Required(ErrorMessage = "Subject ID is required")]
+        public int SubjectId { get; set; }
+
+        public int UserId { get; set; }
+        public string UserSkillLevel { get; set; } = "intermediate"; // beginner, intermediate, advanced
+    }
+
+    #endregion
+
+    #region Study Plan
+
+    /// <summary>
+    /// Request to generate a personalized study plan
+    /// </summary>
+    public class StudyPlanRequest
+    {
+        [Required(ErrorMessage = "User ID is required")]
+        public int UserId { get; set; }
+
+        [Required(ErrorMessage = "Subject name is required")]
+        [MaxLength(200)]
+        public string SubjectName { get; set; }
+
+        [Range(1, 52, ErrorMessage = "Duration must be between 1 and 52 weeks")]
+        public int DurationWeeks { get; set; } = 8;
+
+        [Range(1, 168, ErrorMessage = "Hours per week must be between 1 and 168")]
+        public int HoursPerWeek { get; set; } = 10;
+
+        public string LearningStyle { get; set; } = "mixed"; // visual, auditory, kinesthetic, mixed
+    }
+
+    #endregion
+
+    #region Chat
+
+    /// <summary>
+    /// Request to chat with AI assistant
+    /// </summary>
+    public class ChatRequest
+    {
+        [Required(ErrorMessage = "Message is required")]
+        [MaxLength(1000)]
+        public string Message { get; set; }
+
+        public Dictionary<string, object> Context { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Response from AI chat
+    /// </summary>
+    public class ChatResponse
+    {
+        public string Message { get; set; }
+        public bool IsStreaming { get; set; }
+        public Dictionary<string, object> Context { get; set; } = new();
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    }
+
+    #endregion
+
+    #region Study Habits
+
+    /// <summary>
+    /// Response containing user study habits analysis
+    /// </summary>
+    public class StudyHabitsResponse
+    {
+        public double AverageDailyHours { get; set; }
+        public string PreferredStudyTime { get; set; } // Morning, Afternoon, Evening, Night
+        public string MostActiveDay { get; set; } // Day of week
+        public double CompletionRate { get; set; } // 0-1
+        public DateTime LastStudySession { get; set; }
+        public int TotalStudySessionsThisMonth { get; set; }
+        public string LearningPattern { get; set; } // Consistent, Irregular, Sporadic
+        public List<string> Strengths { get; set; } = new();
+        public List<string> AreasForImprovement { get; set; } = new();
+    }
+
+    #endregion
 }
+
