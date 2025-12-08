@@ -91,20 +91,37 @@
 
 .nav {
   display: flex;
-  gap: 40px;
+  gap: 32px;
   align-items: center;
 }
 
 .nav a {
-  color: var(--rp-gray-600);
+  color: var(--rp-gray-700);
   text-decoration: none;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 15px;
-  transition: color 0.2s;
+  transition: color 0.3s;
+  position: relative;
+  white-space: nowrap;
 }
 
 .nav a:hover {
   color: var(--rp-primary);
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--rp-primary);
+  transition: width 0.3s;
+}
+
+.nav a:hover::after {
+  width: 100%;
 }
 
 .headerActions {
