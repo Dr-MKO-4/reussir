@@ -47,6 +47,25 @@ public class SubjectRepository : ISubjectRepository
         }
     }
 
+    public async Task<IEnumerable<Subject>> GetAllAsync(int page, int limit)
+    {
+        try
+        {
+            var skip = (page - 1) * limit;
+            return await _context.Subjects
+                .Include(s => s.Contents)
+                .OrderByDescending(s => s.CreatedAt)
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paginated subjects (page {Page}, limit {Limit})", page, limit);
+            return Enumerable.Empty<Subject>();
+        }
+    }
+
     public async Task<IEnumerable<Subject>> GetPublishedAsync()
     {
         try
@@ -172,6 +191,12 @@ public class SubjectRepository : ISubjectRepository
             _logger.LogError(ex, "Error counting subjects");
             return 0;
         }
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        // Alias for CountAsync for backward compatibility
+        return await CountAsync();
     }
 
     public async Task<IEnumerable<Subject>> GetPopularAsync(int limit = 10)

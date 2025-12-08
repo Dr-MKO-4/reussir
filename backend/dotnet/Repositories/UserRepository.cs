@@ -75,6 +75,25 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<IEnumerable<User>> GetAllAsync(int page, int limit)
+    {
+        try
+        {
+            var skip = (page - 1) * limit;
+            return await _context.Users
+                .Include(u => u.Enrollments)
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paginated users (page {Page}, limit {Limit})", page, limit);
+            return Enumerable.Empty<User>();
+        }
+    }
+
     public async Task<User> CreateAsync(User user)
     {
         try
@@ -172,5 +191,11 @@ public class UserRepository : IUserRepository
             _logger.LogError(ex, "Error counting users");
             return 0;
         }
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        // Alias for CountAsync for backward compatibility
+        return await CountAsync();
     }
 }

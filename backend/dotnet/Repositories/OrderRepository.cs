@@ -81,6 +81,26 @@ public class OrderRepository : IOrderRepository
         }
     }
 
+    public async Task<IEnumerable<Order>> GetAllAsync(int page, int limit)
+    {
+        try
+        {
+            var skip = (page - 1) * limit;
+            return await _context.Orders
+                .Include(o => o.User)
+                .Include(o => o.Items)
+                .OrderByDescending(o => o.OrderDate)
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paginated orders (page {Page}, limit {Limit})", page, limit);
+            return Enumerable.Empty<Order>();
+        }
+    }
+
     public async Task<Order> CreateAsync(Order order)
     {
         try

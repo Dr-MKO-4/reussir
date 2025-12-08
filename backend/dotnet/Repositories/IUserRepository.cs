@@ -8,10 +8,12 @@ public interface IUserRepository
     Task<User?> GetByCognitoIdAsync(string cognitoId);
     Task<User?> GetByEmailAsync(string email);
     Task<IEnumerable<User>> GetAllAsync();
+    Task<IEnumerable<User>> GetAllAsync(int page, int limit);
     Task<User> CreateAsync(User user);
     Task<User> UpdateAsync(User user);
     Task<bool> DeleteAsync(int id);
     Task<bool> ExistsByCognitoIdAsync(string cognitoId);
     Task<bool> ExistsByEmailAsync(string email);
     Task<int> CountAsync();
+    Task<int> GetCountAsync();
 }

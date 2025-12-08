@@ -12,7 +12,7 @@ public class AddHistoryRequest
     [MaxLength(100)]
     public string EventType { get; set; } = ""; // course_started, course_completed, lesson_viewed, test_taken, etc.
 
-    public int? SubjectId { get; set; }
+    public int SubjectId { get; set; }
 
     [MaxLength(500)]
     public string? EventTitle { get; set; }
@@ -21,13 +21,13 @@ public class AddHistoryRequest
     public string? EventDescription { get; set; }
 
     [Range(0, 100)]
-    public float? Score { get; set; }
+    public decimal? Score { get; set; }
 
     [Range(0, int.MaxValue)]
     public int? DurationSeconds { get; set; }
 
     [Range(0, 100)]
-    public float? ProgressPercentage { get; set; }
+    public decimal? ProgressPercentage { get; set; }
 
     [MaxLength(1000)]
     public string? Notes { get; set; }
@@ -49,9 +49,9 @@ public class HistoryResponse
     public string EventType { get; set; } = "";
     public string? EventTitle { get; set; }
     public string? EventDescription { get; set; }
-    public float? Score { get; set; }
+    public decimal? Score { get; set; }
     public int? DurationSeconds { get; set; }
-    public float? ProgressPercentage { get; set; }
+    public decimal? ProgressPercentage { get; set; }
     public string? Notes { get; set; }
     public string? EventDetails { get; set; }
     public bool IsCompleted { get; set; }

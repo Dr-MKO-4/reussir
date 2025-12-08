@@ -32,7 +32,7 @@ public class TrackEventRequest
 public class AnalyticsEventResponse
 {
     public int Id { get; set; }
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public string EventType { get; set; } = "";
     public string EventName { get; set; } = "";
     public string? EventCategory { get; set; }

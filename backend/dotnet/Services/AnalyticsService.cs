@@ -14,6 +14,7 @@ public interface IAnalyticsService
     Task<UserAnalyticsResponse> GetUserAnalyticsAsync(int userId);
     Task<List<AnalyticsEventResponse>> GetRecentEventsAsync(int limit = 20);
     Task<Dictionary<string, int>> GetEventTypeBreakdownAsync();
+    Task<DashboardAnalyticsResponse> GetDashboardAnalyticsAsync();
 }
 
 /// <summary>
@@ -174,7 +175,6 @@ public class AnalyticsService : IAnalyticsService
     /// <summary>
     /// Récupère les analytics du dashboard
     /// </summary>
-    /*
     public async Task<DashboardAnalyticsResponse> GetDashboardAnalyticsAsync()
     {
         try
@@ -194,10 +194,10 @@ public class AnalyticsService : IAnalyticsService
             return new DashboardAnalyticsResponse
             {
                 TotalEvents = totalEvents,
-                Events24h = last24h.Count(),
-                EventTypeBreakdown = breakdown.ToDictionary(x => x.Key, x => x.Value ?? 0),
+                Events24h = last24h.Count,
+                EventTypeBreakdown = breakdown,
                 RecentEvents = recentEvents.Select(MapToResponse).ToList(),
-                TopEventTypes = breakdown.OrderByDescending(x => x.Value).Take(5).ToDictionary(x => x.Key, x => x.Value ?? 0)
+                TopEventTypes = breakdown.OrderByDescending(x => x.Value).Take(5).ToDictionary(x => x.Key, x => x.Value)
             };
         }
         catch (Exception ex)
@@ -206,7 +206,6 @@ public class AnalyticsService : IAnalyticsService
             throw;
         }
     }
-    */
 
     private AnalyticsEventResponse MapToResponse(AnalyticsEvent analyticsEvent)
     {

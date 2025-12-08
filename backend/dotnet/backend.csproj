@@ -7,6 +7,8 @@
     <LangVersion>12.0</LangVersion>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>Win-r-2025</UserSecretsId>
+    
+    <!-- Disable automatic assembly info generation to prevent duplicates -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
@@ -16,8 +18,13 @@
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyInformationnalVersionAttribute>false</GenerateAssemblyInformationnalVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    
+    <!-- Disable target framework attribute generation (prevents duplicate TargetFrameworkAttribute) -->
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    
     <Deterministic>false</Deterministic>
+    <!-- Suppress warning about duplicate assembly attributes -->
     <NoWarn>CS0579;CS0114;NU1603</NoWarn>
     <DisableImplicitFrameworkReferences>false</DisableImplicitFrameworkReferences>
   </PropertyGroup>
@@ -70,28 +77,14 @@
     <PackageReference Include="Moq" Version="4.20.69" />
   </ItemGroup>
 
-  <!-- Exclude problematic auto-generated assembly attribute files from compilation -->
+  <!-- Exclude auto-generated files and test projects from compilation -->
   <ItemGroup>
+    <!-- Exclude all auto-generated assembly attribute files in /obj directories -->
     <Compile Remove="obj/**/*.cs" />
     <Compile Remove="AITests/obj/**/*.cs" />
+    <!-- Exclude test projects (schema mismatches) -->
     <Compile Remove="AITests/**/*.cs" />
     <Compile Remove="Tests/**/*.cs" />
-    <Compile Remove="Services/HistoryService.cs" />
-    <Compile Remove="Repositories/HistoryRepository.cs" />
-    <Compile Remove="Controllers/HistoryController.cs" />
-    <Compile Remove="Services/AdminService.cs" />
-    <Compile Remove="Controllers/AdminController.cs" />
   </ItemGroup>
-
-  <!-- Custom MSBuild targets to handle the duplicate assembly attributes bug -->
-  <Target Name="RemoveConflictingFiles" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Compile Remove="obj/$(Configuration)/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CleanDuplicateAssemblyAttributeFiles" BeforeTargets="Build">
-    <Delete Files="$(IntermediateOutputPath).NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-  </Target>
 
 </Project>
