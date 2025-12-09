@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import { useToast } from '../contexts/ToastContext';
 import BackgroundAnimation from '../components/ui/BackgroundAnimation';
 import Modal from '../components/ui/Modal';
 import styles from './EmailVerification.module.css';
+import { useToast } from '../components/ui/Toast';
 
 // Types pour les états de vérification
 type VerificationState = 'initial' | 'verifying' | 'success' | 'error' | 'expired' | 'resend' | 'already_verified';

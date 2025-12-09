@@ -1,7 +1,7 @@
 // src/components/dashboard/UserDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import {apiClient} from '../../services/api';
 import { User, UserStats, SessionInfo } from '../../types/auth';
 import styles from './Dashboard.module.css';

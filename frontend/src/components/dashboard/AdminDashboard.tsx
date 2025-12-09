@@ -1,7 +1,7 @@
 // src/components/dashboard/AdminDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import {apiClient} from '../../services/api';
 import { User, UserRole, AuditLog, SecurityLog, DashboardStats } from '../../types/auth';
 import styles from './Dashboard.module.css';
