@@ -8,7 +8,6 @@ namespace Backend.Models.DTOs;
 /// </summary>
 public class TrackEventRequest
 {
-    [Required]
     [MaxLength(100)]
     public string? EventName { get; set; } // signup_attempt, login_success, etc.
 
@@ -21,9 +20,8 @@ public class TrackEventRequest
     [MaxLength(45)]
     public string? IpAddress { get; set; }
 
-    // Le frontend envoie un objet JSON, on le reçoit comme string JSON
-    [MaxLength(5000)]
-    public string? EventData { get; set; } // JSON data
+    // Le frontend envoie un objet JSON, on le reçoit comme object
+    public object? EventData { get; set; } // JSON data (peut être un objet ou un string)
 
     // Champs supplémentaires envoyés par le frontend
     public long? Timestamp { get; set; }

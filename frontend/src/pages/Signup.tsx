@@ -453,7 +453,6 @@ const Signup = () => {
                     type="button"
                     className={styles.passwordToggle}
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -524,7 +523,6 @@ const Signup = () => {
                     type="button"
                     className={styles.passwordToggle}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    disabled={loading}
                   >
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>

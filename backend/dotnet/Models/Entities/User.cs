@@ -26,6 +26,10 @@ public class User
     public DateTime? VerifiedAt { get; set; }
 
     public DateTime? LastLoginAt { get; set; }
+
+    public string? VerificationCode { get; set; } // Code temporaire pour vérifier l'email
+
+    public DateTime? VerificationCodeExpiredAt { get; set; } // Expiration du code
     
     public string? ProfileImageUrl { get; set; }
     

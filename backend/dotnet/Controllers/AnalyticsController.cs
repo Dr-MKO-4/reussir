@@ -40,21 +40,29 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            // Ne pas valider strictement en développement - accepter les requêtes même si incomplets
-            if (request == null || string.IsNullOrWhiteSpace(request.EventName))
+            // En dev, ne pas rejeter sur validation - accepter n'importe quoi
+            if (request == null)
             {
-                return BadRequest(new { error = "EventName is required" });
+                return BadRequest(new { error = "Request body is required" });
             }
             
-            // Ignorer les erreurs de validation du modèle (eventType, eventData optionnels)
+            // Créer un objet minimal s'il manque des champs
+            if (string.IsNullOrWhiteSpace(request.EventName))
+            {
+                request.EventName = "unknown_event";
+            }
+
+            // Ignorer les erreurs de validation du modèle (tout est optionnel sauf EventName)
             if (!ModelState.IsValid)
             {
-                // Log mais ne pas rejeter
-                _logger.LogWarning("ModelState invalid but continuing: {Errors}", ModelState.Values.SelectMany(v => v.Errors));
+                // Log mais ne pas rejeter en dev
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                _logger.LogWarning("ModelState validation issues (ignored in dev): {Errors}", string.Join(", ", errors));
             }
 
             // À remplacer par l'ID utilisateur authentifié
-            var userId = 1;
+            // En dev, on utilise null si l'utilisateur n'est pas authentifié
+            int? userId = null;
 
             var response = await _analyticsService.TrackEventAsync(userId, request);
             return Ok(response);

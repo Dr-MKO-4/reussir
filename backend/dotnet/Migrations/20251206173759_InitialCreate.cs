@@ -42,7 +42,7 @@ namespace backend.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CognitoId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    CognitoId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),

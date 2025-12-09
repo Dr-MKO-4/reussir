@@ -9,7 +9,7 @@ namespace Backend.Services;
 /// </summary>
 public interface IAnalyticsService
 {
-    Task<AnalyticsEventResponse> TrackEventAsync(int userId, TrackEventRequest request);
+    Task<AnalyticsEventResponse> TrackEventAsync(int? userId, TrackEventRequest request);
     Task<SessionStatsResponse> GetSessionStatsAsync(int userId);
     Task<UserAnalyticsResponse> GetUserAnalyticsAsync(int userId);
     Task<List<AnalyticsEventResponse>> GetRecentEventsAsync(int limit = 20);
@@ -34,7 +34,7 @@ public class AnalyticsService : IAnalyticsService
     /// <summary>
     /// Enregistre un événement analytics
     /// </summary>
-    public async Task<AnalyticsEventResponse> TrackEventAsync(int userId, TrackEventRequest request)
+    public async Task<AnalyticsEventResponse> TrackEventAsync(int? userId, TrackEventRequest request)
     {
         try
         {

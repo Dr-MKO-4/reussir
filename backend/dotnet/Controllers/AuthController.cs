@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Models;
+using Backend.Data;
 using Backend.Utilities;
 using Amazon.CognitoIdentityProvider.Model;
 using Microsoft.Extensions.Logging;
@@ -13,11 +14,13 @@ namespace Backend.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ISimpleAuthService _authService;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ISimpleAuthService authService, ILogger<AuthController> logger)
+    public AuthController(ISimpleAuthService authService, ApplicationDbContext context, ILogger<AuthController> logger)
     {
         _authService = authService;
+        _context = context;
         _logger = logger;
     }
 
@@ -112,6 +115,9 @@ public class AuthController : ControllerBase
 
             // Générer un code de vérification (6 chiffres)
             var verificationCode = new Random().Next(100000, 999999).ToString();
+
+            // Sauvegarder le code dans l'utilisateur
+            await _authService.SaveVerificationCodeAsync(user.Email, verificationCode);
 
             // Envoyer l'email de vérification
             await _authService.SendVerificationEmailAsync(user.Email, verificationCode);
