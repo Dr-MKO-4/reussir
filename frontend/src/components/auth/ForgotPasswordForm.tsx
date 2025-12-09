@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './ForgotPasswordForm.module.css';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import { authService } from '../../services/auth';
 
 interface ForgotPasswordFormProps {

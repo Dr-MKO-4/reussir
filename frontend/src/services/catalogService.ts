@@ -73,21 +73,21 @@ const catalogService = {
    * Obtenir les catégories disponibles
    */
   getCategories: async () => {
-    return api.get('/api/subjects/categories');
+    return api.get('/subjects/categories');
   },
 
   /**
    * Obtenir les filtres disponibles
    */
   getFilters: async () => {
-    return api.get('/api/subjects/filters');
+    return api.get('/subjects/filters');
   },
 
   /**
    * Obtenir les sujets similaires
    */
   getSimilarSubjects: async (subjectId: string, limit = 5) => {
-    return api.get(`/api/subjects/${subjectId}/similar?limit=${limit}`);
+    return api.get(`/subjects/${subjectId}/similar?limit=${limit}`);
   },
 
   // ==================== ADMIN - GESTION DES SUJETS ====================
@@ -96,14 +96,14 @@ const catalogService = {
    * Créer un nouveau sujet (Admin)
    */
   createSubject: async (subjectData: Record<string, any>) => {
-    return api.post('/api/subjects', subjectData);
+    return api.post('/subjects', subjectData);
   },
 
   /**
    * Modifier un sujet (Admin)
    */
   updateSubject: async (subjectId: string, subjectData: Record<string, any>) => {
-    return api.put(`/api/subjects/${subjectId}`, subjectData);
+    return api.put(`/subjects/${subjectId}`, subjectData);
   },
 
   /**
@@ -119,14 +119,14 @@ const catalogService = {
    * Obtenir les favoris de l'utilisateur
    */
   getFavorites: async () => {
-    return api.get('/api/favorites');
+    return api.get('/favorites');
   },
 
   /**
    * Ajouter un sujet aux favoris
    */
   addToFavorites: async (subjectId: string) => {
-    return api.post(`/api/favorites/${subjectId}`);
+    return api.post(`/favorites/${subjectId}`);
   },
 
   /**
@@ -163,14 +163,14 @@ const catalogService = {
    * Ajouter une entrée à l'historique
    */
   addToHistory: async (historyData: Record<string, any>) => {
-    return api.post('/api/history', historyData);
+    return api.post('/history', historyData);
   },
 
   /**
    * Effacer l'historique
    */
   clearHistory: async () => {
-    return api.delete('/api/history');
+    return api.delete('/history');
   },
 
   // ==================== STATISTIQUES UTILISATEUR ====================
@@ -206,28 +206,28 @@ const catalogService = {
    * Prédire le succès pour un sujet
    */
   predictSuccess: async (subjectId: string) => {
-    return api.post('/api/ai/predict-success', { subjectId });
+    return api.post('/ai/predict-success', { subjectId });
   },
 
   /**
    * Générer un plan d'étude
    */
   generateStudyPlan: async (planData: Record<string, any>) => {
-    return api.post('/api/ai/study-plan', planData);
+    return api.post('/ai/study-plan', planData);
   },
 
   /**
    * Chat avec l'IA
    */
   chatWithAI: async (message: string, context?: Record<string, any>) => {
-    return api.post('/api/ai/chat', { message, context });
+    return api.post('/ai/chat', { message, context });
   },
 
   /**
    * Obtenir les habitudes d'étude
    */
   getStudyHabits: async () => {
-    return api.get('/api/ai/study-habits');
+    return api.get('/ai/study-habits');
   },
 };
 

@@ -15,16 +15,17 @@ import {
 } from '../types/cart';
 import { localStore as storage } from '../services/storage';
 import paymentService from '../services/paymentService';
+import cartService from '../services/cartService';
 
 /**
  * Configuration du panier
  */
 const CART_CONFIG = {
   STORAGE_KEY: 'shopping_cart',
-  TAX_RATE: 0, // 0% (à ajuster selon les besoins)
+  TAX_RATE: 0.2, // 20%
   CURRENCY: 'XAF',
   MAX_QUANTITY_PER_ITEM: 10,
-  SYNC_WITH_BACKEND: false, // Activer quand l'API est prête
+  SYNC_WITH_BACKEND: true,
 };
 
 /**
@@ -55,7 +56,6 @@ function cartReducer(state: Cart, action: CartAction): Cart {
       let newItems: CartItem[];
 
       if (existingItemIndex >= 0) {
-        // Item existe déjà, augmenter la quantité
         newItems = state.items.map((item, index) => {
           if (index === existingItemIndex) {
             const newQuantity = Math.min(
@@ -67,7 +67,6 @@ function cartReducer(state: Cart, action: CartAction): Cart {
           return item;
         });
       } else {
-        // Nouvel item
         const newItem: CartItem = {
           id: `cart_${Date.now()}_${subject.id}`,
           subject,
@@ -93,7 +92,6 @@ function cartReducer(state: Cart, action: CartAction): Cart {
       const { itemId, quantity } = action.payload;
       
       if (quantity <= 0) {
-        // Si quantité <= 0, supprimer l'item
         const newItems = state.items.filter((item) => item.id !== itemId);
         return calculateCartTotals({ ...state, items: newItems });
       }
@@ -140,13 +138,11 @@ function cartReducer(state: Cart, action: CartAction): Cart {
  * Calculer les totaux du panier
  */
 function calculateCartTotals(cart: Cart): Cart {
-  // Calculer le sous-total
   const subtotal = cart.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
-  // Calculer la réduction
   let discount = 0;
   if (cart.promoCode) {
     if (cart.promoCode.type === 'percentage') {
@@ -156,14 +152,9 @@ function calculateCartTotals(cart: Cart): Cart {
     }
   }
 
-  // Calculer la taxe (sur le montant après réduction)
   const taxableAmount = subtotal - discount;
   const tax = taxableAmount * CART_CONFIG.TAX_RATE;
-
-  // Calculer le total
   const total = taxableAmount + tax;
-
-  // Compter les items
   const itemsCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return {
@@ -214,14 +205,60 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   /**
    * Charger le panier depuis le storage
    */
-  const loadCart = () => {
+  const loadCart = async () => {
     try {
-      const savedCart = storage.get<Cart>(CART_CONFIG.STORAGE_KEY);
-      if (savedCart) {
-        dispatch({ type: 'LOAD_CART', payload: { cart: savedCart } });
+      setIsLoading(true);
+      
+      if (CART_CONFIG.SYNC_WITH_BACKEND) {
+        const backendCart = await cartService.getCart();
+        
+        const items: CartItem[] = backendCart.items.map(item => ({
+          id: item.id,
+          subject: {
+            id: item.subjectId,
+            title: item.title,
+            description: item.description || '',
+            price: item.price,
+            image: item.image,
+            category: '',
+            level: '',
+            difficulty: '',
+            rating: 0,
+            studentsCount: 0,
+          },
+          quantity: item.quantity,
+          price: item.price,
+          originalPrice: item.price,
+          addedAt: item.addedAt.toString(),
+          updatedAt: new Date().toISOString(),
+        }));
+
+        dispatch({
+          type: 'LOAD_CART',
+          payload: {
+            cart: {
+              items,
+              itemsCount: backendCart.items.length,
+              subtotal: backendCart.subtotal,
+              discount: backendCart.discount,
+              tax: backendCart.tax,
+              total: backendCart.total,
+              currency: CART_CONFIG.CURRENCY,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+        });
+      } else {
+        const savedCart = storage.get<Cart>(CART_CONFIG.STORAGE_KEY);
+        if (savedCart) {
+          dispatch({ type: 'LOAD_CART', payload: { cart: savedCart } });
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[CartContext] Error loading cart:', err);
+      setError(err.message || 'Erreur lors du chargement du panier');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -244,19 +281,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      dispatch({
-        type: 'ADD_ITEM',
-        payload: { subject, quantity },
-      });
-
-      // TODO: Sync avec backend si nécessaire
       if (CART_CONFIG.SYNC_WITH_BACKEND) {
-        // await api.post('/cart/items', { subjectId: subject.id, quantity });
+        await cartService.addToCart(subject.id, quantity);
+        await loadCart();
+      } else {
+        dispatch({
+          type: 'ADD_ITEM',
+          payload: { subject, quantity },
+        });
       }
     } catch (err: any) {
       console.error('[CartContext] Add item error:', err);
-      setError(err.message || 'Erreur lors de l\'ajout au panier');
-      throw err;
+      const errorMsg = err.message || 'Erreur lors de l\'ajout au panier';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -270,19 +308,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      dispatch({
-        type: 'REMOVE_ITEM',
-        payload: { itemId },
-      });
-
-      // TODO: Sync avec backend si nécessaire
       if (CART_CONFIG.SYNC_WITH_BACKEND) {
-        // await api.delete(`/cart/items/${itemId}`);
+        await cartService.removeFromCart(itemId);
+        await loadCart();
+      } else {
+        dispatch({
+          type: 'REMOVE_ITEM',
+          payload: { itemId },
+        });
       }
     } catch (err: any) {
       console.error('[CartContext] Remove item error:', err);
-      setError(err.message || 'Erreur lors de la suppression');
-      throw err;
+      const errorMsg = err.message || 'Erreur lors de la suppression';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -296,19 +335,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      dispatch({
-        type: 'UPDATE_QUANTITY',
-        payload: { itemId, quantity },
-      });
-
-      // TODO: Sync avec backend si nécessaire
       if (CART_CONFIG.SYNC_WITH_BACKEND) {
-        // await api.patch(`/cart/items/${itemId}`, { quantity });
+        await cartService.updateQuantity(itemId, quantity);
+        await loadCart();
+      } else {
+        dispatch({
+          type: 'UPDATE_QUANTITY',
+          payload: { itemId, quantity },
+        });
       }
     } catch (err: any) {
       console.error('[CartContext] Update quantity error:', err);
-      setError(err.message || 'Erreur lors de la mise à jour');
-      throw err;
+      const errorMsg = err.message || 'Erreur lors de la mise à jour';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -322,16 +362,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      dispatch({ type: 'CLEAR_CART' });
-
-      // TODO: Sync avec backend si nécessaire
       if (CART_CONFIG.SYNC_WITH_BACKEND) {
-        // await api.delete('/cart');
+        await cartService.clearCart();
       }
+      
+      dispatch({ type: 'CLEAR_CART' });
     } catch (err: any) {
       console.error('[CartContext] Clear cart error:', err);
-      setError(err.message || 'Erreur lors du vidage du panier');
-      throw err;
+      const errorMsg = err.message || 'Erreur lors du vidage du panier';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -344,10 +384,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     try {
       setError(null);
 
-      // TODO: Appeler l'API pour valider le code
-      // const result = await api.post('/promo-codes/validate', { code, cartTotal: cart.subtotal });
+      if (CART_CONFIG.SYNC_WITH_BACKEND) {
+        const result = await cartService.applyPromoCode(code);
+        
+        return {
+          isValid: result.success,
+          code,
+          discountAmount: result.discount,
+          message: result.message,
+        };
+      }
       
-      // Simulation pour le moment
       const mockValidation: PromoCodeValidation = {
         isValid: code.toUpperCase() === 'PROMO10',
         code,
@@ -382,8 +429,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (validation.isValid) {
         const appliedPromo: AppliedPromoCode = {
           code: validation.code,
-          type: 'percentage', // TODO: Récupérer le vrai type depuis l'API
-          value: 10, // TODO: Récupérer la vraie valeur depuis l'API
+          type: 'percentage',
+          value: 10,
           discountAmount: validation.discountAmount,
           appliedAt: new Date().toISOString(),
         };
@@ -392,8 +439,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           type: 'APPLY_PROMO',
           payload: { promoCode: appliedPromo },
         });
+        
+        if (CART_CONFIG.SYNC_WITH_BACKEND) {
+          await loadCart();
+        }
       } else {
-        setError(validation.error || 'Code promo invalide');
+        const errorMsg = validation.error || 'Code promo invalide';
+        setError(errorMsg);
       }
 
       return validation;
@@ -415,11 +467,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
+      if (CART_CONFIG.SYNC_WITH_BACKEND) {
+        await cartService.removePromoCode();
+      }
+      
       dispatch({ type: 'REMOVE_PROMO' });
     } catch (err: any) {
       console.error('[CartContext] Remove promo code error:', err);
-      setError(err.message || 'Erreur lors de la suppression du code promo');
-      throw err;
+      const errorMsg = err.message || 'Erreur lors de la suppression du code promo';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -464,10 +521,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // TODO: Appeler l'API pour créer la commande
-      // const result = await api.post('/orders', data);
-      
-      // Simulation pour le moment
+      // TODO: Implémenter la création de commande
       throw new Error('createOrder not implemented yet');
     } catch (err: any) {
       console.error('[CartContext] Create order error:', err);
@@ -487,7 +541,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Valider les données du paiement
       if (!data.paymentMethodId) {
         throw new Error('Méthode de paiement manquante');
       }
@@ -496,8 +549,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         throw new Error('Montant invalide');
       }
 
-      // Étape 1 : Initialiser l'intention de paiement avec les données du panier
-      console.log('[CartContext] Initializing payment with cart items...');
+      console.log('[CartContext] Initializing payment...');
       const cartData = {
         items: cart.items.map(item => ({
           id: item.subject.id,
@@ -505,22 +557,22 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           price: item.price,
         })),
         total: cart.total,
-        currency: cart.currency || 'EUR',
+        currency: cart.currency || 'XAF',
       };
 
       const paymentIntent = await paymentService.initializePayment(cartData);
       console.log('[CartContext] Payment intent created:', paymentIntent);
 
-      // Étape 2 : Traiter le paiement avec la méthode fournie
-      console.log('[CartContext] Processing payment with method:', data.paymentMethodId);
+      console.log('[CartContext] Processing payment...');
       const receipt = await paymentService.processPayment(
         paymentIntent.id,
         data.paymentMethodId,
         data.amount
       );
-      console.log('[CartContext] Payment processed successfully:', receipt);
+      console.log('[CartContext] Payment processed:', receipt);
 
-      // Étape 3 : Retourner le résultat du paiement
+      await clearCart();
+
       return {
         success: true,
         transactionId: receipt.id,
@@ -539,7 +591,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [cart.items, cart.total, cart.currency]);
+  }, [cart, clearCart]);
 
   /**
    * Valeur du contexte

@@ -20,7 +20,7 @@ const GoogleCallback: React.FC = () => {
           navigate('/dashboard');
         } else if (code) {
           // Si un code est fourni, l'envoyer au backend pour obtenir un token
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/google/callback`, {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/google/callback`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

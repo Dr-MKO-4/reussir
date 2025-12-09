@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Models;
+using Backend.Utilities;
 using Amazon.CognitoIdentityProvider.Model;
 using Microsoft.Extensions.Logging;
 
@@ -11,10 +12,10 @@ namespace Backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly ICognitoAuthService _authService;
+    private readonly ISimpleAuthService _authService;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ICognitoAuthService authService, ILogger<AuthController> logger)
+    public AuthController(ISimpleAuthService authService, ILogger<AuthController> logger)
     {
         _authService = authService;
         _logger = logger;
@@ -36,23 +37,36 @@ public class AuthController : ControllerBase
 
         try
         {
-            var result = await _authService.SignInAsync(request.Username, request.Password);
+            var (success, message, user) = await _authService.LoginAsync(request.Username, request.Password);
+
+            if (!success || user == null)
+            {
+                return Unauthorized(new { error = message });
+            }
+
+            // Générer JWT
+            var claimsDict = new Dictionary<string, object>
+            {
+                { "sub", user.Email },
+                { "email", user.Email },
+                { "name", $"{user.FirstName} {user.LastName}" },
+                { "role", user.Role }
+            };
+            
+            var jwtToken = JwtTokenGenerator.GenerateToken(claimsDict);
 
             var response = new SignInResponse
             {
-                AccessToken = result.AccessToken,
-                RefreshToken = result.RefreshToken,
-                IdToken = result.IdToken,
-                ExpiresIn = result.ExpiresIn,
-                TokenType = result.TokenType
+                AccessToken = jwtToken,
+                RefreshToken = "temp-refresh-token-" + Guid.NewGuid().ToString().Substring(0, 8),
+                IdToken = jwtToken,
+                ExpiresIn = 3600,
+                TokenType = "Bearer",
+                User = new { id = user.Id, email = user.Email, firstName = user.FirstName, lastName = user.LastName }
             };
 
             _logger.LogInformation("User {Username} signed in successfully", request.Username);
             return Ok(response);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Unauthorized(new { error = "Invalid credentials" });
         }
         catch (Exception ex)
         {
@@ -66,35 +80,111 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("signup")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(AuthSignUpResponse), 200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequestDto request)
     {
+        // Valider les champs requis
+        var name = request.Name ?? $"{request.FirstName} {request.LastName}".Trim();
+        
         if (string.IsNullOrWhiteSpace(request.Email) || 
             string.IsNullOrWhiteSpace(request.Password) ||
-            string.IsNullOrWhiteSpace(request.Name))
+            string.IsNullOrWhiteSpace(name))
         {
             return BadRequest(new { error = "Email, password, and name are required" });
         }
 
         try
         {
-            var result = await _authService.SignUpAsync(request.Email, request.Password, request.Name);
+            // Enregistrer l'utilisateur
+            var (success, message, user) = await _authService.RegisterAsync(
+                request.Email, 
+                request.Password, 
+                request.FirstName ?? "", 
+                request.LastName ?? "", 
+                request.Phone
+            );
 
-            return Ok(new
+            if (!success || user == null)
             {
-                message = "User created successfully. Please check your email for confirmation code."
+                return BadRequest(new { error = message });
+            }
+
+            // Générer un code de vérification (6 chiffres)
+            var verificationCode = new Random().Next(100000, 999999).ToString();
+
+            // Envoyer l'email de vérification
+            await _authService.SendVerificationEmailAsync(user.Email, verificationCode);
+
+            // Générer un JWT pour l'app
+            var claimsDict = new Dictionary<string, object>
+            {
+                { "sub", user.Email },
+                { "email", user.Email },
+                { "name", name },
+                { "email_verified", false },
+                { "role", "user" }
+            };
+            
+            var jwtToken = JwtTokenGenerator.GenerateToken(claimsDict);
+
+            return Ok(new AuthSignUpResponse
+            {
+                Message = "User created successfully. Please check your email for confirmation code.",
+                Token = jwtToken,
+                RefreshToken = "temp-refresh-token-" + Guid.NewGuid().ToString().Substring(0, 8),
+                User = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    firstName = user.FirstName ?? "",
+                    lastName = user.LastName ?? "",
+                    role = user.Role,
+                    isEmailVerified = user.IsEmailVerified
+                }
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during sign up");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Confirme l'email avec le code envoyé par email
+    /// </summary>
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
+        {
+            return BadRequest(new { error = "Email and code are required" });
+        }
+
+        try
+        {
+            var (success, message) = await _authService.VerifyEmailAsync(request.Email, request.Code);
+
+            if (!success)
+            {
+                return BadRequest(new { error = message });
+            }
+
+            return Ok(new { message = "Email verified successfully. You can now sign in." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verifying email");
             return StatusCode(500, new { error = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// Confirme l'inscription avec le code envoyé par email
+    /// Confirme l'inscription avec le code envoyé par email (legacy)
     /// </summary>
     [HttpPost("confirm")]
     [AllowAnonymous]
@@ -102,22 +192,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> ConfirmSignUp([FromBody] ConfirmSignUpRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.ConfirmationCode))
+        // Rediriger vers verify-email
+        var verifyRequest = new VerifyEmailRequestDto
         {
-            return BadRequest(new { error = "Username and confirmation code are required" });
-        }
+            Email = request.Username,
+            Code = request.ConfirmationCode
+        };
 
-        try
-        {
-            var result = await _authService.ConfirmSignUpAsync(request.Username, request.ConfirmationCode);
-
-            return Ok(new { message = "Account confirmed successfully. You can now sign in." });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error confirming sign up");
-            return StatusCode(500, new { error = "Internal server error" });
-        }
+        return await VerifyEmail(verifyRequest);
     }
 
     /// <summary>

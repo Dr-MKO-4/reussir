@@ -6,7 +6,7 @@ import Card from '../../components/common/Card';
 import SearchBar from '../../components/common/SearchBar';
 import Pagination from '../../components/common/Pagination';
 import useApi from '../../hooks/useApi';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import styles from './AdminPage.module.css';
 
 // ==================== TYPES ====================

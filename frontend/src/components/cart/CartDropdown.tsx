@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 // Update the path below to the correct relative path if needed
-import { useCart } from '../../contexts/CartContext';
+import { useToast } from '../../components/ui/Toast';
 import { X, ShoppingBag } from 'lucide-react';
 import {Button} from '../common/Button';
 import './CartDropdown.css';

@@ -83,7 +83,7 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/signin', {
+      const response = await api.post<AuthResponse>('/auth/signin', {
         email: credentials.email,
         password: credentials.password,
       });
@@ -102,7 +102,7 @@ class AuthService {
    */
   async signup(data: SignupData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/signup', {
+      const response = await api.post<any>('/auth/signup', {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -112,9 +112,23 @@ class AuthService {
         role: data.role || 'student',
       });
       
-      this.saveAuthData(response);
+      // Transformer la réponse signup en AuthResponse
+      const authResponse: AuthResponse = {
+        token: response.token,
+        refreshToken: response.refreshToken,
+        user: response.user || {
+          id: 0,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          role: data.role || 'student'
+        }
+      };
       
-      return response;
+      this.saveAuthData(authResponse);
+      
+      return authResponse;
     } catch (error) {
       console.error('[Auth Service] Signup error:', error);
       throw error;
@@ -126,7 +140,7 @@ class AuthService {
    */
   async googleLogin(data: GoogleAuthData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/google', data);
+      const response = await api.post<AuthResponse>('/auth/google', data);
       
       this.saveAuthData(response);
       
@@ -142,7 +156,7 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      await api.post('/api/auth/logout', {
+      await api.post('/auth/logout', {
         refreshToken: this.getRefreshToken(),
       });
     } catch (error) {
@@ -163,7 +177,7 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await api.post<AuthTokens>('/api/auth/refresh', {
+      const response = await api.post<AuthTokens>('/auth/refresh', {
         refreshToken,
       });
 
@@ -182,7 +196,7 @@ class AuthService {
    */
   async forgotPassword(data: ForgotPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/forgot-password', data);
+      await api.post('/auth/forgot-password', data);
     } catch (error) {
       console.error('[Auth Service] Forgot password error:', error);
       throw error;
@@ -194,7 +208,7 @@ class AuthService {
    */
   async resetPassword(data: ResetPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/reset-password', {
+      await api.post('/auth/reset-password', {
         token: data.token,
         password: data.password,
         confirmPassword: data.confirmPassword,
@@ -210,7 +224,7 @@ class AuthService {
    */
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/change-password', {
+      await api.post('/auth/change-password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
@@ -226,7 +240,7 @@ class AuthService {
    */
   async verifyEmail(data: VerifyEmailData): Promise<void> {
     try {
-      await api.post('/api/auth/verify-email', data);
+      await api.post('/auth/verify-email', data);
       
       const user = this.getCurrentUser();
       if (user) {
@@ -244,7 +258,7 @@ class AuthService {
    */
   async resendVerificationEmail(): Promise<void> {
     try {
-      await api.post('/api/auth/resend-verification');
+      await api.post('/auth/resend-verification');
     } catch (error) {
       console.error('[Auth Service] Resend verification error:', error);
       throw error;
@@ -286,14 +300,18 @@ class AuthService {
    * Récupérer le token d'accès
    */
   getToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    const token = localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    // Éviter de retourner "undefined" string
+    return (token && token !== 'undefined') ? token : null;
   }
 
   /**
    * Récupérer le refresh token
    */
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    const refreshToken = localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    // Éviter de retourner "undefined" string
+    return (refreshToken && refreshToken !== 'undefined') ? refreshToken : null;
   }
 
   /**
@@ -302,7 +320,13 @@ class AuthService {
   getCurrentUser(): User | null {
     try {
       const userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
-      return userJson ? JSON.parse(userJson) : null;
+      
+      // Éviter de parser "undefined" ou null
+      if (!userJson || userJson === 'undefined') {
+        return null;
+      }
+      
+      return JSON.parse(userJson);
     } catch (error) {
       console.error('[Auth Service] Error parsing user from storage:', error);
       return null;
