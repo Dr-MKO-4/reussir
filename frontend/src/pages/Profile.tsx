@@ -1,13 +1,13 @@
 // src/pages/Profile.tsx
 import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth';
-import { useToast } from '../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Tabs from '../components/common/Tabs';
 import styles from './Profile.module.css';
+import { useToast } from '../components/ui/Toast';
 
 // ==================== TYPES ====================
 interface NotificationSettings {

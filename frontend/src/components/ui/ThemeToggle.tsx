@@ -1,7 +1,7 @@
 // src/components/ui/ThemeToggle.tsx
 
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../components/ui/Toast';
 import styles from './ThemeToggle.module.css';
 
 interface ThemeToggleProps {

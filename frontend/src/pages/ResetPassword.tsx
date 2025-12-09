@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
 import BackgroundAnimation from '../components/ui/BackgroundAnimation';
 import HeroSection from '../components/auth/HeroSection';
 import PasswordResetForm from '../components/auth/PasswordResetForm';
