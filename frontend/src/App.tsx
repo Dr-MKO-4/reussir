@@ -64,7 +64,7 @@ import Terms from './pages/Terms';
 import SubjectList from './pages/SubjectList';
 import Cookies from './pages/Cookies';
 import CatalogPage from './pages/CatalogPage';
-import VerifyCode from './pages/VerifyCode';
+
 // Route de protection pour rediriger les utilisateurs connectés
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();

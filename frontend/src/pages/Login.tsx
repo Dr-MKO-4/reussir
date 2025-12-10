@@ -95,22 +95,15 @@ const Login = () => {
         return;
       }
 
-      // Redirect based on user role
-      switch (response.user.role) {
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'teacher':
-          navigate('/teacher/dashboard');
-          break;
-        case 'parent':
-          navigate('/parent/dashboard');
-          break;
-        case 'student':
-        default:
-          navigate('/dashboard');
-          break;
+      // Charger le profil complet de l'utilisateur
+      try {
+        await authService.getCurrentUserProfile();
+      } catch (err) {
+        console.warn('Could not fetch full profile, but user is logged in');
       }
+
+      // Rediriger vers home
+      navigate('/home', { replace: true });
     } catch (err: any) {
       console.error('Erreur connexion:', err);
       

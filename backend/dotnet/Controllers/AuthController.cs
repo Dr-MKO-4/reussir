@@ -52,6 +52,28 @@ public class AuthController : ControllerBase
                 return Unauthorized(new { error = message });
             }
 
+            // Si l'email n'est pas vérifié, envoyer un code de vérification
+            if (!user.IsEmailVerified)
+            {
+                try
+                {
+                    // Générer un nouveau code de vérification
+                    var verificationCode = new Random().Next(100000, 999999).ToString();
+                    user.VerificationCode = verificationCode;
+                    user.VerificationCodeExpiredAt = DateTime.UtcNow.AddHours(24);
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                    
+                    await _authService.SendVerificationEmailAsync(user.Email, verificationCode);
+                    _logger.LogInformation("Verification email sent to {Email} on login", user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send verification email on login for {Email}", user.Email);
+                    // Continuer même si l'email ne s'envoie pas
+                }
+            }
+
             // Générer JWT
             var claimsDict = new Dictionary<string, object>
             {
@@ -70,7 +92,7 @@ public class AuthController : ControllerBase
                 IdToken = jwtToken,
                 ExpiresIn = 3600,
                 TokenType = "Bearer",
-                User = new { id = user.Id, email = user.Email, firstName = user.FirstName, lastName = user.LastName }
+                User = new { id = user.Id, email = user.Email, firstName = user.FirstName, lastName = user.LastName, isEmailVerified = user.IsEmailVerified }
             };
 
             _logger.LogInformation("User {Username} signed in successfully", request.Username);

@@ -68,6 +68,14 @@ export const Card: React.FC<CardProps> = ({
     isPressable ? 'card-pressable' : '',
     onClick ? 'card-clickable' : '',
     className,
+  ].filter(Boolean).join(' ');
+
+  return (
+    <Component
+      className={classes}
+      onClick={onClick}
+      {...rest}
+    >
   ]
     .filter(Boolean)
     .join(' ');

@@ -89,7 +89,8 @@ class AuthService {
         password: credentials.password,
       });
       
-      this.saveAuthData(response);
+      // Utiliser localStorage ou sessionStorage selon rememberMe
+      this.saveAuthData(response, credentials.rememberMe === true);
       
       return response;
     } catch (error) {
@@ -127,7 +128,8 @@ class AuthService {
         }
       };
       
-      this.saveAuthData(authResponse);
+      // Pour l'inscription, utiliser sessionStorage (pas de persist par défaut)
+      this.saveAuthData(authResponse, false);
       
       return authResponse;
     } catch (error) {
@@ -251,6 +253,12 @@ class AuthService {
         user.isEmailVerified = true;
         this.saveUser(user);
       }
+      
+      // Nettoyer les tokens après vérification (forcer un nouveau login)
+      [localStorage, sessionStorage].forEach(storage => {
+        storage.removeItem(this.STORAGE_KEYS.TOKEN);
+        storage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+      });
     } catch (error) {
       console.error('[Auth Service] Verify email error:', error);
       throw error;
@@ -304,8 +312,12 @@ class AuthService {
    * Récupérer le token d'accès
    */
   getToken(): string | null {
-    const token = localStorage.getItem(this.STORAGE_KEYS.TOKEN);
-    // Éviter de retourner "undefined" string
+    // Vérifier d'abord localStorage (persistent)
+    let token = localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    if (token && token !== 'undefined') return token;
+    
+    // Puis sessionStorage (session only)
+    token = sessionStorage.getItem(this.STORAGE_KEYS.TOKEN);
     return (token && token !== 'undefined') ? token : null;
   }
 
@@ -313,8 +325,12 @@ class AuthService {
    * Récupérer le refresh token
    */
   getRefreshToken(): string | null {
-    const refreshToken = localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
-    // Éviter de retourner "undefined" string
+    // Vérifier d'abord localStorage (persistent)
+    let refreshToken = localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    if (refreshToken && refreshToken !== 'undefined') return refreshToken;
+    
+    // Puis sessionStorage (session only)
+    refreshToken = sessionStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
     return (refreshToken && refreshToken !== 'undefined') ? refreshToken : null;
   }
 
@@ -323,7 +339,12 @@ class AuthService {
    */
   getCurrentUser(): User | null {
     try {
-      const userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
+      // Vérifier d'abord localStorage (persistent)
+      let userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
+      if (!userJson) {
+        // Puis sessionStorage (session only)
+        userJson = sessionStorage.getItem(this.STORAGE_KEYS.USER);
+      }
       
       // Éviter de parser "undefined" ou null
       if (!userJson || userJson === 'undefined') {
@@ -355,11 +376,14 @@ class AuthService {
 
   /**
    * Sauvegarder les données d'authentification
+   * @param authResponse Les données d'auth
+   * @param persist Si true, utilise localStorage (persiste). Si false, utilise sessionStorage (session seulement)
    */
-  private saveAuthData(authResponse: AuthResponse): void {
-    localStorage.setItem(this.STORAGE_KEYS.TOKEN, authResponse.token);
-    localStorage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
-    this.saveUser(authResponse.user);
+  private saveAuthData(authResponse: AuthResponse, persist: boolean = false): void {
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(this.STORAGE_KEYS.TOKEN, authResponse.token);
+    storage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
+    this.saveUser(authResponse.user, persist);
   }
 
   /**
@@ -372,18 +396,24 @@ class AuthService {
 
   /**
    * Sauvegarder l'utilisateur
+   * @param user L'utilisateur
+   * @param persist Si true, utilise localStorage. Si false, utilise sessionStorage
    */
-  private saveUser(user: User): void {
-    localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
+  private saveUser(user: User, persist: boolean = false): void {
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
   }
 
   /**
    * Nettoyer toutes les données d'authentification
    */
   private clearAuthData(): void {
-    localStorage.removeItem(this.STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
-    localStorage.removeItem(this.STORAGE_KEYS.USER);
+    // Nettoyer localStorage et sessionStorage
+    [localStorage, sessionStorage].forEach(storage => {
+      storage.removeItem(this.STORAGE_KEYS.TOKEN);
+      storage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+      storage.removeItem(this.STORAGE_KEYS.USER);
+    });
   }
 
   /**

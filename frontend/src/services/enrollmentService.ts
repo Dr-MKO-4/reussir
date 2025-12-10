@@ -22,7 +22,7 @@ const enrollmentService = {
    * @param userId - ID de l'utilisateur
    */
   getUserEnrollments: async (userId: number) => {
-    return api.get(`/api/enrollments/user/${userId}`);
+    return api.get(`/enrollments/user/${userId}`);
   },
 
   /**
@@ -32,7 +32,7 @@ const enrollmentService = {
    */
   isEnrolled: async (userId: number, subjectId: number) => {
     try {
-      const response = await api.get(`/api/enrollments/${userId}/${subjectId}`);
+      const response = await api.get(`/enrollments/${userId}/${subjectId}`);
       return response.data ? true : false;
     } catch (error) {
       return false;
@@ -45,7 +45,7 @@ const enrollmentService = {
    * @param subjectId - ID du cours/sujet
    */
   getEnrollment: async (userId: number, subjectId: number) => {
-    return api.get(`/api/enrollments/${userId}/${subjectId}`);
+    return api.get(`/enrollments/${userId}/${subjectId}`);
   },
 };
 

@@ -31,42 +31,42 @@ const catalogService = {
     queryParams.append('limit', String(limit));
     queryParams.append('sort', sort);
 
-    return api.get(`/api/subjects/search?${queryParams}`);
+    return api.get(`/subjects/search?${queryParams}`);
   },
 
   /**
    * Obtenir tous les sujets
    */
   getAllSubjects: async (page = 1, limit = 20) => {
-    return api.get(`/api/subjects?page=${page}&limit=${limit}`);
+    return api.get(`/subjects?page=${page}&limit=${limit}`);
   },
 
   /**
    * Obtenir les détails d'un sujet
    */
   getSubjectDetails: async (subjectId: string) => {
-    return api.get(`/api/subjects/${subjectId}`);
+    return api.get(`/subjects/${subjectId}`);
   },
 
   /**
    * Obtenir les sujets par catégorie
    */
   getSubjectsByCategory: async (categoryName: string, page = 1, limit = 20) => {
-    return api.get(`/api/subjects/category/${categoryName}?page=${page}&limit=${limit}`);
+    return api.get(`/subjects/category/${categoryName}?page=${page}&limit=${limit}`);
   },
 
   /**
    * Obtenir les sujets populaires
    */
   getPopularSubjects: async (limit = 10) => {
-    return api.get(`/api/subjects?sort=popular&limit=${limit}`);
+    return api.get(`/subjects?sort=popular&limit=${limit}`);
   },
 
   /**
    * Obtenir les sujets récents
    */
   getRecentSubjects: async (limit = 10) => {
-    return api.get(`/api/subjects?sort=recent&limit=${limit}`);
+    return api.get(`/subjects?sort=recent&limit=${limit}`);
   },
 
   /**
@@ -110,7 +110,7 @@ const catalogService = {
    * Supprimer un sujet (Admin)
    */
   deleteSubject: async (subjectId: string) => {
-    return api.delete(`/api/subjects/${subjectId}`);
+    return api.delete(`/subjects/${subjectId}`);
   },
 
   // ==================== FAVORIS ====================
@@ -133,7 +133,7 @@ const catalogService = {
    * Retirer un sujet des favoris
    */
   removeFromFavorites: async (subjectId: string) => {
-    return api.delete(`/api/favorites/${subjectId}`);
+    return api.delete(`/favorites/${subjectId}`);
   },
 
   // ==================== HISTORIQUE ====================
@@ -149,14 +149,14 @@ const catalogService = {
     });
     if (type) queryParams.append('type', type);
     
-    return api.get(`/api/history?${queryParams}`);
+    return api.get(`/history?${queryParams}`);
   },
 
   /**
    * Obtenir l'historique par type
    */
   getHistoryByType: async (type: string) => {
-    return api.get(`/api/history/${type}`);
+    return api.get(`/history/${type}`);
   },
 
   /**
