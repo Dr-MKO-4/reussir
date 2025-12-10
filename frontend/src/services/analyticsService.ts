@@ -231,7 +231,7 @@ class AnalyticsService {
 
   private static async sendEvent(eventName: string, eventData: Record<string, any>): Promise<void> {
     try {
-      await api.post('/api/analytics/track', {
+      await api.post('/analytics/track', {
         eventName,
         eventData,
         timestamp: Date.now(),

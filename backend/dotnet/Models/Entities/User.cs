@@ -7,13 +7,29 @@ public class User
 {
     public int Id { get; set; }
     
-    public required string CognitoId { get; set; }
+    public string? CognitoId { get; set; } // Optional - for Cognito users
     
     public required string Email { get; set; }
+    
+    public string? PasswordHash { get; set; } // For local authentication
     
     public string? FirstName { get; set; }
     
     public string? LastName { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string Role { get; set; } = "user"; // user, admin, teacher
+
+    public bool IsEmailVerified { get; set; } = false;
+
+    public DateTime? VerifiedAt { get; set; }
+
+    public DateTime? LastLoginAt { get; set; }
+
+    public string? VerificationCode { get; set; } // Code temporaire pour vérifier l'email
+
+    public DateTime? VerificationCodeExpiredAt { get; set; } // Expiration du code
     
     public string? ProfileImageUrl { get; set; }
     

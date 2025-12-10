@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
-import Button from '@/components/common/Button';
+import MainLayout from '../components/layout/MainLayout';
+import Button from '../components/common/Button';
 import styles from './Pricing.module.css';
 
 interface PricingPlan {

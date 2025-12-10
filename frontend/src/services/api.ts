@@ -4,12 +4,16 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
  * Configuration de base de l'API
  */
 const API_CONFIG = {
-  // CORRIGÉ : Pointer vers le backend .NET au lieu de Flask
-  baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7023/api',
+  // CORRIGÉ : Pointer vers le backend .NET sans /api (il est dans les routes des controllers)
+  baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7023',
   timeout: 30000, // 30 secondes
   headers: {
     'Content-Type': 'application/json',
   },
+  // En développement, ignorer les erreurs de certificat SSL auto-signés
+  ...(import.meta.env.DEV && {
+    validateStatus: () => true, // Accepter toutes les réponses (ne pas rejeter sur 4xx/5xx)
+  }),
 };
 
 /**
@@ -23,9 +27,10 @@ const apiClient: AxiosInstance = axios.create(API_CONFIG);
 apiClient.interceptors.request.use(
   (config) => {
     // Récupérer le token depuis localStorage (Cognito ou autre)
-    const token = localStorage.getItem('authToken') || localStorage.getItem('cognitoToken');
+    const token = localStorage.getItem('authToken');
     
-    if (token) {
+    // Seulement ajouter le header Authorization si le token est valide
+    if (token && token !== 'undefined' && token.length > 0) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 

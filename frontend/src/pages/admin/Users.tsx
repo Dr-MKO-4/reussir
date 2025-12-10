@@ -7,7 +7,7 @@ import SearchBar from '../../components/common/SearchBar';
 import Pagination from '../../components/common/Pagination';
 import useApi from '../../hooks/useApi';
 import useAuth from '../../hooks/useAuth';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import styles from './AdminPage.module.css';
 
 // ==================== TYPES ====================

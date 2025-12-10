@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import styles from './PasswordResetForm.module.css';
 
 interface PasswordResetFormProps {

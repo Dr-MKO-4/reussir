@@ -1,4 +1,4 @@
--- Create all tables for the reussir application
+-- Create all tables for the winplus application
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,

@@ -9,7 +9,7 @@ namespace Backend.Services;
 /// </summary>
 public interface IAnalyticsService
 {
-    Task<AnalyticsEventResponse> TrackEventAsync(int userId, TrackEventRequest request);
+    Task<AnalyticsEventResponse> TrackEventAsync(int? userId, TrackEventRequest request);
     Task<SessionStatsResponse> GetSessionStatsAsync(int userId);
     Task<UserAnalyticsResponse> GetUserAnalyticsAsync(int userId);
     Task<List<AnalyticsEventResponse>> GetRecentEventsAsync(int limit = 20);
@@ -34,20 +34,20 @@ public class AnalyticsService : IAnalyticsService
     /// <summary>
     /// Enregistre un événement analytics
     /// </summary>
-    public async Task<AnalyticsEventResponse> TrackEventAsync(int userId, TrackEventRequest request)
+    public async Task<AnalyticsEventResponse> TrackEventAsync(int? userId, TrackEventRequest request)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.EventType))
-                throw new ArgumentException("EventType is required");
-
             if (string.IsNullOrWhiteSpace(request.EventName))
                 throw new ArgumentException("EventName is required");
+
+            // EventType est optionnel - défaut à EventName si non fourni
+            var eventType = !string.IsNullOrWhiteSpace(request.EventType) ? request.EventType : request.EventName;
 
             var analyticsEvent = new AnalyticsEvent
             {
                 UserId = userId,
-                EventType = request.EventType,
+                EventType = eventType,
                 EventName = request.EventName,
                 EventCategory = request.EventCategory,
                 IpAddress = request.IpAddress,

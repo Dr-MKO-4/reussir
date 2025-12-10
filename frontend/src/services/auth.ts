@@ -61,7 +61,8 @@ export interface ChangePasswordData {
 }
 
 export interface VerifyEmailData {
-  token: string;
+  email: string;
+  code: string;
 }
 
 export interface GoogleAuthData {
@@ -83,12 +84,13 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/signin', {
-        email: credentials.email,
+      const response = await api.post<AuthResponse>('/auth/signin', {
+        username: credentials.email,
         password: credentials.password,
       });
       
-      this.saveAuthData(response);
+      // Utiliser localStorage ou sessionStorage selon rememberMe
+      this.saveAuthData(response, credentials.rememberMe === true);
       
       return response;
     } catch (error) {
@@ -102,7 +104,7 @@ class AuthService {
    */
   async signup(data: SignupData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/signup', {
+      const response = await api.post<any>('/auth/signup', {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -112,9 +114,24 @@ class AuthService {
         role: data.role || 'student',
       });
       
-      this.saveAuthData(response);
+      // Transformer la réponse signup en AuthResponse
+      const authResponse: AuthResponse = {
+        token: response.token,
+        refreshToken: response.refreshToken,
+        user: response.user || {
+          id: 0,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          role: data.role || 'student'
+        }
+      };
       
-      return response;
+      // Pour l'inscription, utiliser sessionStorage (pas de persist par défaut)
+      this.saveAuthData(authResponse, false);
+      
+      return authResponse;
     } catch (error) {
       console.error('[Auth Service] Signup error:', error);
       throw error;
@@ -126,7 +143,7 @@ class AuthService {
    */
   async googleLogin(data: GoogleAuthData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/google', data);
+      const response = await api.post<AuthResponse>('/auth/google', data);
       
       this.saveAuthData(response);
       
@@ -142,7 +159,7 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      await api.post('/api/auth/logout', {
+      await api.post('/auth/logout', {
         refreshToken: this.getRefreshToken(),
       });
     } catch (error) {
@@ -163,7 +180,7 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await api.post<AuthTokens>('/api/auth/refresh', {
+      const response = await api.post<AuthTokens>('/auth/refresh', {
         refreshToken,
       });
 
@@ -182,7 +199,7 @@ class AuthService {
    */
   async forgotPassword(data: ForgotPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/forgot-password', data);
+      await api.post('/auth/forgot-password', data);
     } catch (error) {
       console.error('[Auth Service] Forgot password error:', error);
       throw error;
@@ -194,7 +211,7 @@ class AuthService {
    */
   async resetPassword(data: ResetPasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/reset-password', {
+      await api.post('/auth/reset-password', {
         token: data.token,
         password: data.password,
         confirmPassword: data.confirmPassword,
@@ -210,7 +227,7 @@ class AuthService {
    */
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await api.post('/api/auth/change-password', {
+      await api.post('/auth/change-password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
@@ -222,17 +239,26 @@ class AuthService {
   }
 
   /**
-   * Vérifier l'email
+   * Vérifier l'email avec code
    */
   async verifyEmail(data: VerifyEmailData): Promise<void> {
     try {
-      await api.post('/api/auth/verify-email', data);
+      await api.post('/auth/verify-email', {
+        email: data.email,
+        code: data.code,
+      });
       
       const user = this.getCurrentUser();
       if (user) {
         user.isEmailVerified = true;
         this.saveUser(user);
       }
+      
+      // Nettoyer les tokens après vérification (forcer un nouveau login)
+      [localStorage, sessionStorage].forEach(storage => {
+        storage.removeItem(this.STORAGE_KEYS.TOKEN);
+        storage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+      });
     } catch (error) {
       console.error('[Auth Service] Verify email error:', error);
       throw error;
@@ -242,9 +268,9 @@ class AuthService {
   /**
    * Renvoyer l'email de vérification
    */
-  async resendVerificationEmail(): Promise<void> {
+  async resendVerificationEmail(email: string): Promise<void> {
     try {
-      await api.post('/api/auth/resend-verification');
+      await api.post('/auth/resend-verification', { email });
     } catch (error) {
       console.error('[Auth Service] Resend verification error:', error);
       throw error;
@@ -256,7 +282,7 @@ class AuthService {
    */
   async getCurrentUserProfile(): Promise<User> {
     try {
-      const user = await api.get<User>('/api/users/profile');
+      const user = await api.get<User>('/users/profile');
       
       this.saveUser(user);
       
@@ -286,14 +312,26 @@ class AuthService {
    * Récupérer le token d'accès
    */
   getToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    // Vérifier d'abord localStorage (persistent)
+    let token = localStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    if (token && token !== 'undefined') return token;
+    
+    // Puis sessionStorage (session only)
+    token = sessionStorage.getItem(this.STORAGE_KEYS.TOKEN);
+    return (token && token !== 'undefined') ? token : null;
   }
 
   /**
    * Récupérer le refresh token
    */
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    // Vérifier d'abord localStorage (persistent)
+    let refreshToken = localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    if (refreshToken && refreshToken !== 'undefined') return refreshToken;
+    
+    // Puis sessionStorage (session only)
+    refreshToken = sessionStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+    return (refreshToken && refreshToken !== 'undefined') ? refreshToken : null;
   }
 
   /**
@@ -301,8 +339,19 @@ class AuthService {
    */
   getCurrentUser(): User | null {
     try {
-      const userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
-      return userJson ? JSON.parse(userJson) : null;
+      // Vérifier d'abord localStorage (persistent)
+      let userJson = localStorage.getItem(this.STORAGE_KEYS.USER);
+      if (!userJson) {
+        // Puis sessionStorage (session only)
+        userJson = sessionStorage.getItem(this.STORAGE_KEYS.USER);
+      }
+      
+      // Éviter de parser "undefined" ou null
+      if (!userJson || userJson === 'undefined') {
+        return null;
+      }
+      
+      return JSON.parse(userJson);
     } catch (error) {
       console.error('[Auth Service] Error parsing user from storage:', error);
       return null;
@@ -327,11 +376,14 @@ class AuthService {
 
   /**
    * Sauvegarder les données d'authentification
+   * @param authResponse Les données d'auth
+   * @param persist Si true, utilise localStorage (persiste). Si false, utilise sessionStorage (session seulement)
    */
-  private saveAuthData(authResponse: AuthResponse): void {
-    localStorage.setItem(this.STORAGE_KEYS.TOKEN, authResponse.token);
-    localStorage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
-    this.saveUser(authResponse.user);
+  private saveAuthData(authResponse: AuthResponse, persist: boolean = false): void {
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(this.STORAGE_KEYS.TOKEN, authResponse.token);
+    storage.setItem(this.STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
+    this.saveUser(authResponse.user, persist);
   }
 
   /**
@@ -344,18 +396,24 @@ class AuthService {
 
   /**
    * Sauvegarder l'utilisateur
+   * @param user L'utilisateur
+   * @param persist Si true, utilise localStorage. Si false, utilise sessionStorage
    */
-  private saveUser(user: User): void {
-    localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
+  private saveUser(user: User, persist: boolean = false): void {
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
   }
 
   /**
    * Nettoyer toutes les données d'authentification
    */
   private clearAuthData(): void {
-    localStorage.removeItem(this.STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
-    localStorage.removeItem(this.STORAGE_KEYS.USER);
+    // Nettoyer localStorage et sessionStorage
+    [localStorage, sessionStorage].forEach(storage => {
+      storage.removeItem(this.STORAGE_KEYS.TOKEN);
+      storage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
+      storage.removeItem(this.STORAGE_KEYS.USER);
+    });
   }
 
   /**

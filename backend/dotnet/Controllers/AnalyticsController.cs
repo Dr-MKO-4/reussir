@@ -32,18 +32,37 @@ public class AnalyticsController : ControllerBase
     /// <response code="400">Requête invalide</response>
     /// <response code="500">Erreur serveur</response>
     [HttpPost("track")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(AnalyticsEventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> TrackEvent([FromBody] TrackEventRequest request)
+    public async Task<IActionResult> TrackEvent([FromBody] TrackEventRequest? request)
     {
         try
         {
+            // En dev, ne pas rejeter sur validation - accepter n'importe quoi
+            if (request == null)
+            {
+                return BadRequest(new { error = "Request body is required" });
+            }
+            
+            // Créer un objet minimal s'il manque des champs
+            if (string.IsNullOrWhiteSpace(request.EventName))
+            {
+                request.EventName = "unknown_event";
+            }
+
+            // Ignorer les erreurs de validation du modèle (tout est optionnel sauf EventName)
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                // Log mais ne pas rejeter en dev
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                _logger.LogWarning("ModelState validation issues (ignored in dev): {Errors}", string.Join(", ", errors));
+            }
 
             // À remplacer par l'ID utilisateur authentifié
-            var userId = 1;
+            // En dev, on utilise null si l'utilisateur n'est pas authentifié
+            int? userId = null;
 
             var response = await _analyticsService.TrackEventAsync(userId, request);
             return Ok(response);

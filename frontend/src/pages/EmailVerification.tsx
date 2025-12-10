@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import { useToast } from '../contexts/ToastContext';
 import BackgroundAnimation from '../components/ui/BackgroundAnimation';
 import Modal from '../components/ui/Modal';
 import styles from './EmailVerification.module.css';
+import { useToast } from '../components/ui/Toast';
 
 // Types pour les états de vérification
 type VerificationState = 'initial' | 'verifying' | 'success' | 'error' | 'expired' | 'resend' | 'already_verified';
@@ -31,11 +31,19 @@ const EmailVerification: React.FC<EmailVerificationProps> = () => {
   const verificationInProgress = useRef(false);
   const verificationCompleted = useRef(false);
 
-  // Récupérer le token depuis les paramètres URL ou query string
+  // Récupérer le token depuis les paramètres URL, query string, ou localStorage
   const getToken = useCallback((): string | null => {
+    // D'abord vérifier l'URL
     if (urlToken) return urlToken;
     const queryToken = searchParams.get('token');
     if (queryToken) return queryToken;
+    // Ensuite vérifier localStorage (pour les signups)
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      if (storedToken && storedToken !== 'undefined') return storedToken;
+    } catch (e) {
+      console.warn('localStorage access failed:', e);
+    }
     return null;
   }, [urlToken, searchParams]);
 
@@ -191,7 +199,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = () => {
       setResendLoading(true);
       
       // Appel API direct au lieu d'utiliser le contexte
-      const response = await fetch('/api/auth/resend-verification-public', {
+      const response = await fetch('/auth/resend-verification-public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

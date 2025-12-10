@@ -16,10 +16,11 @@ const Login = () => {
   const [emailValid, setEmailValid] = useState<boolean | null>(null);
   const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
 
-  // Validation de l'email
+  // Validation de l'email ou username
   const validateEmail = (email: string) => {
+    // Accepter soit un email valide soit un username (minimum 3 caractères)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(email) || email.length >= 3;
   };
 
   // Validation du mot de passe
@@ -94,22 +95,15 @@ const Login = () => {
         return;
       }
 
-      // Redirect based on user role
-      switch (response.user.role) {
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'teacher':
-          navigate('/teacher/dashboard');
-          break;
-        case 'parent':
-          navigate('/parent/dashboard');
-          break;
-        case 'student':
-        default:
-          navigate('/dashboard');
-          break;
+      // Charger le profil complet de l'utilisateur
+      try {
+        await authService.getCurrentUserProfile();
+      } catch (err) {
+        console.warn('Could not fetch full profile, but user is logged in');
       }
+
+      // Rediriger vers home
+      navigate('/home', { replace: true });
     } catch (err: any) {
       console.error('Erreur connexion:', err);
       
@@ -281,17 +275,17 @@ const Login = () => {
           )}
 
           <form className={styles.loginForm} onSubmit={handleSubmit}>
-            {/* Champ Email */}
+            {/* Champ Email ou Username */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel} htmlFor="email">
-                Adresse e-mail
+                Adresse e-mail ou nom d'utilisateur
               </label>
               <div className={styles.inputWrapper}>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   className={getInputClass(emailValid)}
-                  placeholder="exemple@domaine.com"
+                  placeholder="exemple@domaine.com ou monusername"
                   value={email}
                   onChange={handleEmailChange}
                   required

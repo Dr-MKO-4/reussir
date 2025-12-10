@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Search, BookOpen, Trophy, Users, Star, Download, Clock, 
@@ -7,6 +8,8 @@ import {
 } from 'lucide-react';
 import styles from './HomePage.module.css';
 import { useNavigate } from 'react-router-dom';
+import { useCartContext } from '../contexts/CartContext';
+import { useToast } from '../hooks/useToast';
 
 const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,11 +19,12 @@ const HomePage = () => {
   const [currentPlanSlide, setCurrentPlanSlide] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const [cartItemsCount, setCartItemsCount] = useState(); // Nombre d'articles dans le panier
+  const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
   
   const navigate = useNavigate();
+  const { cart, addItem } = useCartContext();
+  const { showSuccess, showError } = useToast();
 
-  // Gérer le redimensionnement de la fenêtre
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -30,7 +34,6 @@ const HomePage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Déterminer le nombre de cartes visibles selon la largeur d'écran
   const getVisibleCards = () => {
     if (windowWidth < 900) return 1;
     if (windowWidth < 1024) return 2;
@@ -39,12 +42,10 @@ const HomePage = () => {
 
   const visibleCardsCount = getVisibleCards();
 
-  // Fonction pour gérer la connexion
   const handleLoginClick = () => {
     navigate('/login');
   };
 
-  // Fonction pour gérer l'inscription
   const handleSignupClick = () => {
     navigate('/signup');
   };
@@ -72,47 +73,97 @@ const HomePage = () => {
   };
 
   const freeTests = [
-    {
-      id: 1,
-      title: "Baccalauréat Mathématiques 2023",
-      subject: "mathematiques",
-      class: "terminale",
-      difficulty: "Difficile",
-      duration: "4h",
-      views: 1250,
-      downloads: 890,
-      rating: 4.8,
-      isFree: true,
-      image: testImages.mathematiques
-    },
-    {
-      id: 2,
-      title: "Physique ENSPD 2023",
-      subject: "physique",
-      class: "terminale",
-      difficulty: "Très difficile",
-      duration: "3h",
-      views: 987,
-      downloads: 654,
-      rating: 4.9,
-      isFree: true,
-      image: testImages.physique
-    },
-    {
-      id: 3,
-      title: "Epreuve francais BAC Camerounais 2023",
-      subject: "francais",
-      class: "terminale",
-      difficulty: "Moyen",
-      duration: "2h30",
-      views: 2100,
-      downloads: 1500,
-      rating: 4.6,
-      isFree: true,
-      image: testImages.francais
-    },
-  ];
-
+  {
+    id: '1',
+    title: "Baccalauréat Mathématiques 2023",
+    subject: "mathematiques",
+    class: "terminale",
+    difficulty: "Difficile",
+    duration: "4h",
+    views: 1250,
+    downloads: 890,
+    rating: 4.8,
+    isFree: true,
+    image: testImages.mathematiques,
+    price: 0,
+    description: "Épreuve complète de mathématiques du baccalauréat 2023"
+  },
+  {
+    id: '2',
+    title: "Physique ENSPD 2023",
+    subject: "physique",
+    class: "terminale",
+    difficulty: "Très difficile",
+    duration: "3h",
+    views: 987,
+    downloads: 654,
+    rating: 4.9,
+    isFree: false,
+    image: testImages.physique,
+    price: 3000,
+    description: "Concours ENSPD - Épreuve de physique avancée"
+  },
+  {
+    id: '3',
+    title: "Epreuve français BAC Camerounais 2023",
+    subject: "francais",
+    class: "terminale",
+    difficulty: "Moyen",
+    duration: "2h30",
+    views: 2100,
+    downloads: 1500,
+    rating: 4.6,
+    isFree: true,
+    image: testImages.francais,
+    price: 0,
+    description: "Épreuve de français - Baccalauréat général"
+  },
+  {
+    id: '4',
+    title: "SVT Bepc 2023 - Sciences de la Vie",
+    subject: "svt",
+    class: "college",
+    difficulty: "Facile",
+    duration: "2h",
+    views: 1890,
+    downloads: 1234,
+    rating: 4.5,
+    isFree: true,
+    image: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=400&h=200&fit=crop",
+    price: 0,
+    description: "Épreuve de SVT pour le BEPC - Biologie et géologie"
+  },
+  {
+    id: '5',
+    title: "Anglais Probatoire 2023",
+    subject: "anglais",
+    class: "premiere",
+    difficulty: "Moyen",
+    duration: "2h",
+    views: 1456,
+    downloads: 987,
+    rating: 4.4,
+    isFree: false,
+    image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=400&h=200&fit=crop",
+    price: 2000,
+    description: "Épreuve complète d'anglais du probatoire"
+  },
+  {
+    id: '6',
+    title: "Mathématiques Seconde - Contrôle Continu",
+    subject: "mathematiques",
+    class: "seconde",
+    difficulty: "Moyen",
+    duration: "2h30",
+    views: 1678,
+    downloads: 1123,
+    rating: 4.6,
+    isFree: true,
+    image: testImages.mathematiques,
+    price: 0,
+    description: "Examen de mathématiques pour la classe de seconde"
+  },
+];
   const testimonials = [
     {
       name: "Marie Kouakou",
@@ -249,7 +300,33 @@ const HomePage = () => {
     }
   };
 
-  // Calculer le nombre total de dots pour le carousel
+  const handleAddToCart = async (test: typeof freeTests[0]) => {
+    try {
+      setLoadingItems(prev => ({ ...prev, [test.id]: true }));
+
+      const subjectData = {
+        id: test.id,
+        title: test.title,
+        description: test.description,
+        price: test.price,
+        image: test.image,
+        category: test.subject,
+        level: test.class,
+        difficulty: test.difficulty,
+        rating: test.rating,
+        studentsCount: test.views,
+      };
+
+      await addItem(subjectData, 1);
+      showSuccess(`"${test.title}" ajouté au panier`);
+    } catch (error: any) {
+      console.error('Error adding to cart:', error);
+      showError(error.message || 'Erreur lors de l\'ajout au panier');
+    } finally {
+      setLoadingItems(prev => ({ ...prev, [test.id]: false }));
+    }
+  };
+
   const totalDots = plans.length - visibleCardsCount + 1;
 
   return (
@@ -271,10 +348,14 @@ const HomePage = () => {
               <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>À propos</a>
               <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a>
               
-              <button className={styles.cartBtn} aria-label="Panier">
+              <button 
+                className={styles.cartBtn} 
+                onClick={() => navigate('/cart')}
+                aria-label="Panier"
+              >
                 <ShoppingCart size={20} />
-                {cartItemsCount > 0 && (
-                  <span className={styles.cartBadge}>{cartItemsCount}</span>
+                {cart.itemsCount > 0 && (
+                  <span className={styles.cartBadge}>{cart.itemsCount}</span>
                 )}
               </button>
             </nav>
@@ -291,10 +372,10 @@ const HomePage = () => {
                 />
               </div>
 
-              <button className={styles.cartBtnMobile} aria-label="Panier">
+              <button className={styles.cartBtnMobile} aria-label="Panier" onClick={() => navigate('/cart')}>
                 <ShoppingCart size={22} />
-                {cartItemsCount > 0 && (
-                  <span className={styles.cartBadge}>{cartItemsCount}</span>
+                {cart.itemsCount > 0 && (
+                  <span className={styles.cartBadge}>{cart.itemsCount}</span>
                 )}
               </button>
 
@@ -422,7 +503,7 @@ const HomePage = () => {
             <div className={styles.badge}>
               <BookOpen size={16} /> Catalogue
             </div>
-            <h2 className={styles.sectionTitle}>Épreuves gratuites</h2>
+            <h2 className={styles.sectionTitle}>Épreuves disponibles</h2>
             <p className={styles.sectionSubtitle}>Commencez votre préparation dès maintenant</p>
           </div>
 
@@ -473,10 +554,18 @@ const HomePage = () => {
                       ))}
                       <span>({test.rating})</span>
                     </div>
-                    <span className={styles.freeTag}>GRATUIT</span>
+                    <span style={{ fontWeight: 600, color: 'var(--rp-primary)' }}>
+                      {test.price} FCFA
+                    </span>
                   </div>
-                  <button className={styles.btnCardPrimary}>
-                    <Download size={16} /> Télécharger
+                  {/* CORRECTION : Bouton qui ajoute au panier */}
+                  <button 
+                    className={styles.btnCardPrimary}
+                    onClick={() => handleAddToCart(test)}
+                    disabled={loadingItems[test.id]} // ✅ Chargement individuel par ID
+                  >
+                    <ShoppingCart size={16} /> 
+                    {loadingItems[test.id] ? 'Ajout...' : 'Ajouter au panier'}
                   </button>
                 </div>
               </article>
@@ -484,12 +573,13 @@ const HomePage = () => {
           </div>
 
           <div className={styles.catalogCTA}>
-            <button className={styles.btnLarge}>
+            <button className={styles.btnLarge} onClick={() => navigate('/catalog')}>
               Voir tout le catalogue <ChevronRight size={20} />
             </button>
           </div>
         </div>
       </section>
+
 
       {/* Testimonials */}
       <section className={styles.testimonials}>
@@ -701,12 +791,11 @@ const HomePage = () => {
                 </a>
               </div>
             </div>
-
             <div className={styles.footerSection}>
-              <h4 className={styles.footerHeading}>Win+</h4>
-              <a href="#" className={styles.footerLink}>À propos de Win+</a>
-              <a href="#" className={styles.footerLink}>Statistiques</a>
-              <a href="#" className={styles.footerLink}>Contact</a>
+              <h4 className={styles.footerHeading}>Légal</h4>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} className={styles.footerLink}>Confidentialité</a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} className={styles.footerLink}>Conditions</a>
+              <a href="#" className={styles.footerLink}>Cookies</a>
             </div>
 
             <div className={styles.footerSection}>
@@ -725,18 +814,28 @@ const HomePage = () => {
           </div>
 
           <div className={styles.footerBottom}>
+          <div>
             <p className={styles.footerCopyright}>
               © 2024 Win+. Tous droits réservés.
             </p>
-            <div className={styles.footerBadges}>
-              <span className={styles.footerBadge}>
-                <Shield size={16} /> Sécurisé
-              </span>
-              <span className={styles.footerBadge}>
-                <Award size={16} /> Certifié
-              </span>
+            <div style={{ marginTop: '8px', fontSize: '13px' }}>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', marginRight: '16px', textDecoration: 'none' }}>
+                Politique de confidentialité
+              </a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', textDecoration: 'none' }}>
+                Conditions d'utilisation
+              </a>
             </div>
           </div>
+          <div className={styles.footerBadges}>
+            <span className={styles.footerBadge}>
+              <Shield size={16} /> Sécurisé
+            </span>
+            <span className={styles.footerBadge}>
+              <Award size={16} /> Certifié
+            </span>
+          </div>
+        </div>
         </div>
       </footer>
     </div>

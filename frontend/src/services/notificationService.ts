@@ -31,8 +31,8 @@ interface NotificationPreferences {
 
 // ==================== NOTIFICATION SERVICE ====================
 class NotificationService {
-  private static readonly STORAGE_KEY = 'reussir_notifications';
-  private static readonly PREFERENCES_KEY = 'reussir_notification_preferences';
+  private static readonly STORAGE_KEY = 'winplus_notifications';
+  private static readonly PREFERENCES_KEY = 'winplus_notification_preferences';
   private static listeners: Set<(notifications: Notification[]) => void> = new Set();
 
   /**

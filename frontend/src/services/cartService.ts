@@ -1,238 +1,304 @@
-import { api } from './api';
+// src/services/cartService.ts
+import api from './api';
 
-/**
- * Service de gestion du panier avec backend
- */
+interface Subject {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image?: string;
+  category?: string;
+  level?: string;
+  difficulty?: string;
+  rating?: number;
+  studentsCount?: number;
+}
 
-// ==================== TYPES ====================
-
-export interface CartItem {
+interface CartItem {
   id: string;
   subjectId: string;
   title: string;
-  description?: string;
+  description: string;
   price: number;
   image?: string;
   quantity: number;
-  subtotal: number;
   addedAt: Date;
 }
 
-export interface Cart {
+interface BackendCart {
   items: CartItem[];
+  itemsCount: number;
   subtotal: number;
-  tax: number;
   discount: number;
+  tax: number;
   total: number;
-  promoCode: string | null;
 }
 
-export interface CartServiceError {
-  code: 'INVALID_QTY' | 'ITEM_NOT_FOUND' | 'INVALID_PROMO' | 'PROMO_EXPIRED' | 'UNKNOWN';
-  message: string;
-}
-
-// ==================== SERVICE ====================
+const CART_STORAGE_KEY = 'winplus_cart';
 
 class CartService {
-  /**
-   * Obtenir le panier actuel
-   */
-  async getCart(): Promise<Cart> {
+  // ✅ Méthodes localStorage
+  getLocalCart(): BackendCart {
     try {
-      const response = await api.get<Cart>('/api/cart');
-      return response;
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      return this.getEmptyCart();
-    }
-  }
-
-  /**
-   * Ajouter un sujet au panier
-   */
-  async addToCart(subjectId: string, quantity: number = 1): Promise<Cart> {
-    try {
-      if (quantity < 1 || !Number.isInteger(quantity)) {
-        throw {
-          code: 'INVALID_QTY',
-          message: 'La quantité doit être un entier positif',
-        } as CartServiceError;
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Convertir les dates
+        parsed.items = parsed.items.map((item: any) => ({
+          ...item,
+          addedAt: new Date(item.addedAt),
+        }));
+        return parsed;
       }
-
-      const response = await api.post<Cart>('/api/cart/add', {
-        subjectId,
-        quantity,
-      });
-
-      return response;
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
+      console.error('Error reading local cart:', error);
     }
-  }
-
-  /**
-   * Retirer un article du panier
-   */
-  async removeFromCart(cartItemId: string): Promise<Cart> {
-    try {
-      if (!cartItemId) {
-        throw {
-          code: 'ITEM_NOT_FOUND',
-          message: 'ID article invalide',
-        } as CartServiceError;
-      }
-
-      const response = await api.delete<Cart>(`/api/cart/remove/${cartItemId}`);
-      return response;
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Mettre à jour la quantité d'un article
-   */
-  async updateQuantity(cartItemId: string, quantity: number): Promise<Cart> {
-    try {
-      if (!cartItemId) {
-        throw {
-          code: 'ITEM_NOT_FOUND',
-          message: 'Article non trouvé',
-        } as CartServiceError;
-      }
-
-      if (quantity < 0 || !Number.isInteger(quantity)) {
-        throw {
-          code: 'INVALID_QTY',
-          message: 'La quantité doit être un entier positif ou zéro',
-        } as CartServiceError;
-      }
-
-      if (quantity === 0) {
-        return await this.removeFromCart(cartItemId);
-      }
-
-      const response = await api.put<Cart>(`/api/cart/update/${cartItemId}`, {
-        quantity,
-      });
-
-      return response;
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Vider complètement le panier
-   */
-  async clearCart(): Promise<void> {
-    try {
-      await api.post('/api/cart/clear');
-    } catch (error) {
-      console.error('Error clearing cart:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Appliquer un code promo
-   */
-  async applyPromoCode(code: string): Promise<{
-    success: boolean;
-    discount: number;
-    message: string;
-    cart: Cart;
-  }> {
-    try {
-      if (!code || code.trim().length === 0) {
-        return {
-          success: false,
-          discount: 0,
-          message: 'Code promo invalide',
-          cart: await this.getCart(),
-        };
-      }
-
-      const response = await api.post<{
-        success: boolean;
-        discount: number;
-        message: string;
-        cart: Cart;
-      }>('/api/cart/promo', {
-        promoCode: code,
-      });
-
-      return response;
-    } catch (error: any) {
-      console.error('Error applying promo code:', error);
-      return {
-        success: false,
-        discount: 0,
-        message: error.message || 'Erreur lors de l\'application du code promo',
-        cart: await this.getCart(),
-      };
-    }
-  }
-
-  /**
-   * Retirer le code promo
-   */
-  async removePromoCode(): Promise<Cart> {
-    try {
-      const response = await api.delete<Cart>('/api/cart/promo');
-      return response;
-    } catch (error) {
-      console.error('Error removing promo code:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Calculer le total du panier (côté client pour affichage)
-   */
-  calculateTotal(
-    items: CartItem[],
-    taxRate: number = 0.2,
-    discountAmount: number = 0
-  ): {
-    subtotal: number;
-    tax: number;
-    discount: number;
-    total: number;
-  } {
-    const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-    const taxableAmount = Math.max(0, subtotal - discountAmount);
-    const tax = Math.round(taxableAmount * taxRate * 100) / 100;
-    const total = subtotal - discountAmount + tax;
-
-    return {
-      subtotal: Math.round(subtotal * 100) / 100,
-      tax: Math.round(tax * 100) / 100,
-      discount: Math.round(discountAmount * 100) / 100,
-      total: Math.round(total * 100) / 100,
+    return { 
+      items: [], 
+      itemsCount: 0, 
+      subtotal: 0, 
+      discount: 0, 
+      tax: 0, 
+      total: 0 
     };
   }
 
-  /**
-   * Valider avant checkout
-   */
-  validateCheckout(items: CartItem[]): { valid: boolean; errors: string[] } {
+  saveLocalCart(cart: BackendCart): void {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch (error) {
+      console.error('Error saving local cart:', error);
+    }
+  }
+
+  clearLocalCart(): void {
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing local cart:', error);
+    }
+  }
+
+  // ✅ Calculer les totaux
+  private calculateTotals(items: CartItem[]): BackendCart {
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * 0.2; // 20%
+    const total = subtotal + tax;
+    const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return {
+      items,
+      itemsCount,
+      subtotal,
+      discount: 0,
+      tax,
+      total,
+    };
+  }
+
+  // ✅ Récupérer le panier (serveur avec fallback local)
+  async getCart(): Promise<BackendCart> {
+    try {
+      const response = await api.get<BackendCart>('/cart');
+      
+      // Sauvegarder dans le cache local
+      this.saveLocalCart(response.data);
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching cart:', error);
+      
+      // ✅ En cas d'erreur réseau, retourner le panier local
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        console.log('Using local cart due to network error');
+        return this.getLocalCart();
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Ajouter un article (avec alias addToCart)
+  async addToCart(subjectId: string, quantity: number = 1): Promise<BackendCart> {
+    try {
+      const response = await api.post<BackendCart>('/cart/items', {
+        subjectId,
+        quantity,
+      });
+      
+      this.saveLocalCart(response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error adding item:', error);
+      
+      // ✅ Ajouter localement en cas d'erreur réseau
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        const localCart = this.getLocalCart();
+        const existingItem = localCart.items.find(item => item.subjectId === subjectId);
+        
+        if (existingItem) {
+          existingItem.quantity += quantity;
+        } else {
+          // Note: En mode hors ligne, on ne peut pas obtenir les détails du sujet
+          // Il faudrait les passer en paramètre ou les avoir en cache
+          console.warn('Cannot add new item in offline mode without subject details');
+          throw new Error('Impossible d\'ajouter un nouvel article en mode hors ligne');
+        }
+        
+        const updatedCart = this.calculateTotals(localCart.items);
+        this.saveLocalCart(updatedCart);
+        return updatedCart;
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Supprimer un article (avec alias removeFromCart)
+  async removeFromCart(itemId: string): Promise<BackendCart> {
+    try {
+      const response = await api.delete<BackendCart>(`/cart/items/${itemId}`);
+      
+      this.saveLocalCart(response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error removing item:', error);
+      
+      // ✅ Supprimer localement en cas d'erreur réseau
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        const localCart = this.getLocalCart();
+        localCart.items = localCart.items.filter(item => item.id !== itemId);
+        const updatedCart = this.calculateTotals(localCart.items);
+        this.saveLocalCart(updatedCart);
+        return updatedCart;
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Mettre à jour la quantité
+  async updateQuantity(itemId: string, quantity: number): Promise<BackendCart> {
+    try {
+      const response = await api.patch<BackendCart>(`/cart/items/${itemId}`, {
+        quantity,
+      });
+      
+      this.saveLocalCart(response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating quantity:', error);
+      
+      // ✅ Mettre à jour localement en cas d'erreur réseau
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        const localCart = this.getLocalCart();
+        const item = localCart.items.find(item => item.id === itemId);
+        
+        if (item) {
+          item.quantity = quantity;
+        }
+        
+        const updatedCart = this.calculateTotals(localCart.items);
+        this.saveLocalCart(updatedCart);
+        return updatedCart;
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Vider le panier
+  async clearCart(): Promise<void> {
+    try {
+      await api.delete('/cart');
+      this.clearLocalCart();
+    } catch (error: any) {
+      console.error('Error clearing cart:', error);
+      
+      // ✅ Vider localement en cas d'erreur réseau
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        this.clearLocalCart();
+        return;
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Appliquer un code promo
+  async applyPromoCode(code: string): Promise<{ success: boolean; message: string; discount: number }> {
+    try {
+      const response = await api.post<{ success: boolean; message: string; discount: number }>(
+        '/cart/promo',
+        { code }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error applying promo code:', error);
+      
+      // ✅ Mode hors ligne : codes promo simulés
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        // Codes promo locaux pour le mode hors ligne
+        const localPromoCodes: Record<string, number> = {
+          'PROMO10': 0.10,
+          'PROMO20': 0.20,
+          'BIENVENUE': 0.15,
+        };
+        
+        const discountPercent = localPromoCodes[code.toUpperCase()];
+        
+        if (discountPercent) {
+          const localCart = this.getLocalCart();
+          const discount = localCart.subtotal * discountPercent;
+          
+          return {
+            success: true,
+            message: `Code promo appliqué : -${(discountPercent * 100).toFixed(0)}% (mode hors ligne)`,
+            discount,
+          };
+        } else {
+          return {
+            success: false,
+            message: 'Code promo invalide',
+            discount: 0,
+          };
+        }
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Supprimer un code promo
+  async removePromoCode(): Promise<void> {
+    try {
+      await api.delete('/cart/promo');
+    } catch (error: any) {
+      console.error('Error removing promo code:', error);
+      
+      // En mode hors ligne, on ne fait rien
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('connexion')) {
+        return;
+      }
+      
+      throw error;
+    }
+  }
+
+  // ✅ Valider avant le checkout
+  validateCheckout(items: any[]): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (items.length === 0) {
-      errors.push('Le panier est vide');
+      errors.push('Votre panier est vide');
     }
 
     items.forEach((item) => {
       if (item.quantity < 1) {
-        errors.push(`Quantité invalide pour "${item.title}"`);
+        errors.push(`Quantité invalide pour ${item.subject?.title || 'cet article'}`);
       }
       if (item.price <= 0) {
-        errors.push(`Prix invalide pour "${item.title}"`);
+        errors.push(`Prix invalide pour ${item.subject?.title || 'cet article'}`);
       }
     });
 
@@ -242,67 +308,19 @@ class CartService {
     };
   }
 
-  /**
-   * Synchroniser le panier local avec le serveur
-   */
-  async syncCart(localItems: CartItem[]): Promise<Cart> {
+  // ✅ Synchroniser le panier local avec le serveur
+  async syncCart(): Promise<void> {
     try {
-      const response = await api.post<Cart>('/api/cart/sync', {
-        items: localItems,
-      });
-      return response;
+      const localCart = this.getLocalCart();
+      
+      if (localCart.items.length > 0) {
+        // Envoyer le panier local au serveur
+        await api.post('/cart/sync', localCart);
+        console.log('Cart synchronized with server');
+      }
     } catch (error) {
       console.error('Error syncing cart:', error);
-      return this.getEmptyCart();
     }
-  }
-
-  /**
-   * Obtenir un panier vide
-   */
-  private getEmptyCart(): Cart {
-    return {
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      discount: 0,
-      total: 0,
-      promoCode: null,
-    };
-  }
-
-  /**
-   * Calculer les frais d'expédition
-   */
-  calculateShippingCost(subtotal: number, region: string = 'FR'): number {
-    if (subtotal >= 50) return 0;
-
-    const shippingRates: Record<string, number> = {
-      FR: 4.99,
-      EU: 9.99,
-      WORLD: 19.99,
-    };
-
-    return shippingRates[region] || shippingRates.FR;
-  }
-
-  /**
-   * Calculer les économies si achat d'un bundle
-   */
-  calculateBundleSavings(
-    bundlePrice: number,
-    individualTotal: number
-  ): {
-    savings: number;
-    percentage: number;
-  } {
-    const savings = Math.max(0, individualTotal - bundlePrice);
-    const percentage = individualTotal > 0 ? (savings / individualTotal) * 100 : 0;
-
-    return {
-      savings: Math.round(savings * 100) / 100,
-      percentage: Math.round(percentage),
-    };
   }
 }
 

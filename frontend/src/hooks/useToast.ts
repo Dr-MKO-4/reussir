@@ -1,6 +1,3 @@
-// Re-export le hook du contexte
-export { useToast } from '../contexts/ToastContext';
-
-// Default export
-import { useToast } from '../contexts/ToastContext';
-export default useToast;
+// src/hooks/useToast.ts
+// Réexporte le hook depuis le composant Toast pour faciliter l'import
+export { useToast } from '../components/ui/Toast';

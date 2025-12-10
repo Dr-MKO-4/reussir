@@ -813,7 +813,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ teacherProfile }) =
                 <a href="https://wa.me/237XXXXXXXXX" className="contact-icon" title="WhatsApp" aria-label="Contactez-nous sur WhatsApp">
                   <FaWhatsapp />
                 </a>
-                <a href="mailto:enseignants@reussir.cm" className="contact-icon" title="Email" aria-label="Envoyez-nous un email">
+                <a href="mailto:enseignants@winplus.cm" className="contact-icon" title="Email" aria-label="Envoyez-nous un email">
                   <FaEnvelope />
                 </a>
                 <a href="tel:+237XXXXXXXXX" className="contact-icon" title="Téléphone" aria-label="Appelez-nous">

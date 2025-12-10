@@ -132,7 +132,8 @@ public class AuthenticationResultDto
 
 public class SignInRequestDto
 {
-    public string Username { get; set; } = string.Empty;
+    public string? Username { get; set; }
+    public string? Email { get; set; }
     public string Password { get; set; } = string.Empty;
 }
 
@@ -144,19 +145,42 @@ public class SignInResponse
     public int ExpiresIn { get; set; }
     public string? TokenType { get; set; } = "Bearer";
     public string? Error { get; set; }
+    public object? User { get; set; }
 }
 
 public class SignUpRequestDto
 {
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
     public string Email { get; set; } = string.Empty;
+    public string? Phone { get; set; }
     public string Password { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; } // Backwards compatibility
+}
+
+public class AuthSignUpResponse
+{
+    public string Message { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public object? User { get; set; }
 }
 
 public class ConfirmSignUpRequestDto
 {
     public string Username { get; set; } = string.Empty;
     public string ConfirmationCode { get; set; } = string.Empty;
+}
+
+public class VerifyEmailRequestDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+}
+
+public class ResendVerificationRequestDto
+{
+    public string Email { get; set; } = string.Empty;
 }
 
 public class RefreshTokenRequestDto

@@ -34,12 +34,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.CognitoId).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.CognitoId).IsRequired(false).HasMaxLength(255);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.Property(e => e.FirstName).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(100);
             entity.Property(e => e.Bio).HasMaxLength(1000);
-            entity.HasIndex(e => e.CognitoId).IsUnique();
+            entity.HasIndex(e => e.CognitoId).IsUnique().HasFilter("\"CognitoId\" IS NOT NULL");
             entity.HasIndex(e => e.Email).IsUnique();
         });
 

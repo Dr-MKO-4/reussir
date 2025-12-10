@@ -1,7 +1,7 @@
 // src/components/auth/ForgotPasswordForm.tsx
 import React, { useState } from 'react';
 import Modal from '../ui/Modal';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../components/ui/Toast';
 import { authService } from '../../services/auth';
 import styles from './ForgotPasswordForm.module.css';
 

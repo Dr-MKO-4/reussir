@@ -8,22 +8,29 @@ namespace Backend.Models.DTOs;
 /// </summary>
 public class TrackEventRequest
 {
-    [Required]
     [MaxLength(100)]
-    public string EventType { get; set; } = ""; // page_view, button_click, purchase, etc.
+    public string? EventName { get; set; } // signup_attempt, login_success, etc.
 
-    [Required]
+    [MaxLength(100)]
+    public string? EventType { get; set; } // page_view, button_click, purchase, etc.
+
     [MaxLength(255)]
-    public string EventName { get; set; } = "";
-
-    [MaxLength(100)]
     public string? EventCategory { get; set; }
 
     [MaxLength(45)]
     public string? IpAddress { get; set; }
 
-    [MaxLength(2000)]
-    public string? EventData { get; set; } // JSON data
+    // Le frontend envoie un objet JSON, on le reçoit comme object
+    public object? EventData { get; set; } // JSON data (peut être un objet ou un string)
+
+    // Champs supplémentaires envoyés par le frontend
+    public long? Timestamp { get; set; }
+
+    [MaxLength(500)]
+    public string? UserAgent { get; set; }
+
+    [MaxLength(500)]
+    public string? Url { get; set; }
 }
 
 /// <summary>

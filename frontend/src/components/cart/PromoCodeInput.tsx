@@ -29,7 +29,7 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
         <input
           type="text"
           className={styles['promo-input']}
-          placeholder="REUSSIR10"
+          placeholder="WINPLUS10"
           value={value}
           onChange={(e) => onChange(e.target.value.toUpperCase())}
           disabled={isApplied}

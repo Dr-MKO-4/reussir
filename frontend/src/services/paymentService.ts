@@ -86,7 +86,7 @@ class PaymentService {
       }
 
       // Appel API backend pour créer l'intention
-      const response = await api.post('/api/payments', {
+      const response = await api.post('/payments', {
         amount: Math.round(cartData.total * 100), // Convertir en centimes
         currency: cartData.currency || 'EUR',
         items: cartData.items,

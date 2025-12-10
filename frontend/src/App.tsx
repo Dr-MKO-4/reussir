@@ -1,15 +1,16 @@
-// src/App.tsx - Flux de redirection corrigé avec LoadingSpinner centré
+// src/App.tsx - Ordre des Providers corrigé
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { ToastProvider } from './contexts/ToastContext';
+import { ToastProvider } from './components/ui/Toast';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute'
 import { UserRole } from './types/auth';
 import useAuth from './hooks/useAuth';
 import LoadingSpinner, { FullPageSpinner } from './components/ui/LoadingSpinner'
+
 // Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -19,6 +20,7 @@ import Profile from './pages/Profile';
 import CompleteProfile from './pages/CompleteProfile';
 import HomePage from './pages/HomePage';
 import EmailVerification from './pages/EmailVerification';
+import VerifyCode from './pages/VerifyCode';
 import ResetPassword from './pages/ResetPassword';
 import Student from './pages/Student';
 import ParentDashboard from './pages/Parent';
@@ -60,15 +62,14 @@ import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import SubjectList from './pages/SubjectList';
-// Styles globaux
-
+import Cookies from './pages/Cookies';
+import CatalogPage from './pages/CatalogPage';
 
 // Route de protection pour rediriger les utilisateurs connectés
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
-    // CORRECTION: Utiliser le FullPageSpinner pour un centrage parfait
     return (
       <FullPageSpinner 
         message="Vérification de l'authentification"
@@ -81,7 +82,6 @@ const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   if (isAuthenticated && user) {
-    // Si l'utilisateur est connecté, vérifier où le rediriger
     const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                  !user.username || 
                                  !user.profile?.institution || 
@@ -102,7 +102,6 @@ const CompleteProfileRoute: React.FC<{ children: React.ReactNode }> = ({ childre
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
-    // CORRECTION: Utiliser le FullPageSpinner avec message adapté
     return (
       <FullPageSpinner 
         message="Chargement de votre profil"
@@ -118,14 +117,12 @@ const CompleteProfileRoute: React.FC<{ children: React.ReactNode }> = ({ childre
     return <Navigate to="/login" replace />;
   }
 
-  // Vérifier si le profil doit vraiment être complété
   const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                !user?.username || 
                                !user?.profile?.institution || 
                                !user?.profile?.currentLevel;
 
   if (!shouldCompleteProfile) {
-    // Le profil est déjà complet, rediriger vers le dashboard
     localStorage.removeItem('shouldCompleteProfile');
     return <Navigate to="/dashboard" replace />;
   }
@@ -138,7 +135,6 @@ const DashboardRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
-    // CORRECTION: Utiliser le FullPageSpinner avec message dashboard
     return (
       <FullPageSpinner 
         message="Chargement du tableau de bord"
@@ -154,7 +150,6 @@ const DashboardRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" replace />;
   }
 
-  // Vérifier si le profil doit être complété avant d'accéder au dashboard
   const shouldCompleteProfile = localStorage.getItem('shouldCompleteProfile') === 'true' ||
                                !user?.username || 
                                !user?.profile?.institution || 
@@ -187,151 +182,140 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-                  {/* Routes publiques accessibles à tous */}
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/student" element={<Student />} />
-                  <Route path="/parent" element={<ParentDashboard />} />
-                  <Route path="/professeur" element={<TeacherDashboard />} />
-                  <Route path="/user-dashboard" element={<UserDashboard />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/history" element={<History />} />
-                  <Route path="/discover" element={<Discover />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/subject/:id" element={<SubjectDetailsPage />} />
-                  <Route path="/subjects" element={<SubjectList />} />
-                  <Route path="/home" element={<Home />} />
-                  <Route path="/email-verified" element={<EmailVerified />} />
-                  <Route path="/dashboard-page" element={<DashboardPage />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/privacy-policy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
+      {/* Routes publiques accessibles à tous */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/student" element={<Student />} />
+      <Route path="/parent" element={<ParentDashboard />} />
+      <Route path="/professeur" element={<TeacherDashboard />} />
+      <Route path="/user-dashboard" element={<UserDashboard />} />
+      <Route path="/cart" element={<CartPage />} />
+      <Route path="/favorites" element={<Favorites />} />
+      <Route path="/history" element={<History />} />
+      <Route path="/discover" element={<Discover />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/subject/:id" element={<SubjectDetailsPage />} />
+      <Route path="/subjects" element={<SubjectList />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/email-verified" element={<EmailVerified />} />
+      <Route path="/dashboard-page" element={<DashboardPage />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/cookies" element={<Cookies />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/catalog" element={<CatalogPage />} />
 
-                  {/* Routes de test - développement uniquement */}
-                  {import.meta.env.DEV && (
-                    <>
-                      {/* Components de développement nécessitant des props - commentés */}
-                      {/* À utiliser avec des props appropriées:
-                      <Route path="/dev/preview-carousel" element={<PreviewCarousel images={[]} />} />
-                      <Route path="/dev/stats-card" element={<StatsCard icon="" label="" value="" />} />
-                      <Route path="/dev/recent-activity" element={<RecentActivity activities={[]} />} />
-                      <Route path="/dev/study-progress" element={<StudyProgress subjects={[]} completed={0} />} />
-                      <Route path="/dev/performance-chart" element={<PerformanceChart data={[]} />} />
-                      <Route path="/dev/upcoming-exams" element={<UpcomingExams exams={[]} />} />
-                      <Route path="/dev/achievement-badges" element={<AchievementBadges achievements={[]} />} />
-                      <Route path="/dev/recommendation-widget" element={<RecommendationWidget recommendations={[]} />} />
-                      <Route path="/dev/study-streak" element={<StudyStreak currentStreak={0} bestStreak={0} />} />
-                      <Route path="/dev/profile-header" element={<ProfileHeader user={{}} stats={{}} onEditProfile={() => {}} onUploadAvatar={() => {}} />} />
-                      <Route path="/dev/profile-form" element={<ProfileForm initialData={{}} onSubmit={() => {}} onCancel={() => {}} />} />
-                      <Route path="/dev/password-change-form" element={<PasswordChangeForm onSubmit={() => {}} />} />
-                      <Route path="/dev/notification-settings" element={<NotificationSettings initialPreferences={{}} onSubmit={() => {}} />} />
-                      <Route path="/dev/privacy-settings" element={<PrivacySettings initialPreferences={{}} onSubmit={() => {}} />} />
-                      <Route path="/dev/account-deletion" element={<AccountDeletion onDelete={() => {}} />} />
-                      <Route path="/dev/preferences-form" element={<PreferencesForm initialPreferences={{}} onSubmit={() => {}} />} />
-                      <Route path="/dev/subscription-card" element={<SubscriptionCard subscription={{}} onUpgrade={() => {}} onCancel={() => {}} onRenew={() => {}} />} />
-                      */}
-                      <Route path="/dev/quick-actions-example" element={<QuickActionsExample />} />
-                      <Route path="/dev/home-catalog" element={<HomeCatalog />} />
-                    </>
-                  )}
 
-                  {/* Routes publiques - accessibles seulement si non connecté */}
-                  <Route
-                    path="/login"
-                    element={
-                      <UnauthenticatedRoute>
-                        <Login />
-                      </UnauthenticatedRoute>
-                    }
-                  />
-                  <Route
-                    path="/signup"
-                    element={
-                      <UnauthenticatedRoute>
-                        <Signup />
-                      </UnauthenticatedRoute>
-                    }
-                  />
-                  <Route
-                    path="/reset-password/:token"
-                    element={
-                      <UnauthenticatedRoute>
-                        <ResetPassword/>
-                      </UnauthenticatedRoute>
-                    }
-                  />
-                  
-                  {/* Routes de vérification email - publiques */}
-                  <Route
-                    path="/verify-email/:token"
-                    element={<EmailVerification/>}
-                  />
-                  <Route
-                    path="/verify-email"
-                    element={<EmailVerification/>}
-                  />
+      {/* Routes de test - développement uniquement */}
+      {import.meta.env.DEV && (
+        <>
+          <Route path="/dev/quick-actions-example" element={<QuickActionsExample />} />
+          <Route path="/dev/home-catalog" element={<HomeCatalog />} />
+        </>
+      )}
 
-                  {/* Route de complétion de profil avec protection spéciale */}
-                  <Route 
-                    path="/complete-profile" 
-                    element={
-                      <CompleteProfileRoute>
-                        <CompleteProfile />
-                      </CompleteProfileRoute>
-                    } 
-                  />
+      {/* Routes publiques - accessibles seulement si non connecté */}
+      <Route
+        path="/login"
+        element={
+          <UnauthenticatedRoute>
+            <Login />
+          </UnauthenticatedRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <UnauthenticatedRoute>
+            <Signup />
+          </UnauthenticatedRoute>
+        }
+      />
+      <Route
+        path="/reset-password/:token"
+        element={
+          <UnauthenticatedRoute>
+            <ResetPassword/>
+          </UnauthenticatedRoute>
+        }
+      />
+      
+      {/* Routes de vérification email - publiques */}
+      <Route
+        path="/verify-email/:token"
+        element={<VerifyCode/>}
+      />
+      <Route
+        path="/verify-email"
+        element={<VerifyCode/>}
+      />
+      <Route
+        path="/verify-code"
+        element={<VerifyCode/>}
+      />
 
-                  {/* Route dashboard avec vérification de profil */}
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <DashboardRoute>
-                        <Dashboard />
-                      </DashboardRoute>
-                    }
-                  />
-                  {/* AdminDashboard accessible sans authentification */}
-                  <Route
-                    path="/admin/dashboard"
-                    element={<AdminDashboard />}
-                  />
+      {/* Route de complétion de profil avec protection spéciale */}
+      <Route 
+        path="/complete-profile" 
+        element={
+          <CompleteProfileRoute>
+            <CompleteProfile />
+          </CompleteProfileRoute>
+        } 
+      />
 
-                  {/* Route profil - accessible aux utilisateurs avec profil complet */}
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <Profile/>
-                      </ProtectedRoute>
-                    }
-                  />
+      {/* Route dashboard avec vérification de profil */}
+      <Route
+        path="/dashboard"
+        element={
+          <DashboardRoute>
+            <Dashboard />
+          </DashboardRoute>
+        }
+      />
 
-                  {/* Route 404 - Page non trouvée */}
-                  <Route
-                    path="*"
-                    element={<NotFound />}
-                  />
-                </Routes>
-              );
+      {/* AdminDashboard accessible sans authentification */}
+      <Route
+        path="/admin/dashboard"
+        element={<AdminDashboard />}
+      />
+
+      {/* Route profil - accessible aux utilisateurs avec profil complet */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile/>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Route 404 - Page non trouvée */}
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
+    </Routes>
+  );
 };
 
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <ToastProvider position="top-right">
+      {/* ✅ CORRECTION CRITIQUE : ToastProvider doit être AVANT CartProvider */}
+      <ToastProvider>
+        <AuthProvider>
+          <CartProvider>
             <Router>
               <div className="app">
                 <AppRoutes />
               </div>
             </Router>
-          </ToastProvider>
-        </CartProvider>
-      </AuthProvider>
+          </CartProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 };
