@@ -58,6 +58,7 @@ export const Card: React.FC<CardProps> = ({
   as: Component = 'div',
   className = '',
   onClick,
+  hoverable: _hoverable, // Capture et ignore les propriétés booléennes
   ...rest
 }) => {
   const classes = [
