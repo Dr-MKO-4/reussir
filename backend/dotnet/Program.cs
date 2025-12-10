@@ -9,6 +9,7 @@ using Amazon.CognitoIdentityProvider;
 using Backend.Data;
 using Backend.Repositories;
 using Backend.Services;
+using Backend.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,19 +77,43 @@ var region = builder.Configuration["AWS:Region"] ?? "us-east-1";
 var userPoolId = builder.Configuration["AWS:UserPoolId"];
 var clientId = builder.Configuration["AWS:UserPoolClientId"];
 
+// Configuration JWT locale pour développement
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "winplusApp";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "winplusUsers";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = $"https://cognito-idp.{region}.amazonaws.com/{userPoolId}";
-        options.TokenValidationParameters = new TokenValidationParameters
+        // En développement, utiliser la clé secrète locale
+        if (builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(jwtSecretKey))
         {
-            ValidateIssuer = true,
-            ValidIssuer = $"https://cognito-idp.{region}.amazonaws.com/{userPoolId}",
-            ValidateAudience = true,
-            ValidAudience = clientId,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true
-        };
+            var key = System.Text.Encoding.UTF8.GetBytes(jwtSecretKey);
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = jwtAudience,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key)
+            };
+        }
+        else
+        {
+            // En production, utiliser Cognito
+            options.Authority = $"https://cognito-idp.{region}.amazonaws.com/{userPoolId}";
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = $"https://cognito-idp.{region}.amazonaws.com/{userPoolId}",
+                ValidateAudience = true,
+                ValidAudience = clientId,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true
+            };
+        }
         
         // Configure events for better logging
         options.Events = new JwtBearerEvents
@@ -144,6 +169,7 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Add Authentication Services (Simple Auth + Email)
+builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<ISimpleAuthService, SimpleAuthService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 

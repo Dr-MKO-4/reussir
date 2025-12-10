@@ -99,7 +99,7 @@ class CartService {
   // ✅ Récupérer le panier (serveur avec fallback local)
   async getCart(): Promise<BackendCart> {
     try {
-      const response = await api.get<BackendCart>('/api/cart');
+      const response = await api.get<BackendCart>('/cart');
       
       // Sauvegarder dans le cache local
       this.saveLocalCart(response.data);
@@ -121,7 +121,7 @@ class CartService {
   // ✅ Ajouter un article (avec alias addToCart)
   async addToCart(subjectId: string, quantity: number = 1): Promise<BackendCart> {
     try {
-      const response = await api.post<BackendCart>('/api/cart/items', {
+      const response = await api.post<BackendCart>('/cart/items', {
         subjectId,
         quantity,
       });
@@ -157,7 +157,7 @@ class CartService {
   // ✅ Supprimer un article (avec alias removeFromCart)
   async removeFromCart(itemId: string): Promise<BackendCart> {
     try {
-      const response = await api.delete<BackendCart>(`/api/cart/items/${itemId}`);
+      const response = await api.delete<BackendCart>(`/cart/items/${itemId}`);
       
       this.saveLocalCart(response.data);
       return response.data;
@@ -180,7 +180,7 @@ class CartService {
   // ✅ Mettre à jour la quantité
   async updateQuantity(itemId: string, quantity: number): Promise<BackendCart> {
     try {
-      const response = await api.patch<BackendCart>(`/api/cart/items/${itemId}`, {
+      const response = await api.patch<BackendCart>(`/cart/items/${itemId}`, {
         quantity,
       });
       
@@ -210,7 +210,7 @@ class CartService {
   // ✅ Vider le panier
   async clearCart(): Promise<void> {
     try {
-      await api.delete('/api/cart');
+      await api.delete('/cart');
       this.clearLocalCart();
     } catch (error: any) {
       console.error('Error clearing cart:', error);
@@ -229,7 +229,7 @@ class CartService {
   async applyPromoCode(code: string): Promise<{ success: boolean; message: string; discount: number }> {
     try {
       const response = await api.post<{ success: boolean; message: string; discount: number }>(
-        '/api/cart/promo',
+        '/cart/promo',
         { code }
       );
       return response.data;
@@ -272,7 +272,7 @@ class CartService {
   // ✅ Supprimer un code promo
   async removePromoCode(): Promise<void> {
     try {
-      await api.delete('/api/cart/promo');
+      await api.delete('/cart/promo');
     } catch (error: any) {
       console.error('Error removing promo code:', error);
       
@@ -315,7 +315,7 @@ class CartService {
       
       if (localCart.items.length > 0) {
         // Envoyer le panier local au serveur
-        await api.post('/api/cart/sync', localCart);
+        await api.post('/cart/sync', localCart);
         console.log('Cart synchronized with server');
       }
     } catch (error) {

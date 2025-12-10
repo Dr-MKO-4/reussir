@@ -61,7 +61,8 @@ export interface ChangePasswordData {
 }
 
 export interface VerifyEmailData {
-  token: string;
+  email: string;
+  code: string;
 }
 
 export interface GoogleAuthData {
@@ -84,7 +85,7 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/auth/signin', {
-        email: credentials.email,
+        username: credentials.email,
         password: credentials.password,
       });
       
@@ -236,11 +237,14 @@ class AuthService {
   }
 
   /**
-   * Vérifier l'email
+   * Vérifier l'email avec code
    */
   async verifyEmail(data: VerifyEmailData): Promise<void> {
     try {
-      await api.post('/auth/verify-email', data);
+      await api.post('/auth/verify-email', {
+        email: data.email,
+        code: data.code,
+      });
       
       const user = this.getCurrentUser();
       if (user) {
@@ -256,9 +260,9 @@ class AuthService {
   /**
    * Renvoyer l'email de vérification
    */
-  async resendVerificationEmail(): Promise<void> {
+  async resendVerificationEmail(email: string): Promise<void> {
     try {
-      await api.post('/auth/resend-verification');
+      await api.post('/auth/resend-verification', { email });
     } catch (error) {
       console.error('[Auth Service] Resend verification error:', error);
       throw error;
@@ -270,7 +274,7 @@ class AuthService {
    */
   async getCurrentUserProfile(): Promise<User> {
     try {
-      const user = await api.get<User>('/api/users/profile');
+      const user = await api.get<User>('/users/profile');
       
       this.saveUser(user);
       

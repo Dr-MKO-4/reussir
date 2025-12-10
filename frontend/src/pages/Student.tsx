@@ -914,7 +914,7 @@ const Student: React.FC<DashboardProps> = ({ userProfile }) => {
               <a href="https://wa.me/237XXXXXXXXX" className="contact-icon" title="WhatsApp">
                 <FaWhatsapp />
               </a>
-              <a href="mailto:contact@reussir.cm" className="contact-icon" title="Email">
+              <a href="mailto:contact@winplus.cm" className="contact-icon" title="Email">
                 <FaEnvelope />
               </a>
               <a href="tel:+237XXXXXXXXX" className="contact-icon" title="Téléphone">

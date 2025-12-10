@@ -16,12 +16,14 @@ public class AuthController : ControllerBase
     private readonly ISimpleAuthService _authService;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AuthController> _logger;
+    private readonly JwtTokenGenerator _jwtTokenGenerator;
 
-    public AuthController(ISimpleAuthService authService, ApplicationDbContext context, ILogger<AuthController> logger)
+    public AuthController(ISimpleAuthService authService, ApplicationDbContext context, ILogger<AuthController> logger, JwtTokenGenerator jwtTokenGenerator)
     {
         _authService = authService;
         _context = context;
         _logger = logger;
+        _jwtTokenGenerator = jwtTokenGenerator;
     }
 
     /// <summary>
@@ -33,14 +35,17 @@ public class AuthController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> SignIn([FromBody] SignInRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        // Accepter soit email soit username
+        var identifier = request.Email ?? request.Username;
+        
+        if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return BadRequest(new { error = "Username and password are required" });
+            return BadRequest(new { error = "Email or username and password are required" });
         }
 
         try
         {
-            var (success, message, user) = await _authService.LoginAsync(request.Username, request.Password);
+            var (success, message, user) = await _authService.LoginAsync(identifier, request.Password);
 
             if (!success || user == null)
             {
@@ -56,7 +61,7 @@ public class AuthController : ControllerBase
                 { "role", user.Role }
             };
             
-            var jwtToken = JwtTokenGenerator.GenerateToken(claimsDict);
+            var jwtToken = _jwtTokenGenerator.GenerateToken(claimsDict);
 
             var response = new SignInResponse
             {
@@ -132,7 +137,7 @@ public class AuthController : ControllerBase
                 { "role", "user" }
             };
             
-            var jwtToken = JwtTokenGenerator.GenerateToken(claimsDict);
+            var jwtToken = _jwtTokenGenerator.GenerateToken(claimsDict);
 
             return Ok(new AuthSignUpResponse
             {
@@ -197,6 +202,75 @@ public class AuthController : ControllerBase
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> ConfirmSignUp([FromBody] ConfirmSignUpRequestDto request)
+    {
+        // Rediriger vers verify-email
+        var verifyRequest = new VerifyEmailRequestDto
+        {
+            Email = request.Username,
+            Code = request.ConfirmationCode
+        };
+
+        return await VerifyEmail(verifyRequest);
+    }
+
+    /// <summary>
+    /// Renvoie un code de vérification par email
+    /// </summary>
+    [HttpPost("resend-verification")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest(new { error = "Email is required" });
+        }
+
+        try
+        {
+            // Récupérer l'utilisateur
+            var user = await _authService.GetUserByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return NotFound(new { error = "User not found" });
+            }
+
+            // Si l'email est déjà vérifié
+            if (user.IsEmailVerified)
+            {
+                return Ok(new { message = "Email is already verified" });
+            }
+
+            // Générer un nouveau code
+            var verificationCode = new Random().Next(100000, 999999).ToString();
+
+            // Sauvegarder le code
+            await _authService.SaveVerificationCodeAsync(user.Email, verificationCode);
+
+            // Envoyer l'email
+            await _authService.SendVerificationEmailAsync(user.Email, verificationCode);
+
+            _logger.LogInformation("Verification code resent to {Email}", request.Email);
+
+            return Ok(new { message = "Verification code sent successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resending verification email");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Confirme l'inscription avec le code envoyé par email (legacy)
+    /// </summary>
+    [HttpPost("confirm-legacy")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> ConfirmSignUpLegacy([FromBody] ConfirmSignUpRequestDto request)
     {
         // Rediriger vers verify-email
         var verifyRequest = new VerifyEmailRequestDto

@@ -132,7 +132,8 @@ public class AuthenticationResultDto
 
 public class SignInRequestDto
 {
-    public string Username { get; set; } = string.Empty;
+    public string? Username { get; set; }
+    public string? Email { get; set; }
     public string Password { get; set; } = string.Empty;
 }
 
@@ -175,6 +176,11 @@ public class VerifyEmailRequestDto
 {
     public string Email { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
+}
+
+public class ResendVerificationRequestDto
+{
+    public string Email { get; set; } = string.Empty;
 }
 
 public class RefreshTokenRequestDto

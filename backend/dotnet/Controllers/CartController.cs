@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Services;
 using Backend.Models.Entities;
+using Backend.Models.DTOs;
 
 namespace Backend.Controllers;
 
@@ -16,15 +17,38 @@ public class CartController : ControllerBase
         _cartService = cartService;
         _logger = logger;
     }
-
     [HttpGet]
     public async Task<IActionResult> GetCart()
     {
         try
         {
             var userId = 1; // À remplacer par l'ID utilisateur connecté
-            var cart = await _cartService.GetUserCartAsync(userId);
-            return Ok(cart);
+            var items = await _cartService.GetUserCartAsync(userId);
+            
+            // Convertir en DTO avec la structure complète du panier
+            var cartDto = new CartResponseDto
+            {
+                Items = items.Select(item => new CartItemDto
+                {
+                    Id = item.Id,
+                    SubjectId = item.SubjectId,
+                    Title = item.Subject?.Title ?? "",
+                    Description = item.Subject?.Description,
+                    Price = item.Price,
+                    Image = item.Subject?.ThumbnailUrl,
+                    Quantity = 1,
+                    AddedAt = item.AddedAt
+                }).ToList(),
+                ItemsCount = items.Count(),
+                Subtotal = items.Sum(i => i.Price),
+                Discount = 0,
+                Tax = items.Sum(i => i.Price) * 0.1m,
+                Total = items.Sum(i => i.Price) * 1.1m,
+                Currency = "XAF",
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            return Ok(cartDto);
         }
         catch (Exception ex)
         {

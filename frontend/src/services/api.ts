@@ -4,8 +4,8 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
  * Configuration de base de l'API
  */
 const API_CONFIG = {
-  // CORRIGÉ : Pointer vers le backend .NET au lieu de Flask
-  baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7023/api',
+  // CORRIGÉ : Pointer vers le backend .NET sans /api (il est dans les routes des controllers)
+  baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7023',
   timeout: 30000, // 30 secondes
   headers: {
     'Content-Type': 'application/json',

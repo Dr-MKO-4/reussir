@@ -210,44 +210,63 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       
       if (CART_CONFIG.SYNC_WITH_BACKEND) {
-        const backendCart = await cartService.getCart();
-        
-        const items: CartItem[] = backendCart.items.map(item => ({
-          id: item.id,
-          subject: {
-            id: item.subjectId,
-            title: item.title,
-            description: item.description || '',
-            price: item.price,
-            image: item.image,
-            category: '',
-            level: '',
-            difficulty: '',
-            rating: 0,
-            studentsCount: 0,
-          },
-          quantity: item.quantity,
-          price: item.price,
-          originalPrice: item.price,
-          addedAt: item.addedAt.toString(),
-          updatedAt: new Date().toISOString(),
-        }));
-
-        dispatch({
-          type: 'LOAD_CART',
-          payload: {
-            cart: {
-              items,
-              itemsCount: backendCart.items.length,
-              subtotal: backendCart.subtotal,
-              discount: backendCart.discount,
-              tax: backendCart.tax,
-              total: backendCart.total,
-              currency: CART_CONFIG.CURRENCY,
-              updatedAt: new Date().toISOString(),
+        try {
+          const backendCart = await cartService.getCart();
+          
+          // Vérifier que backendCart est bien défini et a une propriété items
+          if (!backendCart || !backendCart.items) {
+            console.warn('[CartContext] Backend cart is empty or malformed, using local cart');
+            const savedCart = storage.get<Cart>(CART_CONFIG.STORAGE_KEY);
+            if (savedCart) {
+              dispatch({ type: 'LOAD_CART', payload: { cart: savedCart } });
             }
+            return;
           }
-        });
+          
+          const items: CartItem[] = backendCart.items.map(item => ({
+            id: item.id,
+            subject: {
+              id: item.subjectId,
+              title: item.title,
+              description: item.description || '',
+              price: item.price,
+              image: item.image,
+              category: '',
+              level: '',
+              difficulty: '',
+              rating: 0,
+              studentsCount: 0,
+            },
+            quantity: item.quantity,
+            price: item.price,
+            originalPrice: item.price,
+            addedAt: item.addedAt.toString(),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          dispatch({
+            type: 'LOAD_CART',
+            payload: {
+              cart: {
+                items,
+                itemsCount: backendCart.items.length,
+                subtotal: backendCart.subtotal,
+                discount: backendCart.discount,
+                tax: backendCart.tax,
+                total: backendCart.total,
+                currency: CART_CONFIG.CURRENCY,
+                updatedAt: new Date().toISOString(),
+              }
+            }
+          });
+        } catch (backendErr: any) {
+          console.error('[CartContext] Error loading from backend:', backendErr);
+          // Fallback to local storage if backend fails
+          const savedCart = storage.get<Cart>(CART_CONFIG.STORAGE_KEY);
+          if (savedCart) {
+            dispatch({ type: 'LOAD_CART', payload: { cart: savedCart } });
+          }
+        }
       } else {
         const savedCart = storage.get<Cart>(CART_CONFIG.STORAGE_KEY);
         if (savedCart) {

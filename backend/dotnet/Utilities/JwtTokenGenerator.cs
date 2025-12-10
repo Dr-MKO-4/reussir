@@ -2,24 +2,34 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Backend.Utilities;
 
 /// <summary>
-/// Utilitaire pour générer des tokens JWT de développement
+/// Utilitaire pour générer des tokens JWT
 /// </summary>
-public static class JwtTokenGenerator
+public class JwtTokenGenerator
 {
-    private static readonly string SecretKey = "your-super-secret-key-for-jwt-token-generation-12345-super-long-key";
-    private static readonly string Issuer = "https://reussir.local";
-    private static readonly string Audience = "https://localhost:7023";
+    private readonly string _secretKey;
+    private readonly string _issuer;
+    private readonly string _audience;
+    private readonly int _expirationMinutes;
 
-    public static string GenerateToken(Dictionary<string, object> claims, int expirationMinutes = 60)
+    public JwtTokenGenerator(IConfiguration configuration)
+    {
+        _secretKey = configuration["Jwt:SecretKey"] ?? "your-super-secret-key-for-jwt-token-generation-12345-super-long-key";
+        _issuer = configuration["Jwt:Issuer"] ?? "winplusApp";
+        _audience = configuration["Jwt:Audience"] ?? "winplusUsers";
+        _expirationMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
+    }
+
+    public string GenerateToken(Dictionary<string, object> claims, int? expirationMinutes = null)
     {
         try
         {
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(SecretKey));
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claimsList = new List<Claim>
@@ -35,10 +45,10 @@ public static class JwtTokenGenerator
             }
 
             var token = new JwtSecurityToken(
-                issuer: Issuer,
-                audience: Audience,
+                issuer: _issuer,
+                audience: _audience,
                 claims: claimsList,
-                expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+                expires: DateTime.UtcNow.AddMinutes(expirationMinutes ?? _expirationMinutes),
                 signingCredentials: credentials
             );
 

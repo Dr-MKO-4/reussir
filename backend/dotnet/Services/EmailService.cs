@@ -38,8 +38,8 @@ public class SmtpEmailService : IEmailService
             var smtpPort = int.Parse(smtpSettings["Port"] ?? "587");
             var smtpUsername = smtpSettings["Username"] ?? "";
             var smtpPassword = smtpSettings["Password"] ?? "";
-            var fromEmail = smtpSettings["FromEmail"] ?? "noreply@reussir.local";
-            var fromName = smtpSettings["FromName"] ?? "Réussir";
+            var fromEmail = smtpSettings["FromEmail"] ?? "noreply@winplus.local";
+            var fromName = smtpSettings["FromName"] ?? "Win+";
 
             using (var client = new SmtpClient(smtpServer, smtpPort))
             {

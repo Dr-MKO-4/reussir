@@ -165,7 +165,7 @@ const Signup = () => {
 
       // Redirect to dashboard or email verification page
       if (!response.user.isEmailVerified) {
-        navigate('/verify-email', { 
+        navigate('/verify-code', { 
           state: { email: formData.email } 
         });
       } else {

@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import CompleteProfile from './pages/CompleteProfile';
 import HomePage from './pages/HomePage';
 import EmailVerification from './pages/EmailVerification';
+import VerifyCode from './pages/VerifyCode';
 import ResetPassword from './pages/ResetPassword';
 import Student from './pages/Student';
 import ParentDashboard from './pages/Parent';
@@ -63,6 +64,7 @@ import Terms from './pages/Terms';
 import SubjectList from './pages/SubjectList';
 import Cookies from './pages/Cookies';
 import CatalogPage from './pages/CatalogPage';
+import VerifyCode from './pages/VerifyCode';
 // Route de protection pour rediriger les utilisateurs connectés
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -243,11 +245,15 @@ const AppRoutes: React.FC = () => {
       {/* Routes de vérification email - publiques */}
       <Route
         path="/verify-email/:token"
-        element={<EmailVerification/>}
+        element={<VerifyCode/>}
       />
       <Route
         path="/verify-email"
-        element={<EmailVerification/>}
+        element={<VerifyCode/>}
+      />
+      <Route
+        path="/verify-code"
+        element={<VerifyCode/>}
       />
 
       {/* Route de complétion de profil avec protection spéciale */}

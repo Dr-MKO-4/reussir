@@ -127,8 +127,8 @@ const Contact: React.FC = () => {
               <div className={styles.infoCard}>
                 <div className={styles.infoIcon}>📧</div>
                 <h3>Email</h3>
-                <p>support@reussir.com</p>
-                <p>info@reussir.com</p>
+                <p>support@winplus.com</p>
+                <p>info@winplus.com</p>
               </div>
               <div className={styles.infoCard}>
                 <div className={styles.infoIcon}>📞</div>
