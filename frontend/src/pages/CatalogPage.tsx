@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Filter, BookOpen, Star, Clock, Eye, Download,
-  ChevronRight, Heart, ShoppingCart, TrendingUp, Sparkles,
-  Award, Target, Zap, Users, ArrowLeft, X, Check, Crown,
-  Lock, Unlock, ChevronDown, Grid, List
+  Search, Filter, BookOpen, Star, Clock, Download,
+  Heart, ShoppingCart, TrendingUp, Users, ArrowLeft,
+  ChevronDown, Grid, List, Facebook, Twitter, Instagram,
+  Linkedin, Shield, Award, Target, Zap, Crown, Eye
 } from 'lucide-react';
+
 import styles from './Catalog.module.css';
 import { useCartContext } from '../contexts/CartContext';
 import { useToast } from '../hooks/useToast';
@@ -16,15 +17,32 @@ const CatalogPage = () => {
   const { showSuccess, showError } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExamType, setSelectedExamType] = useState('tous');
   const [selectedSubject, setSelectedSubject] = useState('tous');
-  const [selectedClass, setSelectedClass] = useState('tous');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('tous');
+  const [selectedYear, setSelectedYear] = useState('tous');
   const [selectedType, setSelectedType] = useState('tous');
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+
+  // Types d'examens et concours
+  const examTypes = [
+    { value: 'tous', label: 'Tous les examens' },
+    { value: 'bepc', label: 'BEPC Camerounais' },
+    { value: 'probatoire', label: 'Probatoire' },
+    { value: 'baccalaureat', label: 'Baccalauréat' },
+    { value: 'ensp', label: 'ENSP (École Normale Supérieure)' },
+    { value: 'enset', label: 'ENSET (Enseignement Technique)' },
+    { value: 'enam', label: 'ENAM (Administration et Magistrature)' },
+    { value: 'iric', label: 'IRIC (Relations Internationales)' },
+    { value: 'essec', label: 'ESSEC (Sciences Économiques)' },
+    { value: 'polytechnique', label: 'École Polytechnique' },
+    { value: 'iut', label: 'IUT (Institut Universitaire)' },
+    { value: 'fmsb', label: 'FMSB (Médecine et Sciences Biomédicales)' },
+  ];
 
   const subjects = [
     { value: 'tous', label: 'Toutes les matières' },
@@ -34,26 +52,19 @@ const CatalogPage = () => {
     { value: 'svt', label: 'SVT' },
     { value: 'francais', label: 'Français' },
     { value: 'anglais', label: 'Anglais' },
-    { value: 'histoire', label: 'Histoire-Géo' },
     { value: 'philosophie', label: 'Philosophie' },
+    { value: 'histoire', label: 'Histoire-Géo' },
+    { value: 'economie', label: 'Économie' },
     { value: 'informatique', label: 'Informatique' },
   ];
 
-  const classes = [
-    { value: 'tous', label: 'Tous les niveaux' },
-    { value: 'college', label: 'Collège' },
-    { value: 'seconde', label: 'Seconde' },
-    { value: 'premiere', label: 'Première' },
-    { value: 'terminale', label: 'Terminale' },
-    { value: 'universite', label: 'Université' },
-  ];
-
-  const difficulties = [
-    { value: 'tous', label: 'Toutes difficultés' },
-    { value: 'facile', label: 'Facile' },
-    { value: 'moyen', label: 'Moyen' },
-    { value: 'difficile', label: 'Difficile' },
-    { value: 'expert', label: 'Expert' },
+  const years = [
+    { value: 'tous', label: 'Toutes les années' },
+    { value: '2024', label: '2024' },
+    { value: '2023', label: '2023' },
+    { value: '2022', label: '2022' },
+    { value: '2021', label: '2021' },
+    { value: '2020', label: '2020' },
   ];
 
   const types = [
@@ -72,210 +83,86 @@ const CatalogPage = () => {
     histoire: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=400&h=250&fit=crop",
     philosophie: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=250&fit=crop",
     informatique: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=250&fit=crop",
+    economie: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop",
   };
 
+  // Base de données complète des épreuves
   const allTests = [
-    {
-      id: '1',
-      title: "Baccalauréat Mathématiques 2023",
-      subject: "mathematiques",
-      class: "terminale",
-      difficulty: "Difficile",
-      duration: "4h",
-      views: 1250,
-      downloads: 890,
-      rating: 4.8,
-      isFree: true,
-      image: testImages.mathematiques,
-      price: 0,
-      description: "Épreuve complète de mathématiques du baccalauréat 2023"
-    },
-    {
-      id: '2',
-      title: "Physique ENSPD 2023",
-      subject: "physique",
-      class: "terminale",
-      difficulty: "Expert",
-      duration: "3h",
-      views: 987,
-      downloads: 654,
-      rating: 4.9,
-      isFree: false,
-      image: testImages.physique,
-      price: 3000,
-      description: "Concours ENSPD - Épreuve de physique avancée"
-    },
-    {
-      id: '3',
-      title: "Français BAC Camerounais 2023",
-      subject: "francais",
-      class: "terminale",
-      difficulty: "Moyen",
-      duration: "2h30",
-      views: 2100,
-      downloads: 1500,
-      rating: 4.6,
-      isFree: true,
-      image: testImages.francais,
-      price: 0,
-      description: "Épreuve de français - Baccalauréat général"
-    },
-    {
-      id: '4',
-      title: "Chimie Organique Université",
-      subject: "chimie",
-      class: "universite",
-      difficulty: "Expert",
-      duration: "3h30",
-      views: 756,
-      downloads: 432,
-      rating: 4.7,
-      isFree: false,
-      image: testImages.chimie,
-      price: 3500,
-      description: "Examen final de chimie organique niveau L2"
-    },
-    {
-      id: '5',
-      title: "SVT Bepc 2023",
-      subject: "svt",
-      class: "college",
-      difficulty: "Facile",
-      duration: "2h",
-      views: 1890,
-      downloads: 1234,
-      rating: 4.5,
-      isFree: true,
-      image: testImages.svt,
-      price: 0,
-      description: "Épreuve de SVT pour le BEPC"
-    },
-    {
-      id: '6',
-      title: "Anglais Probatoire 2023",
-      subject: "anglais",
-      class: "premiere",
-      difficulty: "Moyen",
-      duration: "2h",
-      views: 1456,
-      downloads: 987,
-      rating: 4.4,
-      isFree: false,
-      image: testImages.anglais,
-      price: 2000,
-      description: "Épreuve complète d'anglais du probatoire"
-    },
-    {
-      id: '7',
-      title: "Mathématiques Seconde 2024",
-      subject: "mathematiques",
-      class: "seconde",
-      difficulty: "Moyen",
-      duration: "2h30",
-      views: 1678,
-      downloads: 1123,
-      rating: 4.6,
-      isFree: true,
-      image: testImages.mathematiques,
-      price: 0,
-      description: "Examen de mathématiques pour la classe de seconde"
-    },
-    {
-      id: '8',
-      title: "Histoire-Géo BAC 2023",
-      subject: "histoire",
-      class: "terminale",
-      difficulty: "Moyen",
-      duration: "3h",
-      views: 1234,
-      downloads: 876,
-      rating: 4.3,
-      isFree: false,
-      image: testImages.histoire,
-      price: 2500,
-      description: "Épreuve d'histoire et géographie du baccalauréat"
-    },
-    {
-      id: '9',
-      title: "Philosophie BAC 2023",
-      subject: "philosophie",
-      class: "terminale",
-      difficulty: "Difficile",
-      duration: "4h",
-      views: 1567,
-      downloads: 1098,
-      rating: 4.7,
-      isFree: false,
-      image: testImages.philosophie,
-      price: 2500,
-      description: "Dissertation et commentaire de texte"
-    },
-    {
-      id: '10',
-      title: "Informatique Licence 1",
-      subject: "informatique",
-      class: "universite",
-      difficulty: "Difficile",
-      duration: "3h",
-      views: 890,
-      downloads: 567,
-      rating: 4.8,
-      isFree: false,
-      image: testImages.informatique,
-      price: 3000,
-      description: "Programmation et algorithmique"
-    },
-    {
-      id: '11',
-      title: "Physique-Chimie Seconde",
-      subject: "physique",
-      class: "seconde",
-      difficulty: "Facile",
-      duration: "2h",
-      views: 1345,
-      downloads: 890,
-      rating: 4.4,
-      isFree: true,
-      image: testImages.physique,
-      price: 0,
-      description: "Contrôle continu de physique-chimie"
-    },
-    {
-      id: '12',
-      title: "Français Collège 3ème",
-      subject: "francais",
-      class: "college",
-      difficulty: "Facile",
-      duration: "2h",
-      views: 1789,
-      downloads: 1234,
-      rating: 4.5,
-      isFree: true,
-      image: testImages.francais,
-      price: 0,
-      description: "Brevet blanc de français"
-    },
+    // BEPC
+    { id: 'bepc1', title: "Mathématiques BEPC 2023", examType: "bepc", subject: "mathematiques", year: "2023", duration: "2h", downloads: 1250, rating: 4.5, isFree: true, image: testImages.mathematiques, price: 0, description: "Épreuve complète avec corrigé détaillé" },
+    { id: 'bepc2', title: "Français BEPC 2023", examType: "bepc", subject: "francais", year: "2023", duration: "2h", downloads: 980, rating: 4.3, isFree: true, image: testImages.francais, price: 0, description: "Composition et questions de compréhension" },
+    { id: 'bepc3', title: "Anglais BEPC 2023", examType: "bepc", subject: "anglais", year: "2023", duration: "2h", downloads: 850, rating: 4.4, isFree: true, image: testImages.anglais, price: 0, description: "Reading comprehension et expression écrite" },
+    { id: 'bepc4', title: "SVT BEPC 2022", examType: "bepc", subject: "svt", year: "2022", duration: "2h", downloads: 720, rating: 4.2, isFree: false, image: testImages.svt, price: 1500, description: "Biologie et sciences de la terre" },
+    
+    // Probatoire
+    { id: 'prob1', title: "Mathématiques Probatoire C 2023", examType: "probatoire", subject: "mathematiques", year: "2023", duration: "3h", downloads: 2100, rating: 4.7, isFree: false, image: testImages.mathematiques, price: 2000, description: "Série C - Épreuve complète corrigée" },
+    { id: 'prob2', title: "Physique Probatoire D 2023", examType: "probatoire", subject: "physique", year: "2023", duration: "3h", downloads: 1800, rating: 4.6, isFree: false, image: testImages.physique, price: 2000, description: "Série D - Mécanique et électricité" },
+    { id: 'prob3', title: "Philosophie Probatoire A 2023", examType: "probatoire", subject: "philosophie", year: "2023", duration: "4h", downloads: 1500, rating: 4.5, isFree: false, image: testImages.philosophie, price: 2000, description: "Série A - Dissertation et commentaire" },
+    { id: 'prob4', title: "Histoire-Géo Probatoire 2022", examType: "probatoire", subject: "histoire", year: "2022", duration: "3h", downloads: 1200, rating: 4.3, isFree: true, image: testImages.histoire, price: 0, description: "Toutes séries - Épreuve d'histoire" },
+    
+    // Baccalauréat
+    { id: 'bac1', title: "Mathématiques BAC C 2023", examType: "baccalaureat", subject: "mathematiques", year: "2023", duration: "4h", downloads: 3500, rating: 4.9, isFree: false, image: testImages.mathematiques, price: 3000, description: "BAC série C - Corrigé détaillé avec barème" },
+    { id: 'bac2', title: "Physique BAC D 2023", examType: "baccalaureat", subject: "physique", year: "2023", duration: "4h", downloads: 3200, rating: 4.8, isFree: false, image: testImages.physique, price: 3000, description: "BAC série D - Physique complète" },
+    { id: 'bac3', title: "Français BAC A 2023", examType: "baccalaureat", subject: "francais", year: "2023", duration: "4h", downloads: 2800, rating: 4.7, isFree: false, image: testImages.francais, price: 2500, description: "BAC série A - Littérature" },
+    { id: 'bac4', title: "Philosophie BAC 2023", examType: "baccalaureat", subject: "philosophie", year: "2023", duration: "4h", downloads: 2600, rating: 4.6, isFree: true, image: testImages.philosophie, price: 0, description: "Toutes séries - Sujets et corrigés" },
+    
+    // ENSP
+    { id: 'ensp1', title: "Mathématiques ENSP 2023", examType: "ensp", subject: "mathematiques", year: "2023", duration: "3h", downloads: 1800, rating: 4.8, isFree: false, image: testImages.mathematiques, price: 4000, description: "Concours ENSP - Niveau avancé" },
+    { id: 'ensp2', title: "Français ENSP 2023", examType: "ensp", subject: "francais", year: "2023", duration: "3h", downloads: 1500, rating: 4.7, isFree: false, image: testImages.francais, price: 4000, description: "Culture générale et expression" },
+    { id: 'ensp3', title: "Épreuve générale ENSP 2022", examType: "ensp", subject: "francais", year: "2022", duration: "4h", downloads: 1200, rating: 4.6, isFree: false, image: testImages.francais, price: 3500, description: "Épreuve de culture générale" },
+    
+    // ENSET
+    { id: 'enset1', title: "Mathématiques ENSET 2023", examType: "enset", subject: "mathematiques", year: "2023", duration: "3h", downloads: 980, rating: 4.7, isFree: false, image: testImages.mathematiques, price: 3500, description: "Concours d'entrée ENSET" },
+    { id: 'enset2', title: "Physique ENSET 2023", examType: "enset", subject: "physique", year: "2023", duration: "3h", downloads: 850, rating: 4.6, isFree: false, image: testImages.physique, price: 3500, description: "Épreuve technique ENSET" },
+    
+    // ENAM
+    { id: 'enam1', title: "Culture Générale ENAM 2023", examType: "enam", subject: "francais", year: "2023", duration: "4h", downloads: 1600, rating: 4.8, isFree: false, image: testImages.francais, price: 4500, description: "Concours ENAM - Section A" },
+    { id: 'enam2', title: "Droit ENAM 2023", examType: "enam", subject: "economie", year: "2023", duration: "3h", downloads: 1400, rating: 4.7, isFree: false, image: testImages.economie, price: 4500, description: "Droit administratif et constitutionnel" },
+    
+    // IRIC
+    { id: 'iric1', title: "Relations Internationales IRIC 2023", examType: "iric", subject: "histoire", year: "2023", duration: "4h", downloads: 890, rating: 4.6, isFree: false, image: testImages.histoire, price: 4000, description: "Géopolitique et relations internationales" },
+    { id: 'iric2', title: "Anglais IRIC 2023", examType: "iric", subject: "anglais", year: "2023", duration: "3h", downloads: 750, rating: 4.5, isFree: false, image: testImages.anglais, price: 4000, description: "English proficiency test" },
+    
+    // ESSEC
+    { id: 'essec1', title: "Économie ESSEC 2023", examType: "essec", subject: "economie", year: "2023", duration: "4h", downloads: 1300, rating: 4.7, isFree: false, image: testImages.economie, price: 4000, description: "Microéconomie et macroéconomie" },
+    { id: 'essec2', title: "Mathématiques ESSEC 2023", examType: "essec", subject: "mathematiques", year: "2023", duration: "3h", downloads: 1100, rating: 4.6, isFree: false, image: testImages.mathematiques, price: 4000, description: "Mathématiques pour économistes" },
+    
+    // Polytechnique
+    { id: 'poly1', title: "Mathématiques Polytechnique 2023", examType: "polytechnique", subject: "mathematiques", year: "2023", duration: "4h", downloads: 2200, rating: 4.9, isFree: false, image: testImages.mathematiques, price: 5000, description: "Concours Polytechnique - Niveau expert" },
+    { id: 'poly2', title: "Physique Polytechnique 2023", examType: "polytechnique", subject: "physique", year: "2023", duration: "4h", downloads: 2000, rating: 4.9, isFree: false, image: testImages.physique, price: 5000, description: "Physique avancée" },
+    { id: 'poly3', title: "Chimie Polytechnique 2022", examType: "polytechnique", subject: "chimie", year: "2022", duration: "3h", downloads: 1800, rating: 4.8, isFree: false, image: testImages.chimie, price: 4500, description: "Chimie générale et organique" },
+    
+    // IUT
+    { id: 'iut1', title: "Informatique IUT 2023", examType: "iut", subject: "informatique", year: "2023", duration: "3h", downloads: 1500, rating: 4.7, isFree: false, image: testImages.informatique, price: 3500, description: "Algorithmique et programmation" },
+    { id: 'iut2', title: "Mathématiques IUT 2023", examType: "iut", subject: "mathematiques", year: "2023", duration: "3h", downloads: 1300, rating: 4.6, isFree: false, image: testImages.mathematiques, price: 3500, description: "Mathématiques appliquées" },
+    
+    // FMSB
+    { id: 'fmsb1', title: "Biologie FMSB 2023", examType: "fmsb", subject: "svt", year: "2023", duration: "4h", downloads: 1700, rating: 4.8, isFree: false, image: testImages.svt, price: 5000, description: "Concours médecine - Biologie" },
+    { id: 'fmsb2', title: "Chimie FMSB 2023", examType: "fmsb", subject: "chimie", year: "2023", duration: "3h", downloads: 1600, rating: 4.7, isFree: false, image: testImages.chimie, price: 5000, description: "Chimie organique et biochimie" },
   ];
 
+  // Filtrage des épreuves
   const filteredTests = allTests.filter(test => {
     const searchMatch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        test.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const examMatch = selectedExamType === 'tous' || test.examType === selectedExamType;
     const subjectMatch = selectedSubject === 'tous' || test.subject === selectedSubject;
-    const classMatch = selectedClass === 'tous' || test.class === selectedClass;
-    const difficultyMatch = selectedDifficulty === 'tous' || test.difficulty.toLowerCase() === selectedDifficulty;
+    const yearMatch = selectedYear === 'tous' || test.year === selectedYear;
     const typeMatch = selectedType === 'tous' || 
                      (selectedType === 'gratuit' && test.isFree) ||
                      (selectedType === 'payant' && !test.isFree);
+    const favoriteMatch = !showFavorites || favorites.includes(test.id);
     
-    return searchMatch && subjectMatch && classMatch && difficultyMatch && typeMatch;
+    return searchMatch && examMatch && subjectMatch && yearMatch && typeMatch && favoriteMatch;
   });
 
+  // Tri des épreuves
   const sortedTests = [...filteredTests].sort((a, b) => {
     switch(sortBy) {
       case 'popular':
-        return b.views - a.views;
+        return b.downloads - a.downloads;
       case 'recent':
-        return b.id.localeCompare(a.id);
+        return b.year.localeCompare(a.year);
       case 'rating':
         return b.rating - a.rating;
       case 'price-asc':
@@ -307,10 +194,10 @@ const CatalogPage = () => {
         price: test.price,
         image: test.image,
         category: test.subject,
-        level: test.class,
-        difficulty: test.difficulty,
+        level: test.examType,
+        difficulty: test.examType,
         rating: test.rating,
-        studentsCount: test.views,
+        studentsCount: test.downloads,
       };
 
       await addItem(subjectData, 1);
@@ -339,9 +226,17 @@ const CatalogPage = () => {
 
             <div className={styles.logo} onClick={() => navigate('/')}>
               <div className={styles.logoIcon}>  
-                <img src="\logo1.png" alt="Win+" />
+                <img src="/logo1.png" alt="Win+" />
               </div>
+              <span className={styles.logoText}>Win+</span>
             </div>
+
+            <nav className={styles.nav}>
+              <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>Accueil</a>
+              <a href="/catalog" onClick={(e) => { e.preventDefault(); navigate('/catalog'); }} className={styles.active}>Catalogue</a>
+              <a href="/about" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>À propos</a>
+              <a href="/contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>Contact</a>
+            </nav>
 
             <div className={styles.headerActions}>
               <button 
@@ -363,72 +258,31 @@ const CatalogPage = () => {
         </div>
       </header>
 
-      {/* Hero Banner */}
-      <section className={styles.heroBanner}>
+      {/* Hero Section */}
+      <section className={styles.hero}>
         <div className={styles.container}>
           <div className={styles.heroContent}>
-            <div className={styles.heroLeft}>
-              <div className={styles.badge}>
-                <Sparkles size={16} /> Catalogue
-              </div>
-              <h1 className={styles.heroTitle}>
-                Explorez notre <span className={styles.accent}>bibliothèque</span> d'épreuves
-              </h1>
-              <p className={styles.heroSubtitle}>
-                Plus de 1000+ épreuves corrigées pour exceller dans vos études
-              </p>
+            <div className={styles.heroText}>
+              <h1>Catalogue d'Épreuves</h1>
+              <p>Accédez à plus de 1000 épreuves corrigées des examens et concours camerounais</p>
               <div className={styles.heroStats}>
                 <div className={styles.statItem}>
-                  <BookOpen size={24} className={styles.statIcon} />
-                  <div>
-                    <div className={styles.statNumber}>1000+</div>
-                    <div className={styles.statLabel}>Épreuves</div>
-                  </div>
+                  <BookOpen size={20} />
+                  <span>{allTests.length}+ Épreuves</span>
                 </div>
                 <div className={styles.statItem}>
-                  <Users size={24} className={styles.statIcon} />
-                  <div>
-                    <div className={styles.statNumber}>2000+</div>
-                    <div className={styles.statLabel}>Étudiants</div>
-                  </div>
+                  <Users size={20} />
+                  <span>2000+ Étudiants</span>
                 </div>
                 <div className={styles.statItem}>
-                  <Star size={24} className={styles.statIcon} />
-                  <div>
-                    <div className={styles.statNumber}>4.8/5</div>
-                    <div className={styles.statLabel}>Note moyenne</div>
-                  </div>
+                  <Star size={20} />
+                  <span>4.8/5 Note</span>
                 </div>
               </div>
             </div>
-            <div className={styles.heroRight}>
-              <div className={styles.floatingCard}>
-                <Crown size={32} className={styles.floatingIcon} />
-                <h3>Accès Premium</h3>
-                <p>Débloquez toutes les épreuves</p>
-                <button className={styles.btnHero} onClick={() => navigate('/signup')}>
-                  Essayer gratuitement
-                </button>
-              </div>
+            <div className={styles.heroImage}>
+              <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=400&fit=crop" alt="Catalogue" />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section className={styles.ctaBanner}>
-        <div className={styles.container}>
-          <div className={styles.ctaContent}>
-            <div className={styles.ctaIcon}>
-              <Zap size={32} />
-            </div>
-            <div className={styles.ctaText}>
-              <h3>🎯 Connectez-vous pour un suivi personnalisé par IA</h3>
-              <p>Suivez vos progrès, recevez des recommandations personnalisées et débloquez des fonctionnalités exclusives</p>
-            </div>
-            <button className={styles.btnCtaLarge} onClick={() => navigate('/signup')}>
-              Créer un compte gratuit
-            </button>
           </div>
         </div>
       </section>
@@ -436,9 +290,55 @@ const CatalogPage = () => {
       {/* Main Content */}
       <main className={styles.main}>
         <div className={styles.container}>
-          <div className={styles.contentWrapper}>
-            {/* Search & Filters */}
-            <div className={styles.searchSection}>
+          {/* Filters Section */}
+          <div className={styles.filtersSection}>
+            <div className={styles.mainFilters}>
+              <div className={styles.filterGroup}>
+                <label>Type d'examen</label>
+                <select 
+                  value={selectedExamType}
+                  onChange={(e) => setSelectedExamType(e.target.value)}
+                  className={styles.select}
+                >
+                  {examTypes.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Matière</label>
+                <select 
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className={styles.select}
+                >
+                  {subjects.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Année</label>
+                <select 
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className={styles.select}
+                >
+                  {years.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Type</label>
+                <select 
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className={styles.select}
+                >
+                  {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles.searchAndSort}>
               <div className={styles.searchBar}>
                 <Search size={20} className={styles.searchIcon} />
                 <input
@@ -450,239 +350,186 @@ const CatalogPage = () => {
                 />
               </div>
 
+              <div className={styles.sortGroup}>
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={styles.select}
+                >
+                  <option value="popular">Plus populaires</option>
+                  <option value="recent">Plus récents</option>
+                  <option value="rating">Mieux notés</option>
+                  <option value="price-asc">Prix croissant</option>
+                  <option value="price-desc">Prix décroissant</option>
+                </select>
+              </div>
+
               <button 
-                className={styles.filterToggle}
-                onClick={() => setShowFilters(!showFilters)}
+                className={`${styles.favoritesBtn} ${showFavorites ? styles.active : ''}`}
+                onClick={() => setShowFavorites(!showFavorites)}
               >
-                <Filter size={18} />
-                Filtres
-                <ChevronDown size={16} className={showFilters ? styles.rotated : ''} />
+                <Heart size={18} fill={showFavorites ? 'currentColor' : 'none'} />
+                Favoris ({favorites.length})
               </button>
-
-              <div className={styles.viewToggle}>
-                <button 
-                  className={`${styles.viewBtn} ${viewMode === 'grid' ? styles.active : ''}`}
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid size={18} />
-                </button>
-                <button 
-                  className={`${styles.viewBtn} ${viewMode === 'list' ? styles.active : ''}`}
-                  onClick={() => setViewMode('list')}
-                >
-                  <List size={18} />
-                </button>
-              </div>
             </div>
-
-            {showFilters && (
-              <div className={styles.filtersPanel}>
-                <div className={styles.filterGroup}>
-                  <label>Matière</label>
-                  <select 
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                    className={styles.select}
-                  >
-                    {subjects.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
-                </div>
-
-                <div className={styles.filterGroup}>
-                  <label>Niveau</label>
-                  <select 
-                    value={selectedClass}
-                    onChange={(e) => setSelectedClass(e.target.value)}
-                    className={styles.select}
-                  >
-                    {classes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                </div>
-
-                <div className={styles.filterGroup}>
-                  <label>Difficulté</label>
-                  <select 
-                    value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                    className={styles.select}
-                  >
-                    {difficulties.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-                  </select>
-                </div>
-
-                <div className={styles.filterGroup}>
-                  <label>Type</label>
-                  <select 
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className={styles.select}
-                  >
-                    {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-
-                <div className={styles.filterGroup}>
-                  <label>Trier par</label>
-                  <select 
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className={styles.select}
-                  >
-                    <option value="popular">Plus populaires</option>
-                    <option value="recent">Plus récents</option>
-                    <option value="rating">Mieux notés</option>
-                    <option value="price-asc">Prix croissant</option>
-                    <option value="price-desc">Prix décroissant</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Results Info */}
-            <div className={styles.resultsInfo}>
-              <p>{sortedTests.length} épreuve{sortedTests.length > 1 ? 's' : ''} trouvée{sortedTests.length > 1 ? 's' : ''}</p>
-            </div>
-
-            {/* Tests Grid */}
-            <div className={`${styles.testsGrid} ${viewMode === 'list' ? styles.listView : ''}`}>
-              {sortedTests.map(test => (
-                <article key={test.id} className={styles.testCard}>
-                  <div className={styles.testImageContainer}>
-                    <img 
-                      src={test.image}
-                      alt={test.title}
-                      className={styles.testImage}
-                    />
-                    <span className={styles.difficulty}>{test.difficulty}</span>
-                    <button 
-                      className={`${styles.favoriteBtn} ${favorites.includes(test.id) ? styles.favorited : ''}`}
-                      onClick={() => toggleFavorite(test.id)}
-                      aria-label="Ajouter aux favoris"
-                    >
-                      <Heart size={18} fill={favorites.includes(test.id) ? 'currentColor' : 'none'} />
-                    </button>
-                    {!test.isFree && (
-                      <span className={styles.priceBadge}>{test.price} FCFA</span>
-                    )}
-                    {test.isFree && (
-                      <span className={styles.freeBadge}>Gratuit</span>
-                    )}
-                  </div>
-
-                  <div className={styles.testContent}>
-                    <h3 className={styles.testTitle}>{test.title}</h3>
-                    <p className={styles.testDescription}>{test.description}</p>
-                    
-                    <div className={styles.testMeta}>
-                      <span><Clock size={14} /> {test.duration}</span>
-                      <span><Eye size={14} /> {test.views}</span>
-                      <span><Download size={14} /> {test.downloads}</span>
-                    </div>
-
-                    <div className={styles.testFooter}>
-                      <div className={styles.rating}>
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            size={14} 
-                            fill={i < Math.floor(test.rating) ? '#FF8C00' : 'none'}
-                            color="#FF8C00"
-                          />
-                        ))}
-                        <span>({test.rating})</span>
-                      </div>
-                    </div>
-
-                    <button 
-                      className={test.isFree ? styles.btnDownload : styles.btnAddCart}
-                      onClick={() => test.isFree ? null : handleAddToCart(test)}
-                      disabled={loadingItems[test.id]}
-                    >
-                      {test.isFree ? (
-                        <>
-                          <Download size={16} />
-                          Télécharger
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart size={16} />
-                          {loadingItems[test.id] ? 'Ajout...' : 'Ajouter au panier'}
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {sortedTests.length === 0 && (
-              <div className={styles.emptyState}>
-                <BookOpen size={64} className={styles.emptyIcon} />
-                <h3>Aucune épreuve trouvée</h3>
-                <p>Essayez de modifier vos filtres de recherche</p>
-              </div>
-            )}
           </div>
+
+          {/* Results */}
+          <div className={styles.resultsInfo}>
+            <p>{sortedTests.length} épreuve{sortedTests.length > 1 ? 's' : ''} trouvée{sortedTests.length > 1 ? 's' : ''}</p>
+          </div>
+
+          {/* Tests Grid */}
+          <div className={styles.testsGrid}>
+            {sortedTests.map(test => (
+              <article key={test.id} className={styles.testCard}>
+                <div className={styles.testImageContainer}>
+                  <img 
+                    src={test.image}
+                    alt={test.title}
+                    className={styles.testImage}
+                  />
+                  <button 
+                    className={`${styles.favoriteBtn} ${favorites.includes(test.id) ? styles.favorited : ''}`}
+                    onClick={() => toggleFavorite(test.id)}
+                    aria-label="Ajouter aux favoris"
+                  >
+                    <Heart size={18} fill={favorites.includes(test.id) ? 'currentColor' : 'none'} />
+                  </button>
+                  {test.isFree ? (
+                    <span className={styles.freeBadge}>Gratuit</span>
+                  ) : (
+                    <span className={styles.priceBadge}>{test.price} FCFA</span>
+                  )}
+                </div>
+
+                <div className={styles.testContent}>
+                  <h3 className={styles.testTitle}>{test.title}</h3>
+                  <p className={styles.testDescription}>{test.description}</p>
+                  
+                  <div className={styles.testMeta}>
+                    <span><Clock size={14} /> {test.duration}</span>
+                    <span><Download size={14} /> {test.downloads}</span>
+                  </div>
+
+                  <div className={styles.testFooter}>
+                    <div className={styles.rating}>
+                      <Star size={14} fill="#FFA500" color="#FFA500" />
+                      <span>{test.rating}</span>
+                    </div>
+                    {!test.isFree && (
+                      <div className={styles.price}>{test.price} FCFA</div>
+                    )}
+                  </div>
+
+                  <button 
+                    className={test.isFree ? styles.btnDownload : styles.btnAddCart}
+                    onClick={() => test.isFree ? null : handleAddToCart(test)}
+                    disabled={loadingItems[test.id]}
+                  >
+                    {test.isFree ? (
+                      <>
+                        <Download size={16} />
+                        Télécharger
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={16} />
+                        {loadingItems[test.id] ? 'Ajout...' : 'Ajouter au panier'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {sortedTests.length === 0 && (
+            <div className={styles.emptyState}>
+              <BookOpen size={64} className={styles.emptyIcon} />
+              <h3>Aucune épreuve trouvée</h3>
+              <p>Essayez de modifier vos filtres de recherche</p>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Benefits Section */}
-      <section className={styles.benefitsSection}>
+      {/* Footer */}
+      <footer className={styles.footer}>
         <div className={styles.container}>
-          <div className={styles.benefitsGrid}>
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>
-                <Target size={32} />
+          <div className={styles.footerContent}>
+            <div className={styles.footerSection}>
+              <div className={styles.footerLogo}>
+                <div className={styles.logoIcon}>  
+                  <img src="/logo1.png" alt="Win+" />
+                </div>
+                <span className={styles.logoText}>Win+</span>
               </div>
-              <h3>Suivi personnalisé</h3>
-              <p>Notre IA analyse vos performances et adapte vos recommandations</p>
-              <button className={styles.btnBenefit} onClick={() => navigate('/signup')}>
-                Commencer maintenant
-              </button>
+              <p className={styles.footerText}>
+                Autonomiser les éducateurs pour améliorer notre monde
+              </p>
+              <div className={styles.socialIcons}>
+                <a href="#" className={styles.socialIcon} aria-label="Facebook">
+                  <Facebook size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="Twitter">
+                  <Twitter size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="LinkedIn">
+                  <Linkedin size={20} />
+                </a>
+                <a href="#" className={styles.socialIcon} aria-label="Instagram">
+                  <Instagram size={20} />
+                </a>
+              </div>
+            </div>
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>Légal</h4>
+              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} className={styles.footerLink}>Confidentialité</a>
+              <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} className={styles.footerLink}>Conditions</a>
+              <a href="#" className={styles.footerLink}>Cookies</a>
             </div>
 
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>
-                <TrendingUp size={32} />
-              </div>
-              <h3>Progression garantie</h3>
-              <p>95% de nos utilisateurs améliorent leurs notes en 3 mois</p>
-              <button className={styles.btnBenefit} onClick={() => navigate('/signup')}>
-                Rejoindre Win+
-              </button>
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>Support</h4>
+              <a href="#" className={styles.footerLink}>Documentation</a>
+              <a href="#" className={styles.footerLink}>Forums</a>
+              <a href="#" className={styles.footerLink}>Service Providers</a>
             </div>
 
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>
-                <Award size={32} />
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerHeading}>S'impliquer</h4>
+              <a href="#" className={styles.footerLink}>Développement</a>
+              <a href="#" className={styles.footerLink}>Traduction</a>
+              <a href="#" className={styles.footerLink}>Expérience utilisateur</a>
+            </div>
+          </div>
+
+          <div className={styles.footerBottom}>
+            <div>
+              <p className={styles.footerCopyright}>
+                © 2024 Win+. Tous droits réservés.
+              </p>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', marginRight: '16px', textDecoration: 'none' }}>
+                  Politique de confidentialité
+                </a>
+                <a href="/terms" onClick={(e) => { e.preventDefault(); navigate('/terms'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', textDecoration: 'none' }}>
+                  Conditions d'utilisation
+                </a>
               </div>
-              <h3>Certificats reconnus</h3>
-              <p>Obtenez des certificats validant vos compétences</p>
-              <button className={styles.btnBenefit} onClick={() => navigate('/signup')}>
-                En savoir plus
-              </button>
+            </div>
+            <div className={styles.footerBadges}>
+              <span className={styles.footerBadge}>
+                <Shield size={16} /> Sécurisé
+              </span>
+              <span className={styles.footerBadge}>
+                <Award size={16} /> Certifié
+              </span>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className={styles.finalCta}>
-        <div className={styles.container}>
-          <div className={styles.finalCtaContent}>
-            <h2>Prêt à exceller dans vos études ?</h2>
-            <p>Rejoignez 2000+ étudiants qui ont déjà transformé leurs résultats avec Win+</p>
-            <div className={styles.ctaButtons}>
-              <button className={styles.btnFinalPrimary} onClick={() => navigate('/signup')}>
-                Créer un compte gratuit
-              </button>
-              <button className={styles.btnFinalSecondary} onClick={() => navigate('/')}>
-                En savoir plus
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+      </footer>
     </div>
   );
 };
