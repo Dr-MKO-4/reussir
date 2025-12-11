@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Filter, BookOpen, Star, Clock, Download,
-  Heart, ShoppingCart, TrendingUp, Users, ArrowLeft,
-  ChevronDown, Grid, List, Facebook, Twitter, Instagram,
-  Linkedin, Shield, Award, Target, Zap, Crown, Eye
+  Search, BookOpen, Star, Clock, Download,
+  Heart, ShoppingCart, Users, ArrowLeft,
+  Facebook, Twitter, Instagram, Linkedin, 
+  Shield, Award, ChevronLeft, ChevronRight,
+  Filter, X, Crown, TrendingUp, Award as Trophy,
+  CheckCircle, Zap, Target, Eye,MapPin,Mail,MessageSquare,Phone
 } from 'lucide-react';
 
 import styles from './Catalog.module.css';
@@ -22,11 +24,70 @@ const CatalogPage = () => {
   const [selectedYear, setSelectedYear] = useState('tous');
   const [selectedType, setSelectedType] = useState('tous');
   const [sortBy, setSortBy] = useState('popular');
-  const [viewMode, setViewMode] = useState('grid');
-  const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRating, setSelectedRating] = useState('tous');
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000 });
+   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [openFilters, setOpenFilters] = useState({
+    examType: true,
+    subject: true,
+    year: true,
+    type: true,
+    rating: true,
+  });
+
+  const itemsPerPage = 12;
+
+  const toggleFilter = (filterName: keyof typeof openFilters) => {
+    setOpenFilters(prev => ({
+      ...prev,
+      [filterName]: !prev[filterName]
+    }));
+  }
+
+
+  // Announcements carousel - Maintenant avec Win+ Premium
+  const announcements = [
+    {
+      id: 1,
+      text: "Parents : Suivez les progrès de vos enfants en temps réel",
+      cta: "Créer un compte Parent",
+      color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    },
+    {
+      id: 2,
+      text: "Professeurs : Accédez à l'IA pour un suivi personnalisé",
+      cta: "Découvrir l'offre Enseignant",
+      color: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    },
+    {
+      id: 3,
+      text: "Passez à Win+ Premium - Accès illimité à toutes les épreuves",
+      cta: "Découvrir Premium",
+      color: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+    },
+    {
+      id: 4,
+      text: "Étudiants : Plus de 1000 épreuves corrigées disponibles",
+      cta: "Commencer gratuitement",
+      color: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    },
+  ];
+
+  // Auto-rotate announcements
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentAnnouncementIndex((prev) => 
+        prev === announcements.length - 1 ? 0 : prev + 1
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Types d'examens et concours
   const examTypes = [
@@ -71,6 +132,13 @@ const CatalogPage = () => {
     { value: 'tous', label: 'Tous types' },
     { value: 'gratuit', label: 'Gratuit' },
     { value: 'payant', label: 'Payant' },
+  ];
+
+  const ratings = [
+    { value: 'tous', label: 'Toutes notes' },
+    { value: '4', label: '4+ étoiles' },
+    { value: '3', label: '3+ étoiles' },
+    { value: '2', label: '2+ étoiles' },
   ];
 
   const testImages = {
@@ -142,37 +210,49 @@ const CatalogPage = () => {
   ];
 
   // Filtrage des épreuves
-  const filteredTests = allTests.filter(test => {
-    const searchMatch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                       test.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const examMatch = selectedExamType === 'tous' || test.examType === selectedExamType;
-    const subjectMatch = selectedSubject === 'tous' || test.subject === selectedSubject;
-    const yearMatch = selectedYear === 'tous' || test.year === selectedYear;
-    const typeMatch = selectedType === 'tous' || 
-                     (selectedType === 'gratuit' && test.isFree) ||
-                     (selectedType === 'payant' && !test.isFree);
-    const favoriteMatch = !showFavorites || favorites.includes(test.id);
-    
-    return searchMatch && examMatch && subjectMatch && yearMatch && typeMatch && favoriteMatch;
-  });
+  const filteredTests = useMemo(() => {
+    return allTests.filter(test => {
+      const searchMatch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         test.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const examMatch = selectedExamType === 'tous' || test.examType === selectedExamType;
+      const subjectMatch = selectedSubject === 'tous' || test.subject === selectedSubject;
+      const yearMatch = selectedYear === 'tous' || test.year === selectedYear;
+      const typeMatch = selectedType === 'tous' || 
+                       (selectedType === 'gratuit' && test.isFree) ||
+                       (selectedType === 'payant' && !test.isFree);
+      const favoriteMatch = !showFavorites || favorites.includes(test.id);
+      const ratingMatch = selectedRating === 'tous' || test.rating >= parseFloat(selectedRating);
+      const priceMatch = test.price >= priceRange.min && test.price <= priceRange.max;
+      
+      return searchMatch && examMatch && subjectMatch && yearMatch && typeMatch && favoriteMatch && ratingMatch && priceMatch;
+    });
+  }, [allTests, searchQuery, selectedExamType, selectedSubject, selectedYear, selectedType, showFavorites, favorites, selectedRating, priceRange]);
 
   // Tri des épreuves
-  const sortedTests = [...filteredTests].sort((a, b) => {
-    switch(sortBy) {
-      case 'popular':
-        return b.downloads - a.downloads;
-      case 'recent':
-        return b.year.localeCompare(a.year);
-      case 'rating':
-        return b.rating - a.rating;
-      case 'price-asc':
-        return a.price - b.price;
-      case 'price-desc':
-        return b.price - a.price;
-      default:
-        return 0;
-    }
-  });
+  const sortedTests = useMemo(() => {
+    return [...filteredTests].sort((a, b) => {
+      switch(sortBy) {
+        case 'popular':
+          return b.downloads - a.downloads;
+        case 'recent':
+          return b.year.localeCompare(a.year);
+        case 'rating':
+          return b.rating - a.rating;
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        default:
+          return 0;
+      }
+    });
+  }, [filteredTests, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedTests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTests = sortedTests.slice(startIndex, endIndex);
 
   const toggleFavorite = (testId: string) => {
     setFavorites(prev => 
@@ -210,6 +290,32 @@ const CatalogPage = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const clearAllFilters = () => {
+    setSelectedExamType('tous');
+    setSelectedSubject('tous');
+    setSelectedYear('tous');
+    setSelectedType('tous');
+    setSelectedRating('tous');
+    setPriceRange({ min: 0, max: 10000 });
+    setSearchQuery('');
+    setShowFavorites(false);
+    setCurrentPage(1);
+  };
+
+  const handleAnnouncementClick = () => {
+    if (currentAnnouncementIndex === 2) {
+      // C'est l'annonce Premium
+      navigate('/pricing');
+    } else {
+      navigate('/login');
+    }
+  };
+
   return (
     <div className={styles.wrapper}>
       {/* Header */}
@@ -231,12 +337,16 @@ const CatalogPage = () => {
               <span className={styles.logoText}>Win+</span>
             </div>
 
-            <nav className={styles.nav}>
-              <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>Accueil</a>
-              <a href="/catalog" onClick={(e) => { e.preventDefault(); navigate('/catalog'); }} className={styles.active}>Catalogue</a>
-              <a href="/about" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>À propos</a>
-              <a href="/contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>Contact</a>
-            </nav>
+            <div className={styles.headerSearch}>
+              <Search size={18} className={styles.headerSearchIcon} />
+              <input
+                type="text"
+                placeholder="Rechercher une épreuve..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.headerSearchInput}
+              />
+            </div>
 
             <div className={styles.headerActions}>
               <button 
@@ -258,201 +368,551 @@ const CatalogPage = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className={styles.hero}>
+      {/* Announcement Carousel */}
+      <div className={styles.announcementBar} style={{ background: announcements[currentAnnouncementIndex].color }}>
         <div className={styles.container}>
-          <div className={styles.heroContent}>
-            <div className={styles.heroText}>
-              <h1>Catalogue d'Épreuves</h1>
-              <p>Accédez à plus de 1000 épreuves corrigées des examens et concours camerounais</p>
-              <div className={styles.heroStats}>
-                <div className={styles.statItem}>
-                  <BookOpen size={20} />
-                  <span>{allTests.length}+ Épreuves</span>
+          <div className={styles.announcementContent}>
+            <div className={styles.announcementText}>
+              {currentAnnouncementIndex === 2 ? <Crown size={20} /> : <Zap size={20} />}
+              <span>{announcements[currentAnnouncementIndex].text}</span>
+            </div>
+            <button 
+              className={styles.announcementCta}
+              onClick={handleAnnouncementClick}
+            >
+              {announcements[currentAnnouncementIndex].cta}
+            </button>
+            <div className={styles.announcementDots}>
+              {announcements.map((_, index) => (
+                <button
+                  key={index}
+                  className={`${styles.announcementDot} ${index === currentAnnouncementIndex ? styles.active : ''}`}
+                  onClick={() => setCurrentAnnouncementIndex(index)}
+                  aria-label={`Annonce ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className={styles.mainContent}>
+        <div className={styles.container}>
+          <div className={styles.contentGrid}>
+            {/* Sidebar Filters */}
+            {/* Sidebar Filters */}
+<aside className={styles.sidebar}>
+  <div className={styles.sidebarWrapper}>
+    <div className={styles.sidebarSticky}>
+      <div className={styles.sidebarHeader}>
+        <div className={styles.sidebarTitle}>
+          <Filter size={20} />
+          <span>Filtres</span>
+        </div>
+        {(selectedExamType !== 'tous' || selectedSubject !== 'tous' || selectedYear !== 'tous' || selectedType !== 'tous' || selectedRating !== 'tous' || showFavorites) && (
+          <button className={styles.clearFilters} onClick={clearAllFilters}>
+            Réinitialiser
+          </button>
+        )}
+      </div>
+
+      <div className={styles.filtersScrollContainer}>
+        {/* Favorites Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.favoritesFilter} ${showFavorites ? styles.active : ''}`}
+            onClick={() => setShowFavorites(!showFavorites)}
+          >
+            <Heart size={18} fill={showFavorites ? 'currentColor' : 'none'} />
+            <span>Mes favoris ({favorites.length})</span>
+          </button>
+        </div>
+
+        {/* Type d'examen Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.filterHeader} ${activeFilter === 'examType' ? styles.active : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'examType' ? null : 'examType')}
+          >
+            <div className={styles.filterTitleGroup}>
+              <Trophy size={16} className={styles.filterIcon} style={{ color: '#8B5CF6' }} />
+              <h3 className={styles.filterTitle}>Type d'examen</h3>
+            </div>
+            <ChevronRight 
+              size={18} 
+              className={`${styles.filterChevron} ${activeFilter === 'examType' ? styles.open : ''}`}
+            />
+          </button>
+        </div>
+
+        {/* Matière Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.filterHeader} ${activeFilter === 'subject' ? styles.active : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'subject' ? null : 'subject')}
+          >
+            <div className={styles.filterTitleGroup}>
+              <BookOpen size={16} className={styles.filterIcon} style={{ color: '#3B82F6' }} />
+              <h3 className={styles.filterTitle}>Matière</h3>
+            </div>
+            <ChevronRight 
+              size={18} 
+              className={`${styles.filterChevron} ${activeFilter === 'subject' ? styles.open : ''}`}
+            />
+          </button>
+        </div>
+
+        {/* Année Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.filterHeader} ${activeFilter === 'year' ? styles.active : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'year' ? null : 'year')}
+          >
+            <div className={styles.filterTitleGroup}>
+              <Clock size={16} className={styles.filterIcon} style={{ color: '#10B981' }} />
+              <h3 className={styles.filterTitle}>Année</h3>
+            </div>
+            <ChevronRight 
+              size={18} 
+              className={`${styles.filterChevron} ${activeFilter === 'year' ? styles.open : ''}`}
+            />
+          </button>
+        </div>
+
+        {/* Prix Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.filterHeader} ${activeFilter === 'type' ? styles.active : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'type' ? null : 'type')}
+          >
+            <div className={styles.filterTitleGroup}>
+              <ShoppingCart size={16} className={styles.filterIcon} style={{ color: '#F59E0B' }} />
+              <h3 className={styles.filterTitle}>Prix</h3>
+            </div>
+            <ChevronRight 
+              size={18} 
+              className={`${styles.filterChevron} ${activeFilter === 'type' ? styles.open : ''}`}
+            />
+          </button>
+        </div>
+
+        {/* Note Filter */}
+        <div className={styles.filterSection}>
+          <button 
+            className={`${styles.filterHeader} ${activeFilter === 'rating' ? styles.active : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'rating' ? null : 'rating')}
+          >
+            <div className={styles.filterTitleGroup}>
+              <Star size={16} className={styles.filterIcon} style={{ color: '#EF4444' }} />
+              <h3 className={styles.filterTitle}>Note</h3>
+            </div>
+            <ChevronRight 
+              size={18} 
+              className={`${styles.filterChevron} ${activeFilter === 'rating' ? styles.open : ''}`}
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Panneau des sous-filtres à droite - INTÉGRÉ */}
+    {activeFilter && (
+      <div className={styles.subFilterPanel}>
+        <div className={styles.subFilterHeader}>
+          <h4 className={styles.subFilterTitle}>
+            {activeFilter === 'examType' && 'Type d\'examen'}
+            {activeFilter === 'subject' && 'Matière'}
+            {activeFilter === 'year' && 'Année'}
+            {activeFilter === 'type' && 'Prix'}
+            {activeFilter === 'rating' && 'Note'}
+          </h4>
+          <button 
+            className={styles.closeSubFilter}
+            onClick={() => setActiveFilter(null)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className={styles.subFilterContent}>
+          {/* Type d'examen options */}
+          {activeFilter === 'examType' && (
+            <div className={styles.filterOptions}>
+              {examTypes.map(exam => (
+                <label key={exam.value} className={styles.filterOption}>
+                  <input
+                    type="radio"
+                    name="examType"
+                    value={exam.value}
+                    checked={selectedExamType === exam.value}
+                    onChange={(e) => {
+                      setSelectedExamType(e.target.value);
+                      setActiveFilter(null);
+                    }}
+                    className={styles.filterRadio}
+                  />
+                  <span className={styles.filterLabel}>{exam.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Matière options */}
+          {activeFilter === 'subject' && (
+            <div className={styles.filterOptions}>
+              {subjects.map(subject => (
+                <label key={subject.value} className={styles.filterOption}>
+                  <input
+                    type="radio"
+                    name="subject"
+                    value={subject.value}
+                    checked={selectedSubject === subject.value}
+                    onChange={(e) => {
+                      setSelectedSubject(e.target.value);
+                      setActiveFilter(null);
+                    }}
+                    className={styles.filterRadio}
+                  />
+                  <span className={styles.filterLabel}>{subject.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Année options */}
+          {activeFilter === 'year' && (
+            <div className={styles.filterOptions}>
+              {years.map(year => (
+                <label key={year.value} className={styles.filterOption}>
+                  <input
+                    type="radio"
+                    name="year"
+                    value={year.value}
+                    checked={selectedYear === year.value}
+                    onChange={(e) => {
+                      setSelectedYear(e.target.value);
+                      setActiveFilter(null);
+                    }}
+                    className={styles.filterRadio}
+                  />
+                  <span className={styles.filterLabel}>{year.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Prix options */}
+          {activeFilter === 'type' && (
+            <div className={styles.filterOptions}>
+              {types.map(type => (
+                <label key={type.value} className={styles.filterOption}>
+                  <input
+                    type="radio"
+                    name="type"
+                    value={type.value}
+                    checked={selectedType === type.value}
+                    onChange={(e) => {
+                      setSelectedType(e.target.value);
+                      setActiveFilter(null);
+                    }}
+                    className={styles.filterRadio}
+                  />
+                  <span className={styles.filterLabel}>{type.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Note options */}
+          {activeFilter === 'rating' && (
+            <div className={styles.filterOptions}>
+              {ratings.map(rating => (
+                <label key={rating.value} className={styles.filterOption}>
+                  <input
+                    type="radio"
+                    name="rating"
+                    value={rating.value}
+                    checked={selectedRating === rating.value}
+                    onChange={(e) => {
+                      setSelectedRating(e.target.value);
+                      setActiveFilter(null);
+                    }}
+                    className={styles.filterRadio}
+                  />
+                  <span className={styles.filterLabel}>{rating.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</aside>
+
+            {/* Products Grid */}
+            <div className={styles.productsSection}>
+              {/* Top Bar */}
+              <div className={styles.topBar}>
+                <div className={styles.resultsInfo}>
+                  <h2>Épreuves disponibles</h2>
+                  <p>{sortedTests.length} résultat{sortedTests.length > 1 ? 's' : ''} trouvé{sortedTests.length > 1 ? 's' : ''}</p>
                 </div>
-                <div className={styles.statItem}>
-                  <Users size={20} />
-                  <span>2000+ Étudiants</span>
+
+                <div className={styles.topBarActions}>
+                  <button 
+                    className={styles.mobileFilterBtn}
+                    onClick={() => setShowMobileFilters(true)}
+                  >
+                    <Filter size={18} />
+                    Filtres
+                  </button>
+
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className={styles.sortSelect}
+                  >
+                    <option value="popular">Plus populaires</option>
+                    <option value="recent">Plus récents</option>
+                    <option value="rating">Mieux notés</option>
+                    <option value="price-asc">Prix croissant</option>
+                    <option value="price-desc">Prix décroissant</option>
+                  </select>
                 </div>
-                <div className={styles.statItem}>
-                  <Star size={20} />
-                  <span>4.8/5 Note</span>
+              </div>
+
+              {/* Success Banner */}
+              <div className={styles.successBanner}>
+                <div className={styles.successIcon}>
+                  <TrendingUp size={20} />
+                </div>
+                <div className={styles.successText}>
+                  <strong>+2,000 étudiants</strong> ont réussi leurs examens grâce à Win+
+                </div>
+              </div>
+
+              {/* Products Grid */}
+              {currentTests.length > 0 ? (
+                <>
+                  <div className={styles.productsGrid}>
+                    {currentTests.map(test => (
+                      <article key={test.id} className={styles.productCard}>
+                        <div className={styles.productImageContainer}>
+                          <img 
+                            src={test.image}
+                            alt={test.title}
+                            className={styles.productImage}
+                          />
+                          <button 
+                            className={`${styles.favoriteBtn} ${favorites.includes(test.id) ? styles.favorited : ''}`}
+                            onClick={() => toggleFavorite(test.id)}
+                            aria-label="Ajouter aux favoris"
+                          >
+                            <Heart size={16} fill={favorites.includes(test.id) ? 'currentColor' : 'none'} />
+                          </button>
+                          {test.isFree ? (
+                            <span className={styles.freeBadge}>Gratuit</span>
+                          ) : (
+                            <span className={styles.priceBadge}>{test.price} FCFA</span>
+                          )}
+                        </div>
+
+                        <div className={styles.productContent}>
+                          <h3 className={styles.productTitle}>{test.title}</h3>
+                          
+                          <div className={styles.productMeta}>
+                            <div className={styles.productRating}>
+                              <Star size={12} fill="#FFA500" color="#FFA500" />
+                              <span>{test.rating}</span>
+                            </div>
+                            <div className={styles.productDownloads}>
+                              <Eye size={12} />
+                              <span>{test.downloads}</span>
+                            </div>
+                          </div>
+
+                          <p className={styles.productDescription}>{test.description}</p>
+                          
+                          <div className={styles.productFooter}>
+                            {!test.isFree && (
+                              <div className={styles.productPrice}>{test.price} FCFA</div>
+                            )}
+                            <button 
+                              className={test.isFree ? styles.btnDownload : styles.btnAddCart}
+                              onClick={() => test.isFree ? null : handleAddToCart(test)}
+                              disabled={loadingItems[test.id]}
+                            >
+                              {test.isFree ? (
+                                <>
+                                  <Download size={14} />
+                                  Télécharger
+                                </>
+                              ) : (
+                                <>
+                                  <ShoppingCart size={14} />
+                                  {loadingItems[test.id] ? 'Ajout...' : 'Ajouter'}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className={styles.pagination}>
+                      <button
+                        className={styles.paginationBtn}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+
+                      <div className={styles.paginationNumbers}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                          // Show first page, last page, current page, and pages around current
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={page}
+                                className={`${styles.paginationNumber} ${page === currentPage ? styles.active : ''}`}
+                                onClick={() => handlePageChange(page)}
+                              >
+                                {page}
+                              </button>
+                            );
+                          } else if (page === currentPage - 2 || page === currentPage + 2) {
+                            return <span key={page} className={styles.paginationEllipsis}>...</span>;
+                          }
+                          return null;
+                        })}
+                      </div>
+
+                      <button
+                        className={styles.paginationBtn}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className={styles.emptyState}>
+                  <BookOpen size={64} className={styles.emptyIcon} />
+                  <h3>Aucune épreuve trouvée</h3>
+                  <p>Essayez de modifier vos filtres de recherche</p>
+                  <button className={styles.btnSecondary} onClick={clearAllFilters}>
+                    Réinitialiser les filtres
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Mobile Filters Modal */}
+      {showMobileFilters && (
+        <div className={styles.mobileFiltersOverlay} onClick={() => setShowMobileFilters(false)}>
+          <div className={styles.mobileFiltersModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.mobileFiltersHeader}>
+              <h3>Filtres</h3>
+              <button onClick={() => setShowMobileFilters(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <div className={styles.mobileFiltersContent}>
+              {/* Copy all filter sections from sidebar */}
+              <div className={styles.filterSection}>
+                <h3 className={styles.filterTitle}>Type d'examen</h3>
+                <div className={styles.filterOptions}>
+                  {examTypes.map(exam => (
+                    <label key={exam.value} className={styles.filterOption}>
+                      <input
+                        type="radio"
+                        name="examTypeMobile"
+                        value={exam.value}
+                        checked={selectedExamType === exam.value}
+                        onChange={(e) => setSelectedExamType(e.target.value)}
+                        className={styles.filterRadio}
+                      />
+                      <span className={styles.filterLabel}>{exam.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
-            <div className={styles.heroImage}>
-              <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=400&fit=crop" alt="Catalogue" />
+            <div className={styles.mobileFiltersFooter}>
+              <button className={styles.btnSecondary} onClick={clearAllFilters}>
+                Réinitialiser
+              </button>
+              <button className={styles.btnPrimary} onClick={() => setShowMobileFilters(false)}>
+                Appliquer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Section */}
+      <section id="contact" className={styles.contact}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Besoin d'aide avec Win+ ?</h2>
+            <p className={styles.sectionSubtitle}>Contactez notre équipe de support</p>
+          </div>
+
+          <div className={styles.contactGrid}>
+            <div className={styles.contactCard}>
+              <Mail size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Par Email</h3>
+              <p className={styles.contactCardText}>Réponse sous 24h</p>
+              <a href="mailto:contact@winplus.cm" className={styles.contactLink}>contact@winplus.cm</a>
+            </div>
+            <div className={styles.contactCard}>
+              <Phone size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Par Téléphone</h3>
+              <p className={styles.contactCardText}>Support direct</p>
+              <a href="tel:+237123456789" className={styles.contactLink}>+237 123 456 789</a>
+            </div>
+            <div className={styles.contactCard}>
+              <MapPin size={32} className={styles.contactIcon} />
+              <h3 className={styles.contactCardTitle}>Localisation</h3>
+              <p className={styles.contactCardText}>Yaoundé, Cameroun</p>
+              <span className={styles.contactLink}>Centre-ville</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className={styles.container}>
+          <div className={styles.bottomCta}>
+            <div className={styles.bottomCtaContent}>
+              <div className={styles.bottomCtaIcon}>
+                <Trophy size={32} />
+              </div>
+              <div className={styles.bottomCtaText}>
+                <h3>Besoin de plus de ressources ?</h3>
+                <p>Créez un compte gratuit et accédez à des épreuves exclusives + suivi de progression</p>
+              </div>
+              <button className={styles.btnCtaPrimary} onClick={() => navigate('/login')}>
+                Créer un compte gratuit
+              </button>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Main Content */}
-      <main className={styles.main}>
-        <div className={styles.container}>
-          {/* Filters Section */}
-          <div className={styles.filtersSection}>
-            <div className={styles.mainFilters}>
-              <div className={styles.filterGroup}>
-                <label>Type d'examen</label>
-                <select 
-                  value={selectedExamType}
-                  onChange={(e) => setSelectedExamType(e.target.value)}
-                  className={styles.select}
-                >
-                  {examTypes.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
-                </select>
-              </div>
-
-              <div className={styles.filterGroup}>
-                <label>Matière</label>
-                <select 
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                  className={styles.select}
-                >
-                  {subjects.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-              </div>
-
-              <div className={styles.filterGroup}>
-                <label>Année</label>
-                <select 
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className={styles.select}
-                >
-                  {years.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
-                </select>
-              </div>
-
-              <div className={styles.filterGroup}>
-                <label>Type</label>
-                <select 
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className={styles.select}
-                >
-                  {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.searchAndSort}>
-              <div className={styles.searchBar}>
-                <Search size={20} className={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Rechercher une épreuve..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={styles.searchInput}
-                />
-              </div>
-
-              <div className={styles.sortGroup}>
-                <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="popular">Plus populaires</option>
-                  <option value="recent">Plus récents</option>
-                  <option value="rating">Mieux notés</option>
-                  <option value="price-asc">Prix croissant</option>
-                  <option value="price-desc">Prix décroissant</option>
-                </select>
-              </div>
-
-              <button 
-                className={`${styles.favoritesBtn} ${showFavorites ? styles.active : ''}`}
-                onClick={() => setShowFavorites(!showFavorites)}
-              >
-                <Heart size={18} fill={showFavorites ? 'currentColor' : 'none'} />
-                Favoris ({favorites.length})
-              </button>
-            </div>
-          </div>
-
-          {/* Results */}
-          <div className={styles.resultsInfo}>
-            <p>{sortedTests.length} épreuve{sortedTests.length > 1 ? 's' : ''} trouvée{sortedTests.length > 1 ? 's' : ''}</p>
-          </div>
-
-          {/* Tests Grid */}
-          <div className={styles.testsGrid}>
-            {sortedTests.map(test => (
-              <article key={test.id} className={styles.testCard}>
-                <div className={styles.testImageContainer}>
-                  <img 
-                    src={test.image}
-                    alt={test.title}
-                    className={styles.testImage}
-                  />
-                  <button 
-                    className={`${styles.favoriteBtn} ${favorites.includes(test.id) ? styles.favorited : ''}`}
-                    onClick={() => toggleFavorite(test.id)}
-                    aria-label="Ajouter aux favoris"
-                  >
-                    <Heart size={18} fill={favorites.includes(test.id) ? 'currentColor' : 'none'} />
-                  </button>
-                  {test.isFree ? (
-                    <span className={styles.freeBadge}>Gratuit</span>
-                  ) : (
-                    <span className={styles.priceBadge}>{test.price} FCFA</span>
-                  )}
-                </div>
-
-                <div className={styles.testContent}>
-                  <h3 className={styles.testTitle}>{test.title}</h3>
-                  <p className={styles.testDescription}>{test.description}</p>
-                  
-                  <div className={styles.testMeta}>
-                    <span><Clock size={14} /> {test.duration}</span>
-                    <span><Download size={14} /> {test.downloads}</span>
-                  </div>
-
-                  <div className={styles.testFooter}>
-                    <div className={styles.rating}>
-                      <Star size={14} fill="#FFA500" color="#FFA500" />
-                      <span>{test.rating}</span>
-                    </div>
-                    {!test.isFree && (
-                      <div className={styles.price}>{test.price} FCFA</div>
-                    )}
-                  </div>
-
-                  <button 
-                    className={test.isFree ? styles.btnDownload : styles.btnAddCart}
-                    onClick={() => test.isFree ? null : handleAddToCart(test)}
-                    disabled={loadingItems[test.id]}
-                  >
-                    {test.isFree ? (
-                      <>
-                        <Download size={16} />
-                        Télécharger
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart size={16} />
-                        {loadingItems[test.id] ? 'Ajout...' : 'Ajouter au panier'}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {sortedTests.length === 0 && (
-            <div className={styles.emptyState}>
-              <BookOpen size={64} className={styles.emptyIcon} />
-              <h3>Aucune épreuve trouvée</h3>
-              <p>Essayez de modifier vos filtres de recherche</p>
-            </div>
-          )}
-        </div>
-      </main>
 
       {/* Footer */}
       <footer className={styles.footer}>
@@ -535,3 +995,5 @@ const CatalogPage = () => {
 };
 
 export default CatalogPage;
+
+                  
