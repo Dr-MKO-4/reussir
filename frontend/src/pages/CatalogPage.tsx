@@ -69,7 +69,7 @@ const CatalogPage = () => {
       id: 3,
       text: "Passez à Win+ Premium - Accès illimité à toutes les épreuves",
       cta: "Découvrir Premium",
-      color: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+      color: "linear-gradient(135deg, #a80f0fff 0%, #ea4f4fff 100%)",
     },
     {
       id: 4,
