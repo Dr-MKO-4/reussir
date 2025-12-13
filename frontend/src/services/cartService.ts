@@ -124,7 +124,7 @@ class CartService {
       const response = await api.post<BackendCart>('/cart/items', {
         subjectId,
         quantity,
-      });
+      }); // Vérifiez que l'URL correspond bien à l'endpoint backend corrigé
       
       this.saveLocalCart(response.data);
       return response.data;

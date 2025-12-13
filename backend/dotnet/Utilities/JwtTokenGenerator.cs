@@ -59,4 +59,36 @@ public class JwtTokenGenerator
             throw new InvalidOperationException($"Error generating JWT token: {ex.Message}", ex);
         }
     }
+
+    public ClaimsPrincipal? ValidateToken(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = System.Text.Encoding.UTF8.GetBytes(_secretKey);
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _issuer,
+                ValidAudience = _audience,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.Zero // Élimine le délai de grâce
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+            return principal;
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            throw new UnauthorizedAccessException("Le token a expiré. Veuillez vous reconnecter.");
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Erreur lors de la validation du token: {ex.Message}");
+        }
+    }
 }

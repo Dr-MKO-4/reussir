@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Filter, BookOpen, Star, Clock, Download,
@@ -10,6 +10,7 @@ import {
 import styles from './Catalog.module.css';
 import { useCartContext } from '../contexts/CartContext';
 import { useToast } from '../hooks/useToast';
+import { fetchCatalogItems } from '../services/catalogService';
 
 const CatalogPage = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const CatalogPage = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Types d'examens et concours
   const examTypes = [
@@ -142,7 +145,10 @@ const CatalogPage = () => {
   ];
 
   // Filtrage des épreuves
-  const filteredTests = allTests.filter(test => {
+  // Utiliser les données dynamiques si disponibles, sinon fallback sur les données statiques
+  const dataSource = catalogItems && catalogItems.length > 0 ? catalogItems : allTests;
+
+  const filteredTests = dataSource.filter((test: any) => {
     const searchMatch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        test.description.toLowerCase().includes(searchQuery.toLowerCase());
     const examMatch = selectedExamType === 'tous' || test.examType === selectedExamType;
@@ -157,7 +163,7 @@ const CatalogPage = () => {
   });
 
   // Tri des épreuves
-  const sortedTests = [...filteredTests].sort((a, b) => {
+  const sortedTests = [...filteredTests].sort((a: any, b: any) => {
     switch(sortBy) {
       case 'popular':
         return b.downloads - a.downloads;
@@ -209,6 +215,25 @@ const CatalogPage = () => {
       setLoadingItems(prev => ({ ...prev, [test.id]: false }));
     }
   };
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      try {
+        const items = await fetchCatalogItems();
+        setCatalogItems(items);
+      } catch (error) {
+        console.error('Erreur lors du chargement du catalogue:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCatalog();
+  }, []);
+
+  if (loading) {
+    return <div>Chargement du catalogue...</div>;
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -268,7 +293,7 @@ const CatalogPage = () => {
               <div className={styles.heroStats}>
                 <div className={styles.statItem}>
                   <BookOpen size={20} />
-                  <span>{allTests.length}+ Épreuves</span>
+                  <span>{(catalogItems && catalogItems.length) || allTests.length}+ Épreuves</span>
                 </div>
                 <div className={styles.statItem}>
                   <Users size={20} />
