@@ -969,7 +969,7 @@ const CatalogPage = () => {
           <div className={styles.footerBottom}>
             <div>
               <p className={styles.footerCopyright}>
-                © 2024 Win+. Tous droits réservés.
+                © 2025 Win+. Tous droits réservés.
               </p>
               <div style={{ marginTop: '8px', fontSize: '13px' }}>
                 <a href="/privacy" onClick={(e) => { e.preventDefault(); navigate('/privacy'); }} style={{ color: 'rgba(255, 255, 255, 0.7)', marginRight: '16px', textDecoration: 'none' }}>
