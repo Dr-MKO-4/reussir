@@ -62,7 +62,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Serilog.Sinks.AwsCloudWatch" Version="5.2.2" />
+    <PackageReference Include="Serilog.Sinks.AwsCloudWatch" Version="4.4.42" />
     
     <!-- Configuration -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
