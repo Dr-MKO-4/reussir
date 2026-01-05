@@ -357,7 +357,69 @@
   padding: 80px 0;
   background-color: #FFFFFF;
 }
+/* AJOUTER CES STYLES À LA FIN DE HomePage.module.css */
 
+/* Pricing Category Selector */
+.pricingCategorySelector {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.pricingCategoryBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background-color: #FFFFFF;
+  border: 2px solid var(--rp-gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rp-gray-700);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pricingCategoryBtn:hover {
+  border-color: var(--rp-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(26, 77, 94, 0.15);
+  color: var(--rp-primary);
+  background-color: var(--rp-gray-50);
+}
+
+.pricingCategoryBtn svg {
+  transition: transform 0.3s;
+}
+
+.pricingCategoryBtn:hover svg {
+  transform: scale(1.1);
+}
+
+/* Responsive pour les boutons de catégorie */
+@media (max-width: 768px) {
+  .pricingCategorySelector {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pricingCategoryBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pricingCategoryBtn {
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+}
 .sectionHeader {
   text-align: center;
   margin-bottom: 60px;

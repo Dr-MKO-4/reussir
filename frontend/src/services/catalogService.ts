@@ -232,3 +232,9 @@ const catalogService = {
 };
 
 export default catalogService;
+
+// Export utilitaire utilisé par CatalogPage
+export const fetchCatalogItems = async (page = 1, limit = 50) => {
+  // Utilise explicitement l'endpoint /api/subjects (controllers utilisent le préfixe /api)
+  return catalogService.getAllSubjects(page, limit);
+};

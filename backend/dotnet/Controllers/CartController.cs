@@ -57,7 +57,7 @@ public class CartController : ControllerBase
         }
     }
 
-    [HttpPost("add")]
+    [HttpPost("items")] // Correction de l'URL pour correspondre au frontend
     public async Task<IActionResult> AddToCart([FromBody] CartItem item)
     {
         try

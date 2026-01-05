@@ -4,7 +4,7 @@ import {
   Search, BookOpen, Trophy, Users, Star, Download, Clock, 
   Eye, ChevronRight, Mail, Phone, MessageSquare, MapPin,
   Check, Menu, X, Award, Shield, Zap, Target, Cpu,
-  Facebook, Twitter, Linkedin, Instagram, ChevronLeft, ShoppingCart
+  Facebook, Twitter, Linkedin, Instagram, ChevronLeft, ShoppingCart,Heart 
 } from 'lucide-react';
 import styles from './HomePage.module.css';
 import { useNavigate } from 'react-router-dom';
@@ -49,7 +49,220 @@ const HomePage = () => {
   const handleSignupClick = () => {
     navigate('/signup');
   };
+const handleCategoryChange = (category: 'students' | 'teachers' | 'parents') => {
+  setSelectedPricingCategory(category);
+  setCurrentPlanSlide(0); // Reset le carousel
+};
+const [selectedPricingCategory, setSelectedPricingCategory] = useState<'students' | 'teachers' | 'parents'>('students');
 
+// AJOUTER CES DONNÉES DE PLANS AVEC LES AUTRES DONNÉES (après les plans étudiants existants)
+ const plans = [
+    {
+      name: "Standard",
+      price: "0",
+      period: "Gratuit",
+      features: [
+        "Accès aux épreuves gratuites",
+        "Chatbot pédagogique de base",
+        "Suivi basique des progrès",
+        "Accès au forum communautaire"
+      ],
+      popular: false,
+      icon: Users,
+    },
+    {
+      name: "2 Semaines",
+      price: "1750",
+      period: "/2 semaines",
+      features: [
+        "Accès à toutes les épreuves",
+        "Chatbot IA avancé",
+        "Corrections de base",
+        "Support standard"
+      ],
+      popular: false,
+      icon: Clock,
+    },
+    {
+      name: "Premium",
+      price: "3500",
+      period: "/mois",
+      features: [
+        "Accès à toutes les épreuves",
+        "Chatbot IA avancé",
+        "Corrections personnalisées",
+        "Support prioritaire",
+        "Téléchargements illimités"
+      ],
+      popular: true,
+      icon: Star,
+    },
+    {
+      name: "Étudiant+",
+      price: "6000",
+      period: "/trimestre",
+      features: [
+        "Tous les avantages Premium",
+        "Coaching individuel",
+        "Annales exclusives",
+        "Statistiques avancées",
+        "Certificat de réussite"
+      ],
+      popular: false,
+      icon: Trophy,
+    },
+    {
+      name: "Annuel",
+      price: "20000",
+      period: "/an",
+      features: [
+        "Tous les avantages Étudiant+",
+        "3 mois gratuits",
+        "Séances de groupe",
+        "Accès à vie aux ressources",
+        "Badge premium"
+      ],
+      popular: false,
+      icon: Award,
+    },
+  ];
+
+const teacherPlans = [
+  {
+    name: "Enseignant Débutant",
+    price: "0",
+    period: "Gratuit",
+    features: [
+      "Créer jusqu'à 5 épreuves",
+      "Accès aux outils de base",
+      "Support communautaire",
+      "Statistiques basiques"
+    ],
+    popular: false,
+    icon: BookOpen,
+  },
+  {
+    name: "Enseignant Pro",
+    price: "5000",
+    period: "/mois",
+    features: [
+      "Épreuves illimitées",
+      "Correction automatique IA",
+      "Tableau de bord avancé",
+      "Support prioritaire",
+      "Bibliothèque de ressources"
+    ],
+    popular: true,
+    icon: Users,
+  },
+  {
+    name: "Enseignant Expert",
+    price: "12000",
+    period: "/trimestre",
+    features: [
+      "Tous les avantages Pro",
+      "Gestion de classes multiples",
+      "Rapports détaillés",
+      "Formation continue",
+      "Badge certifié",
+      "Visibilité sur la plateforme"
+    ],
+    popular: false,
+    icon: Award,
+  },
+  {
+    name: "Établissement",
+    price: "35000",
+    period: "/an",
+    features: [
+      "Comptes illimités pour enseignants",
+      "Licence institutionnelle",
+      "Formation sur site",
+      "Support dédié 24/7",
+      "Intégration système",
+      "Branding personnalisé"
+    ],
+    popular: false,
+    icon: Shield,
+  },
+];
+
+const parentPlans = [
+  {
+    name: "Parent Vigilant",
+    price: "0",
+    period: "Gratuit",
+    features: [
+      "Suivi de 1 enfant",
+      "Rapports mensuels",
+      "Notifications basiques",
+      "Accès au forum parents"
+    ],
+    popular: false,
+    icon: Users,
+  },
+  {
+    name: "Parent Investi",
+    price: "2500",
+    period: "/mois",
+    features: [
+      "Suivi de 2 enfants",
+      "Rapports hebdomadaires détaillés",
+      "Notifications en temps réel",
+      "Messagerie avec enseignants",
+      "Recommandations personnalisées"
+    ],
+    popular: true,
+    icon: Star,
+  },
+  {
+    name: "Famille Premium",
+    price: "4500",
+    period: "/mois",
+    features: [
+      "Suivi illimité d'enfants",
+      "Rapports quotidiens",
+      "Coaching parental",
+      "Séances famille-tuteur",
+      "Accès ressources parentales",
+      "Support prioritaire"
+    ],
+    popular: false,
+    icon: Trophy,
+  },
+  {
+    name: "Famille VIP",
+    price: "12000",
+    period: "/trimestre",
+    features: [
+      "Tous les avantages Premium",
+      "Conseiller familial dédié",
+      "Webinaires exclusifs",
+      "Ateliers parentalité",
+      "Réseau de parents VIP",
+      "Remises sur événements"
+    ],
+    popular: false,
+    icon: Award,
+  },
+];
+
+// MODIFIER LA LOGIQUE DE SÉLECTION DES PLANS
+const getCurrentPricingPlans = () => {
+  switch (selectedPricingCategory) {
+    case 'teachers':
+      return teacherPlans;
+    case 'parents':
+      return parentPlans;
+    default:
+      return plans; // Les plans étudiants existants
+  }
+};
+
+const currentPlans = getCurrentPricingPlans();
+const visiblePlans = currentPlans.slice(currentPlanSlide, currentPlanSlide + visibleCardsCount);
+const canGoNext = currentPlanSlide < currentPlans.length - visibleCardsCount;
+const canGoPrev = currentPlanSlide > 0;
   const subjects = [
     { value: 'tous', label: 'Toutes les matières' },
     { value: 'mathematiques', label: 'Mathématiques' },
@@ -195,77 +408,7 @@ const HomePage = () => {
     }
   ];
 
-  const plans = [
-    {
-      name: "Standard",
-      price: "0",
-      period: "Gratuit",
-      features: [
-        "Accès aux épreuves gratuites",
-        "Chatbot pédagogique de base",
-        "Suivi basique des progrès",
-        "Accès au forum communautaire"
-      ],
-      popular: false,
-      icon: Users,
-    },
-    {
-      name: "2 Semaines",
-      price: "1750",
-      period: "/2 semaines",
-      features: [
-        "Accès à toutes les épreuves",
-        "Chatbot IA avancé",
-        "Corrections de base",
-        "Support standard"
-      ],
-      popular: false,
-      icon: Clock,
-    },
-    {
-      name: "Premium",
-      price: "3500",
-      period: "/mois",
-      features: [
-        "Accès à toutes les épreuves",
-        "Chatbot IA avancé",
-        "Corrections personnalisées",
-        "Support prioritaire",
-        "Téléchargements illimités"
-      ],
-      popular: true,
-      icon: Star,
-    },
-    {
-      name: "Étudiant+",
-      price: "6000",
-      period: "/trimestre",
-      features: [
-        "Tous les avantages Premium",
-        "Coaching individuel",
-        "Annales exclusives",
-        "Statistiques avancées",
-        "Certificat de réussite"
-      ],
-      popular: false,
-      icon: Trophy,
-    },
-    {
-      name: "Annuel",
-      price: "20000",
-      period: "/an",
-      features: [
-        "Tous les avantages Étudiant+",
-        "3 mois gratuits",
-        "Séances de groupe",
-        "Accès à vie aux ressources",
-        "Badge premium"
-      ],
-      popular: false,
-      icon: Award,
-    },
-  ];
-
+ 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -284,9 +427,7 @@ const HomePage = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const visiblePlans = plans.slice(currentPlanSlide, currentPlanSlide + visibleCardsCount);
-  const canGoNext = currentPlanSlide < plans.length - visibleCardsCount;
-  const canGoPrev = currentPlanSlide > 0;
+
 
   const nextPlans = () => {
     if (canGoNext) {
@@ -619,6 +760,7 @@ const HomePage = () => {
         </div>
       </section>
 
+
       {/* Pricing */}
       <section id="pricing" className={styles.pricing}>
         <div className={styles.container}>
@@ -628,6 +770,31 @@ const HomePage = () => {
             </div>
             <h2 className={styles.sectionTitle}>Choisissez votre <span className={styles.accent}>formule</span></h2>
             <p className={styles.sectionSubtitle}>Des plans adaptés à tous les besoins</p>
+          </div>
+
+          {/* Boutons de sélection de catégorie */}
+          <div className={styles.pricingCategorySelector}>
+            <button 
+              className={`${styles.pricingCategoryBtn} ${selectedPricingCategory === 'students' ? styles.pricingCategoryBtnActive : ''}`}
+              onClick={() => handleCategoryChange('students')}
+            >
+              <BookOpen size={20} />
+              <span>Étudiants</span>
+            </button>
+            <button 
+              className={`${styles.pricingCategoryBtn} ${selectedPricingCategory === 'teachers' ? styles.pricingCategoryBtnActive : ''}`}
+              onClick={() => handleCategoryChange('teachers')}
+            >
+              <Users size={20} />
+              <span>Enseignants</span>
+            </button>
+            <button 
+              className={`${styles.pricingCategoryBtn} ${selectedPricingCategory === 'parents' ? styles.pricingCategoryBtnActive : ''}`}
+              onClick={() => handleCategoryChange('parents')}
+            >
+              <Trophy size={20} />
+              <span>Parents</span>
+            </button>
           </div>
 
           <div className={styles.pricingContainer}>
@@ -643,7 +810,7 @@ const HomePage = () => {
             <div className={styles.pricingGrid}>
               {visiblePlans.map((plan, i) => (
                 <div 
-                  key={currentPlanSlide + i} 
+                  key={`${selectedPricingCategory}-${currentPlanSlide + i}`} 
                   className={`${styles.planCard} ${plan.popular ? styles.planCardPopular : ''}`}
                 >
                   {plan.popular && (
@@ -696,8 +863,18 @@ const HomePage = () => {
               ))}
             </div>
           )}
+
+          {/* Bouton pour voir tous les détails */}
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <button 
+              className={styles.btnLarge}
+              onClick={() => navigate('/pricing')}
+            >
+              Voir les détails complets <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-      </section>
+      </section>    
 
       {/* About */}
       <section id="about" className={styles.about}>

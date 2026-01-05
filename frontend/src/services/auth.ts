@@ -174,22 +174,16 @@ class AuthService {
    */
   async refreshToken(): Promise<AuthTokens> {
     try {
-      const refreshToken = this.getRefreshToken();
-      
+      const refreshToken = localStorage.getItem(this.STORAGE_KEYS.REFRESH_TOKEN);
       if (!refreshToken) {
-        throw new Error('No refresh token available');
+        throw new Error('Aucun refresh token disponible');
       }
 
-      const response = await api.post<AuthTokens>('/auth/refresh', {
-        refreshToken,
-      });
-
-      this.saveTokens(response);
-
+      const response = await api.post<AuthTokens>('/auth/refresh', { refreshToken });
+      this.saveAuthData(response, true); // Sauvegarde les nouveaux tokens
       return response;
     } catch (error) {
-      console.error('[Auth Service] Refresh token error:', error);
-      this.clearAuthData();
+      console.error('[Auth Service] Erreur lors du rafraîchissement du token:', error);
       throw error;
     }
   }

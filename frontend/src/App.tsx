@@ -7,7 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './components/ui/Toast';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute'
-import { UserRole } from './types/auth';
+import { UserRole, User } from './types/auth';
 import useAuth from './hooks/useAuth';
 import LoadingSpinner, { FullPageSpinner } from './components/ui/LoadingSpinner'
 
@@ -90,7 +90,7 @@ const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ childre
     if (shouldCompleteProfile) {
       return <Navigate to="/complete-profile" replace />;
     } else {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/home" replace />; // Redirection corrigée vers /home
     }
   }
 
@@ -183,7 +183,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Routes publiques accessibles à tous */}
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="/student" element={<Student />} />
       <Route path="/parent" element={<ParentDashboard />} />
       <Route path="/professeur" element={<TeacherDashboard />} />
@@ -292,6 +292,12 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Route racine pour redirection conditionnelle */}
+      <Route
+        path="/"
+        element={<RootRoute />}
+      />
+
       {/* Route 404 - Page non trouvée */}
       <Route
         path="*"
@@ -321,3 +327,21 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+const RootRoute: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <FullPageSpinner 
+        message="Chargement..."
+        submessage="Vérification de votre statut de connexion"
+        size="large"
+        variant="default"
+        color="primary"
+      />
+    );
+  }
+
+  return isAuthenticated ? <Home /> : <HomePage />;
+};
